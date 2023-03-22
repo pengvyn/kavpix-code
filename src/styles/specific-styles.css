@@ -1,0 +1,32 @@
+.code-example-cont {
+    height: 100%;
+    width: 100%;
+    text-align: center;
+}
+#result {
+    margin: 1rem;
+}
+.power-set-inp-cont {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.curly {
+    margin: 1rem;
+}
+.hidden {
+    display: none;
+}
+/* .fade-in {
+    animation: 0.4s ease-out running normal none 1 0s fadein;
+} */
+
+@keyframes fadein {
+    0% {
+        opacity: 0;
+        font-size: 0px;
+    }
+    100% {
+        opacity: 100;
+    }
+}

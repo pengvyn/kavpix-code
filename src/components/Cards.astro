@@ -1,0 +1,16 @@
+---
+import type { CardValues } from "./Card.astro";
+import Card from "./Card.astro";
+
+export interface CardsProps {
+    cards: CardValues[];
+}
+
+const { cards } = Astro.props;
+---
+
+<div class="cards">
+    {cards.map((cardMap: CardValues) => (
+        <Card card={cardMap} /> 
+    ))}
+</div>

@@ -1,0 +1,29 @@
+---
+export interface HeaderProps {
+	back: string;
+}
+const { back } = Astro.props;
+---
+
+<div class="header">
+	<div class="header-left">
+		{back === undefined ? null : <div class="back-cont"><a class="back" href={back}>&lt;</a></div>}
+	</div>
+	<div class="header-middle">
+		<div class="header-title">
+			<a href="https://kavpix.com">
+				<img class="header-img" src="/images/website-header.svg" alt="header"/>
+			</a>
+		</div>
+	</div>
+	<div class="header-right">
+		<div class="socials">
+			<a href="https://twitter.com/kavpix" target="_blank">
+				<img class="social-img" src="/images/twitter.svg" alt="twitter" />
+			</a>
+			<a href="https://mastodon.art/@kavpix" target="_blank">
+				<img class="social-img" src="/images/masto.svg" alt="mastodon art" />
+			</a>
+		</div>
+	</div>
+</div>

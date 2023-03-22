@@ -1,0 +1,36 @@
+---
+import BaseHead from "../../components/BaseHead.astro";
+import Header from "../../components/Header.astro";
+import { SITE_TITLE } from "../../config";
+
+---
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <BaseHead title={`${SITE_TITLE} | Power Sets`}/>
+    </head>
+    <body>
+        <div class="page-cont">
+            <Header back={"../"}/>
+            <div>
+                <form id="form">
+                    <input id="truth-table"/>
+                </form>
+            </div>
+            <script>
+                import { getTruthTable } from "../../scripts/truth-tables/truth-tables";
+                const f = document.getElementById("form") as HTMLFormElement;
+
+                function callback(ev: SubmitEvent) {
+                    ev.preventDefault();
+                    const inp = document.getElementById("truth-table") as HTMLInputElement;
+                    getTruthTable(inp.value);
+                }
+
+                f.addEventListener("submit", (ev) => callback(ev));
+            </script>
+            <footer />
+        </div>
+    </body>
+</html>

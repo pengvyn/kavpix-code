@@ -1,0 +1,54 @@
+---
+import BaseHead from "../../components/BaseHead.astro";
+import Header from "../../components/Header.astro";
+import { SITE_TITLE } from "../../config";
+
+---
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <BaseHead title={`${SITE_TITLE} | Power Sets`}/>
+    </head>
+    <body>
+        <div class="page-cont">
+            <Header back={"../"}/>
+
+            <div class="code-example-cont">
+                <div class="code-example">
+                    <form class="form">
+                        <label for="power-set-inp">Type the elements (numbers or letters) of your set separated by commas</label>
+                        <br/>
+                        <div class="power-set-inp-cont">
+                            <div class="curly">{`{`}</div> 
+                            <input 
+                                type="text" 
+                                id="power-set-inp" 
+                                name="power-set-inp" 
+                                required 
+                            />  
+                            <div class="curly">{`}`}</div>
+                        </div>
+                    </form>
+                    
+                    <div class="result-cont">
+                        <div class="result-label">Result: </div>
+                        <div id="result"/>
+                    </div>
+
+                    <script>
+                        import { displayPS } from "../../scripts/power-sets/power-sets-browser";
+                        const f = document.querySelector(".form") as HTMLFormElement;
+
+                        function callback(ev: SubmitEvent) {
+                            displayPS(ev);
+                        }
+
+                        f.addEventListener("submit", (ev) => callback(ev));
+                    </script>
+                </div>
+            </div>
+            <footer />
+        </div>
+    </body>
+</html>

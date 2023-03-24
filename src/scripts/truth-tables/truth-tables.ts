@@ -4,7 +4,7 @@
 // the number of rows is 2^[number of statements]
 // returns truth table in string format? separated by | and _ maybe
 
-import { getStatements, parseInput } from "./truth-tables-parsing";
+import { getStatements, parseInput, parseInput2 } from "./truth-tables-parsing";
 
 export type Statement = "A"|"B"|"C"|"D"|"E"|"F"|"G"|"H"|"I"|"J"|"K"|"L"|"M"|"N"|"O"|"P"|"Q"|"R"|"S"|"T"|"U"|"V"|"W"|"X"|"Y"|"Z";
 export const statementValues: Statement[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("") as Statement[];
@@ -73,6 +73,6 @@ export function getTruthTable(input: string): string {
     const statements = removeStatementDupes(getStatements(input));
     const sstr = singleStatementTableRows(statements);
     const sstc = singleStatementTableCols(sstr);
-    console.log(parseInput(input));
+    console.log(parseInput2(input));
     return "";
 }

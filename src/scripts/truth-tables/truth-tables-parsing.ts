@@ -69,7 +69,6 @@ function selectWhichTag(operator: Operator): Tag {
 }
 
 function joinOperators(splitted: string[]): string[] {
-    console.log(splitted);
     return splitted.reduce((prev, cur, idx) => cur === ">" 
         // checking if it's biconditional
         ? splitted[idx - 2] === "<"
@@ -87,7 +86,6 @@ function joinOperators(splitted: string[]): string[] {
 export function parseInput(input: string): Expression[] {
     const spaceless: string = input.replaceAll(" ", "");
     const splitted: string[] = joinOperators(spaceless.split(""));
-    console.log(splitted);
     return splitted.reduce((expressions, cur, idx) => (operatorValues as string[]).includes(cur) 
             ? [...expressions, 
                 {   left: expressions.length === 0 ? splitted[idx - 1] : expressions[expressions.length - 1], 
@@ -167,3 +165,115 @@ export function parseInput(input: string): Expression[] {
 //    (In the 2 examples above, the values go into consumed. like if it finds "=", it is put into the consumed box,
 //     and once it finds >, that is put into the consumed box along with the = until the statement is found)
 //    IF the next item isn't the expected value, an error should be given
+// Output is an EXPRESSION !! it will be a "tree", basically expressions with expressions inside
+// The return value for the tree above willll be:
+// {
+//  left: A
+//  right: {
+//      left: B
+//      right: C
+//      _tag: or    
+//  }
+//  _tag: and
+// }
+
+type ExpectedVal = "Statement" | "Operator" | "Parantheses" | "=" | ">" | "~";
+
+function valueIsExpected(value: Operator | string | Statement | undefined, expected: ExpectedVal[]): boolean {
+    if(value === undefined) {
+        return false;
+    }
+    if(expected.includes("~") && expected.includes("Statement")) {
+        return (statementValues as string[]).includes(value) || value === "~";
+    }
+    if(expected.includes("Operator")) {
+        const splitOperators = operatorValues.reduce((p, c) => [...p, ...c.split("")], [] as string[]);
+        return splitOperators.includes(value);
+    }
+    if(expected.includes("Statement")) {
+        return (statementValues as string[]).includes(value);
+    }
+    if(expected.includes("=")) {
+        return value === "=";
+    }
+    return value === ">";
+}
+
+function makeExpression(left: Expression, right: Statement, {main, not}: Waiting): Expression {
+    console.log(left, right, main, not, "Make expression");
+    let rightNot: Expression = right;
+    if(not) {
+        rightNot = { value: right, _tag: "not"}
+    }
+    if(main === "|") {
+        return { left, right: rightNot, _tag: "or"};
+    }
+    if(main === "&") {
+        return { left, right: rightNot, _tag: "and"};
+    }
+    if(main === "=>") {
+        return { left, right, _tag: "conditional"};
+    }
+    return { left, right, _tag: "biconditional"};
+}
+
+interface Waiting {
+    main: string;
+    not: boolean;
+}
+
+function makeWait(main: string, not: boolean = false): Waiting {
+    return { main, not };
+}
+
+export function parseInput2(input: string): Expression | null {
+    const withoutSpaces = input.replaceAll(" ", "");
+    if(withoutSpaces.length === 0) {
+        return null;
+    }
+    const split = withoutSpaces.split("");
+
+    let parsed: Expression | null = null;
+    let waiting: Waiting = { main: "", not: false };
+    let expectedValue: ExpectedVal[] = ["Statement", "~"];
+
+    for(let idx = 0; idx < split.length; idx++) {
+        const curVal = split[idx];
+        if(!valueIsExpected(curVal, expectedValue)) {
+            throw `Error: Unexpected value at ${idx}`;
+
+        } else if(curVal === "=") {
+            waiting = makeWait(waiting.main + curVal);
+            expectedValue  = [">"];
+
+        } else if(curVal === "<") {
+            waiting = makeWait(curVal);
+            expectedValue = ["="];
+
+        } else if(curVal === ">") {
+            waiting = makeWait(waiting.main + curVal);
+            expectedValue = ["Statement", "~"];
+
+        } else if(curVal === "&" || curVal === "|") {
+            waiting = makeWait(curVal);
+            expectedValue = ["Statement", "~"];
+
+        } else if(curVal === "~") {
+            // console.log("notttttttttt asjdfhkjahldkjh")
+            console.log("hii");
+            waiting = makeWait(waiting.main, true);
+            console.log(waiting);
+            expectedValue = ["Statement"];
+
+        } else if((statementValues as string[]).includes(curVal)) {
+            console.log(waiting);
+            parsed = parsed === null
+            ? waiting.not
+                ? { value: curVal, _tag: "not"} as Not
+                : curVal as Statement
+            : makeExpression(parsed, curVal as Statement, waiting);
+            expectedValue = ["Operator"];
+        }
+    }
+    return parsed;
+}

@@ -83,19 +83,19 @@ function joinOperators(splitted: string[]): string[] {
         , [] as string[]);
 }
 
-export function parseInput(input: string): Expression[] {
-    const spaceless: string = input.replaceAll(" ", "");
-    const splitted: string[] = joinOperators(spaceless.split(""));
-    return splitted.reduce((expressions, cur, idx) => (operatorValues as string[]).includes(cur) 
-            ? [...expressions, 
-                {   left: expressions.length === 0 ? splitted[idx - 1] : expressions[expressions.length - 1], 
-                    right: splitted[idx + 1], 
-                    _tag: selectWhichTag(cur as Operator)
-                } as Expression]
-            : expressions
-        , [] as Expression[] 
-    )
-}
+// export function parseInput(input: string): Expression[] {
+//     const spaceless: string = input.replaceAll(" ", "");
+//     const splitted: string[] = joinOperators(spaceless.split(""));
+//     return splitted.reduce((expressions, cur, idx) => (operatorValues as string[]).includes(cur) 
+//             ? [...expressions, 
+//                 {   left: expressions.length === 0 ? splitted[idx - 1] : expressions[expressions.length - 1], 
+//                     right: splitted[idx + 1], 
+//                     _tag: selectWhichTag(cur as Operator)
+//                 } as Expression]
+//             : expressions
+//         , [] as Expression[] 
+//     )
+// }
 
 // how should the parsing be doneeee
 // adding parantheses first would help a LOT
@@ -200,7 +200,6 @@ function valueIsExpected(value: Operator | string | Statement | undefined, expec
 }
 
 function makeExpression(left: Expression, right: Statement, {main, not}: Waiting): Expression {
-    console.log(left, right, main, not, "Make expression");
     let rightNot: Expression = right;
     if(not) {
         rightNot = { value: right, _tag: "not"}
@@ -226,7 +225,7 @@ function makeWait(main: string, not: boolean = false): Waiting {
     return { main, not };
 }
 
-export function parseInput2(input: string): Expression | null {
+export function parseInput(input: string): Expression | null {
     const withoutSpaces = input.replaceAll(" ", "");
     if(withoutSpaces.length === 0) {
         return null;
@@ -259,14 +258,10 @@ export function parseInput2(input: string): Expression | null {
             expectedValue = ["Statement", "~"];
 
         } else if(curVal === "~") {
-            // console.log("notttttttttt asjdfhkjahldkjh")
-            console.log("hii");
             waiting = makeWait(waiting.main, true);
-            console.log(waiting);
             expectedValue = ["Statement"];
 
         } else if((statementValues as string[]).includes(curVal)) {
-            console.log(waiting);
             parsed = parsed === null
             ? waiting.not
                 ? { value: curVal, _tag: "not"} as Not

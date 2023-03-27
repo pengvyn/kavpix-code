@@ -4,7 +4,8 @@
 // the number of rows is 2^[number of statements]
 // returns truth table in string format? separated by | and _ maybe
 
-import { getStatements, parseInput, parseInput2 } from "./truth-tables-parsing";
+import { joinSimilars, parseNumber } from "../tree-expressions/numbers";
+import type { Expression } from "./truth-tables-parsing";
 
 export type Statement = "A"|"B"|"C"|"D"|"E"|"F"|"G"|"H"|"I"|"J"|"K"|"L"|"M"|"N"|"O"|"P"|"Q"|"R"|"S"|"T"|"U"|"V"|"W"|"X"|"Y"|"Z";
 export const statementValues: Statement[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("") as Statement[];
@@ -68,11 +69,35 @@ function conditional(v1: TOrF[], v2: TOrF[]): TOrF[] {
     }
     return v1.map((val, idx) => isTrueOrFalse(val, v2[idx]));
 }
+function biconditional(v1: TOrF[], v2: TOrF[]): TOrF[] {
+    return v1.map((val, idx) => 
+        val === "T" 
+        ? v2[idx] === "T"
+            ? "T"
+            : "F"
+        : v2[idx] === "F"
+            ? "T"
+            : "F"
+    );
+}
+
+// What should be done w the tree?
+// Maybe find the smallest part(s) (like a place where an expressions isn't nested in another expression)
+// And call the functions based on the tag?
+// how should i go to the smallest part .. rhghrgnhjdns
+// Or maybe i should start at the main thing and go from there... like go through each expression from there (??)
+
+function untitled(tree: Expression, branches: Expression[] = [tree]) {
+    
+}
 
 export function getTruthTable(input: string): string {
-    const statements = removeStatementDupes(getStatements(input));
-    const sstr = singleStatementTableRows(statements);
-    const sstc = singleStatementTableCols(sstr);
-    console.log(parseInput2(input));
+    // const statements = removeStatementDupes(getStatements(input));
+    // const sstr = singleStatementTableRows(statements);
+    // const sstc = singleStatementTableCols(sstr);
+    // const tree = parseInput(input);
+    // console.log(tree);
+    console.log(parseNumber(input));
+
     return "";
 }

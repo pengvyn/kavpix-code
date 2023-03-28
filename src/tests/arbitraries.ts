@@ -1,4 +1,5 @@
 import * as fc from "fast-check";
+import { ExpectedNumVal, NumberOperator, numberOperators } from "../scripts/tree-expressions/numbers";
 import type { Statement } from "../scripts/truth-tables/truth-tables";
 
 const lowercaseLetters = "abcdefghijklmnopqrstuvwxyz";
@@ -25,3 +26,8 @@ export const statementsArb: fc.Arbitrary<Statement[]> = fc.array(
         ...(uppercaseLetters.split("") as Statement[])), 
         {minLength: 2, maxLength: 20}
 );
+
+// exp tree
+//  number
+
+export const arbOperator: fc.Arbitrary<NumberOperator> = fc.constantFrom(...numberOperators);

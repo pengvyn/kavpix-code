@@ -24,3 +24,9 @@ export function makeWaiting<Operator> (
     ): Waiting<Operator> {
         return {operator, negate: negate ? true : false };
 }
+
+export interface ParsedWaitNext<T, O, NE> {
+    parsed: Expression<T>;
+    waiting: Waiting<O>;
+    next: NE[];
+}

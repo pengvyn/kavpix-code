@@ -1,9 +1,22 @@
 import * as fc from "fast-check";
 import { ExpectedNumVal, NumberOperator, numberOperators } from "../scripts/tree-expressions/numbers";
+import type { Expression, Waiting } from "../scripts/tree-expressions/types";
 import type { Statement } from "../scripts/truth-tables/truth-tables";
 
 const lowercaseLetters = "abcdefghijklmnopqrstuvwxyz";
 const uppercaseLetters = lowercaseLetters.toUpperCase();
+
+export function joinArbs<T>(list: fc.Arbitrary<T>[]): fc.Arbitrary<T[]> {
+    const initial = fc.array(fc.constant(undefined), {
+        minLength: 0,
+        maxLength: 0,
+    }) as unknown as fc.Arbitrary<T[]>;
+    return list.reduce(
+        (joined, cur) =>
+            joined.chain((vals) => cur.chain((val) => fc.constant([...vals, val]))),
+        initial
+    );
+}
 
 // power set
 
@@ -30,4 +43,12 @@ export const statementsArb: fc.Arbitrary<Statement[]> = fc.array(
 // exp tree
 //  number
 
-export const arbOperator: fc.Arbitrary<NumberOperator> = fc.constantFrom(...numberOperators);
+export const arbNumOperator: fc.Arbitrary<NumberOperator> = fc.constantFrom(...numberOperators);
+
+export const arbNumWaiting: fc.Arbitrary<Waiting<number>> = fc.constantFrom(...numberOperators, null).chain(
+    (op) => fc.constantFrom(true, false).chain((neg) => fc.constant({operator: op, negate: neg} as Waiting<number>))
+)
+
+export const arbStringAndNumList: fc.Arbitrary<string[]> = fc.array(fc.constantFrom(...alphabet, ..."01234567890".split("")), 
+            {minLength: 0, maxLength: 50}
+)

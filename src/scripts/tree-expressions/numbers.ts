@@ -127,31 +127,71 @@ export function valueIsOperator(
     value: NumberOperator, 
     parsed: Expression<number>, 
     waiting: Waiting<NumberOperator>
-    ): ParsedWaitNext<number, NumberOperator, string> {
+    ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
         const newWaiting: Waiting<NumberOperator> = {...waiting, operator: value};
         const nextExp: ExpectedNumVal[] = ["neg", "number"];
         return {parsed, waiting: newWaiting, next: nextExp};
 }
 export function valueIsNumber(
     value: number, 
-    parsed: Expression<number>, 
+    parsed: Expression<number> | null, 
     waiting: Waiting<NumberOperator>
-    ): ParsedWaitNext<number, NumberOperator, string> {
+    ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
         const newBranch: Expression<number> = waiting.negate 
         ? makeNumExp(value, null, "-")
         : value;
-        const newParsed: Expression<number> = makeNumExp(parsed, newBranch, waiting.operator as NumberOperator);
+        const newParsed: Expression<number> = parsed === null
+        ? newBranch
+        : makeNumExp(parsed, newBranch, waiting.operator as NumberOperator);
         const nextExp: ExpectedNumVal[] = ["operator"];
         const newWaiting: Waiting<NumberOperator> = makeWaiting();
         return {parsed: newParsed, next: nextExp, waiting: newWaiting};
 }
 export function valueIsNegate(
-    parsed: Expression<number>, 
+    parsed: Expression<number> | null, 
     waiting: Waiting<NumberOperator>
-    ): ParsedWaitNext<number, NumberOperator, string> {
+    ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
         const newWaiting: Waiting<NumberOperator> = {...waiting, negate: true};
         const nextExp: ExpectedNumVal[] = ["number"];
         return {parsed, waiting: newWaiting, next: nextExp};
+}
+
+export function parseInput(input: string): Expression<number> | null {
+    const listed = joinSimilars(input.replaceAll(" ", "").split(""), "1234567890".split(""));
+
+    let parsed: Expression<number> | null = null;
+    let waiting: Waiting<NumberOperator> = { operator: null, negate: false};
+    let nextExp: ExpectedNumVal[] = ["neg", "number"];
+
+    for(let idx = 0; idx < listed.length; idx++) {
+        const curVal: string = listed[idx];
+        if(!isExpected(curVal, nextExp)) {
+            throw "Error: Unexpected value";
+        } else {
+            const newStorage: ParsedWaitNext<number, NumberOperator, ExpectedNumVal> = 
+            curVal === "-"
+                ? valueIsNegate(parsed, waiting)
+                : (numberOperators as string[]).includes(curVal)
+                    ? valueIsOperator(curVal as NumberOperator, parsed as Expression<number>, waiting)
+                    : valueIsNumber(JSON.parse(curVal), parsed, waiting);
+            
+            parsed = newStorage.parsed;
+            waiting = newStorage.waiting;
+            nextExp = newStorage.next;
+        }
+        // } else if(curVal === "-") {
+        //     const newStorage = valueIsNegate(parsed, waiting);
+        //     parsed = newStorage.parsed;
+        //     waiting = newStorage.waiting;
+        //     nextExp = newStorage.next;
+
+        // } else if((numberOperators as string[]).includes(curVal)) {
+        //     const newStorage = valueIsOperator(curVal as NumberOperator, parsed, waiting);
+        //     parsed = newStorage.parsed;
+        //     waiting = newStorage.waiting;
+        // }
+    }
+    return parsed;
 }
 
 // function that checks if the value is expected

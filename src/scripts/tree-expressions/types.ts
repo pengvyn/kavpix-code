@@ -26,7 +26,7 @@ export function makeWaiting<Operator> (
 }
 
 export interface ParsedWaitNext<T, O, NE> {
-    parsed: Expression<T>;
+    parsed: Expression<T> | null;
     waiting: Waiting<O>;
     next: NE[];
 }

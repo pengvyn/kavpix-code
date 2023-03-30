@@ -1,4 +1,4 @@
-import { Evaluate, Expression, makeWaiting, Neg, ParsedWaitNext, ParseInp, Waiting } from "./types";
+import { Add, Evaluate, Expression, Leaf, makeLeaf, makeWaiting, Neg, ParsedWaitNext, ParseInp, Waiting } from "./types";
 
 export type NumberOperator = "+";
 export const numberOperators: NumberOperator[] = ["+"]
@@ -138,8 +138,8 @@ export function valueIsNumber(
     waiting: Waiting<NumberOperator>
     ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
         const newBranch: Expression<number> = waiting.negate 
-        ? makeNumExp(value, null, "-")
-        : value;
+        ? makeNumExp(makeLeaf(value), null, "-")
+        : makeLeaf(value);
         const newParsed: Expression<number> = parsed === null
         ? newBranch
         : makeNumExp(parsed, newBranch, waiting.operator as NumberOperator);
@@ -231,3 +231,26 @@ export function parseInput(input: string): Expression<number> | null {
 //  function for if the value is negate
 //      it should be put into the waiting
 //      everything else remains the same
+
+interface AddLeaf {
+    left: Leaf<number>
+    right: Leaf<number>
+    _tag: "add"
+}
+interface NegLeaf {
+    val: Leaf<number>
+    _tag: "neg"
+}
+
+function add(exp: AddLeaf): Leaf<number> {
+    return makeLeaf(exp.left.val + exp.right.val);
+}
+function neg(exp: NegLeaf): Leaf<number> {
+    return makeLeaf(exp.val.val * -1);
+}
+export function evaluateNum(exp: AddLeaf | NegLeaf): Leaf<number> {
+    if(exp._tag === "add") {
+        return add(exp);
+    }
+    return neg(exp);
+}

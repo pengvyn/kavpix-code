@@ -1,7 +1,7 @@
 import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { ExpectedNumVal, isExpected, joinSimilars, NumberOperator, parseInput, valueIsNegate, valueIsNumber, valueIsOperator } from "../../scripts/tree-expressions/numbers";
-import type { Add, Expression, Neg, Waiting } from "../../scripts/tree-expressions/types";
+import { Add, Expression, Leaf, makeLeaf, Neg, Waiting } from "../../scripts/tree-expressions/types";
 import { arbNumOperator, arbNumWaiting, arbStringAndNumList, strNumSet } from "../arbitraries";
 import { isEqual, negate } from "lodash";
 
@@ -80,7 +80,7 @@ describe("Numbers expression tree", () => {
                     fc.integer({min: -1000, max: 1000}),
                     (value: number) => {
                         const result = valueIsNumber(value, null, {operator: null, negate: false});
-                        const parsedIsVal = result.parsed === value;
+                        const parsedIsVal = result.parsed === makeLeaf(value);
                         const waitIsEmpty = isEqual(result.waiting, {operator: null, negate: false});
                         const nextIsOp = isEqual(result.next, ["operator"]);
                         return parsedIsVal && waitIsEmpty && nextIsOp;
@@ -92,7 +92,7 @@ describe("Numbers expression tree", () => {
                     fc.integer({min: -1000, max: 1000}),
                     (value: number) => {
                         const result = valueIsNumber(value, null, {operator: null, negate: true});
-                        const parsedIsVal = isEqual(result.parsed, {val: value, _tag: "neg"} as Neg<number>);
+                        const parsedIsVal = isEqual(result.parsed, {val: makeLeaf(value), _tag: "neg"} as Neg<number>);
                         const waitIsEmpty = isEqual(result.waiting, {operator: null, negate: false});
                         const nextIsOp = isEqual(result.next, ["operator"]);
                         return parsedIsVal && waitIsEmpty && nextIsOp;
@@ -103,16 +103,21 @@ describe("Numbers expression tree", () => {
                 fc.assert(fc.property(
                     fc.integer({min: -1000, max: 1000}),
                     (value: number) => {
+
+                        const l: Leaf<number>[] = [makeLeaf(20), makeLeaf(90123), makeLeaf(15)]
+
                         const parsed: Expression<number> = {
-                            left: 20, right: {
-                                left: 90123, right: {
-                                    val: 15, _tag: "neg"
+                            left: l[0], right: {
+                                left: l[1], right: {
+                                    val: l[2], _tag: "neg"
                                 }, _tag: "add"
                             }, _tag: "add"
                         };
                         const result = valueIsNumber(value, parsed, {operator: "+", negate: false});
 
-                        const parsedEquals = isEqual(result.parsed, {left: parsed, right: value, _tag: "add"} as Add<number>);
+                        const parsedEquals = isEqual(result.parsed, { 
+                            left: parsed, right: makeLeaf(value), _tag: "add"
+                        } as Add<number>);
                         const waitEquals = isEqual(result.waiting, {operator: null, negate: false});
                         const nextEquals = isEqual(result.next, ["operator"]);
                         return parsedEquals && waitEquals && nextEquals;
@@ -124,16 +129,21 @@ describe("Numbers expression tree", () => {
                     fc.integer({min: -1000, max: 1000}),
                     (value: number) => {
                         const parsed: Expression<number> = {
-                            left: {val: 20, _tag: "neg"}, 
+                            left: {val: makeLeaf(20), _tag: "neg"}, 
                             right: {
-                                left: 1231231, right: {
-                                    val: 34, _tag: "neg"
+                                left: makeLeaf(1231231), right: {
+                                    val: makeLeaf(34), _tag: "neg"
                                 }, _tag: "add"
                             }, _tag: "add"
                         };
                         const result = valueIsNumber(value, parsed, {operator: "+", negate: true});
 
-                        const parsedEquals = isEqual(result.parsed, {left: parsed, right: {val: value, _tag: "neg"}, _tag: "add"} as Add<number>);
+                        const parsedEquals = isEqual(result.parsed, { 
+                            left: parsed, right: {
+                                val: makeLeaf(value), _tag: "neg"
+                            }
+                            , _tag: "add"
+                        } as Add<number>);
                         const waitEquals = isEqual(result.waiting, {operator: null, negate: false});
                         const nextEquals = isEqual(result.next, ["operator"]);
                         return parsedEquals && waitEquals && nextEquals;
@@ -152,14 +162,14 @@ describe("Numbers expression tree", () => {
                     const parsed: Expression<number> = { 
                         left: {
                             left: {
-                                left: { val: 1002, _tag: "neg" }, right: 10, _tag: "add"
+                                left: { val: makeLeaf(1002), _tag: "neg" }, right: makeLeaf(10), _tag: "add"
                             },
                             right: {
-                                left: 13, right: { val: 578, _tag: "neg" }, _tag: "add"
+                                left: makeLeaf(13), right: { val: makeLeaf(578), _tag: "neg" }, _tag: "add"
                             },
                             _tag: "add"
                         },
-                        right: 10,
+                        right: makeLeaf(10),
                         _tag: "add"
                     }
                     const result = valueIsOperator(operator, parsed, {operator: null, negate: false});
@@ -189,7 +199,7 @@ describe("Numbers expression tree", () => {
                 fc.assert(fc.property(
                     arbNumOperator, (operator: NumberOperator) => {
                         const parsed: Expression<number> = {
-                            val: 21031,
+                            val: makeLeaf(21031),
                             _tag: "neg"
                         };
         

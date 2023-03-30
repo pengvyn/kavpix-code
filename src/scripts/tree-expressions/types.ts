@@ -7,13 +7,17 @@ export interface Neg<T> {
     val: Expression<T>;
     _tag: "neg"
 }
+export interface Leaf<T> {
+    val: T
+    _tag: "leaf"
+}
 
 export interface Waiting<Operator> {
     operator: Operator | null;
     negate: boolean;
 }
 
-export type Expression<T> = Add<T> | Neg<T> | T;
+export type Expression<T> = Add<T> | Neg<T> | Leaf<T>;
 
 export type ParseInp<T> = (input: string) => Expression<T> | null;
 export type Evaluate<T, U> = (input: Expression<T>) => U;
@@ -29,4 +33,8 @@ export interface ParsedWaitNext<T, O, NE> {
     parsed: Expression<T> | null;
     waiting: Waiting<O>;
     next: NE[];
+}
+
+export function makeLeaf<T>(leaf: T): Leaf<T> {
+    return { val: leaf, _tag: "leaf" };
 }

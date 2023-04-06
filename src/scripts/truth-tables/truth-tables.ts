@@ -4,6 +4,7 @@
 // the number of rows is 2^[number of statements]
 // returns truth table in string format? separated by | and _ maybe
 
+import { parseInput } from "../tree-expressions/numbers";
 import type { Expression } from "./truth-tables-parsing";
 
 export type Statement = "A"|"B"|"C"|"D"|"E"|"F"|"G"|"H"|"I"|"J"|"K"|"L"|"M"|"N"|"O"|"P"|"Q"|"R"|"S"|"T"|"U"|"V"|"W"|"X"|"Y"|"Z";
@@ -94,8 +95,8 @@ export function getTruthTable(input: string): string {
     // const statements = removeStatementDupes(getStatements(input));
     // const sstr = singleStatementTableRows(statements);
     // const sstc = singleStatementTableCols(sstr);
-    // const tree = parseInput(input);
-    // console.log(tree);
+    const tree = parseInput(input);
+    console.log(tree);
 
     return "";
 }

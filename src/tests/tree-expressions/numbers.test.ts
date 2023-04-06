@@ -1,7 +1,7 @@
 import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { ExpectedNumVal, isExpected, joinSimilars, NumberOperator, parseInput, valueIsNegate, valueIsNumber, valueIsOperator } from "../../scripts/tree-expressions/numbers";
-import { Add, Expression, Leaf, makeLeaf, Neg, Waiting } from "../../scripts/tree-expressions/types";
+import { ExpectedNumVal, isExpected, joinSimilars, NumberOperator, parseInput, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers";
+import { Add, Expression, Leaf, makeLeaf, makeWaiting, Neg, Waiting } from "../../scripts/tree-expressions/types";
 import { arbNumOperator, arbNumWaiting, arbStringAndNumList, strNumSet } from "../arbitraries";
 import { isEqual, negate } from "lodash";
 
@@ -79,9 +79,9 @@ describe("Numbers expression tree", () => {
                 fc.assert(fc.property(
                     fc.integer({min: -1000, max: 1000}),
                     (value: number) => {
-                        const result = valueIsNumber(value, null, {operator: null, negate: false});
+                        const result = valueIsNumber(value, null, {operator: null, negate: false, paran: {_tag: "not-paranned", exp: null}});
                         const parsedIsVal = result.parsed === makeLeaf(value);
-                        const waitIsEmpty = isEqual(result.waiting, {operator: null, negate: false});
+                        const waitIsEmpty = isEqual(result.waiting, {operator: null, negate: false, paran: {_tag: "not-paranned", exp: null}});
                         const nextIsOp = isEqual(result.next, ["operator"]);
                         return parsedIsVal && waitIsEmpty && nextIsOp;
                     }
@@ -91,9 +91,9 @@ describe("Numbers expression tree", () => {
                 fc.assert(fc.property(
                     fc.integer({min: -1000, max: 1000}),
                     (value: number) => {
-                        const result = valueIsNumber(value, null, {operator: null, negate: true});
+                        const result = valueIsNumber(value, null, {operator: null, negate: true, paran: {_tag: "not-paranned", exp: null}});
                         const parsedIsVal = isEqual(result.parsed, {val: makeLeaf(value), _tag: "neg"} as Neg<number>);
-                        const waitIsEmpty = isEqual(result.waiting, {operator: null, negate: false});
+                        const waitIsEmpty = isEqual(result.waiting, {operator: null, negate: false, paran: {_tag: "not-paranned", exp: null}});
                         const nextIsOp = isEqual(result.next, ["operator"]);
                         return parsedIsVal && waitIsEmpty && nextIsOp;
                     }
@@ -113,12 +113,12 @@ describe("Numbers expression tree", () => {
                                 }, _tag: "add"
                             }, _tag: "add"
                         };
-                        const result = valueIsNumber(value, parsed, {operator: "+", negate: false});
+                        const result = valueIsNumber(value, parsed, {operator: "+", negate: false, paran: {_tag: "not-paranned", exp: null}});
 
                         const parsedEquals = isEqual(result.parsed, { 
                             left: parsed, right: makeLeaf(value), _tag: "add"
                         } as Add<number>);
-                        const waitEquals = isEqual(result.waiting, {operator: null, negate: false});
+                        const waitEquals = isEqual(result.waiting, {operator: null, negate: false, paran: {_tag: "not-paranned", exp: null}});
                         const nextEquals = isEqual(result.next, ["operator"]);
                         return parsedEquals && waitEquals && nextEquals;
                     }
@@ -136,7 +136,7 @@ describe("Numbers expression tree", () => {
                                 }, _tag: "add"
                             }, _tag: "add"
                         };
-                        const result = valueIsNumber(value, parsed, {operator: "+", negate: true});
+                        const result = valueIsNumber(value, parsed, {operator: "+", negate: true, paran: {_tag: "not-paranned", exp: null}});
 
                         const parsedEquals = isEqual(result.parsed, { 
                             left: parsed, right: {
@@ -144,7 +144,7 @@ describe("Numbers expression tree", () => {
                             }
                             , _tag: "add"
                         } as Add<number>);
-                        const waitEquals = isEqual(result.waiting, {operator: null, negate: false});
+                        const waitEquals = isEqual(result.waiting, {operator: null, negate: false, paran: {_tag: "not-paranned", exp: null}});
                         const nextEquals = isEqual(result.next, ["operator"]);
                         return parsedEquals && waitEquals && nextEquals;
                     }
@@ -172,11 +172,11 @@ describe("Numbers expression tree", () => {
                         right: makeLeaf(10),
                         _tag: "add"
                     }
-                    const result = valueIsOperator(operator, parsed, {operator: null, negate: false});
+                    const result = valueIsOperator(operator, parsed, {operator: null, negate: false, paran: {_tag: "not-paranned", exp: null}});
 
                     const negNum: ExpectedNumVal[] = ["neg", "number"];
 
-                    const waitEquals = isEqual(result.waiting, {operator, negate: false});
+                    const waitEquals = isEqual(result.waiting, {operator, negate: false, paran: {_tag: "not-paranned", exp: null}});
                     const nextEquals = result.next.every((ne) => negNum.includes(ne))
                         && negNum.every((ne) => result.next.includes(ne));
                     const parsedEquals = isEqual(result.parsed, parsed);
@@ -189,9 +189,9 @@ describe("Numbers expression tree", () => {
             // nothing parsed
             // parsed
             it("Nothing parsed", () => {
-                const result = valueIsNegate(null, {operator: null, negate: false});
+                const result = valueIsNegate(null, {operator: null, negate: false, paran: {_tag: "not-paranned", exp: null}});
                 const parsedEquals = result.parsed === null;
-                const waitEquals = isEqual(result.waiting, {operator: null, negate: true});
+                const waitEquals = isEqual(result.waiting, {operator: null, negate: true, paran: {_tag: "not-paranned", exp: null}});
                 const nextEquals = isEqual(result.next, ["number"]);
                 return parsedEquals && waitEquals && nextEquals;
             })
@@ -203,10 +203,10 @@ describe("Numbers expression tree", () => {
                             _tag: "neg"
                         };
         
-                        const result = valueIsNegate(parsed, {operator: operator, negate: false});
+                        const result = valueIsNegate(parsed, {operator: operator, negate: false, paran: {_tag: "not-paranned", exp: null}});
         
                         const parsedEquals = isEqual(result.parsed, parsed);
-                        const waitEquals = isEqual(result.waiting, {operator: operator, negate: true});
+                        const waitEquals = isEqual(result.waiting, {operator: operator, negate: true, paran: {_tag: "not-paranned", exp: null}});
                         const nextEquals = isEqual(result.next, ["number"]);
                         return parsedEquals && waitEquals && nextEquals;
                     }
@@ -214,9 +214,16 @@ describe("Numbers expression tree", () => {
             })
         })
     })
-    describe.only("Parse input", () => {
+    describe.skip("Parse input", () => {
         it("aaaa", () => {
             console.log(parseInput("10 + -10 + -64"));
+        })
+    })
+    describe("Paran functions", () => {
+        describe.only("Open paran", () => {
+            it("asdfsda", () => {
+                console.log(parseInput("(1 + (2 + 3))"))
+            })
         })
     })
 })

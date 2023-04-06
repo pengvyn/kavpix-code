@@ -1,21 +1,8 @@
-import { Add, Evaluate, Expression, Leaf, makeLeaf, makeWaiting, Neg, ParsedWaitNext, ParseInp, Waiting } from "./types";
+import { Add, Evaluate, Expression, Leaf, makeLeaf, makeWaiting, Neg, Paran, ParanWait, ParsedWaitNext, ParseInp, Waiting } from "./types";
 
-export type NumberOperator = "+";
-export const numberOperators: NumberOperator[] = ["+"]
-export type ExpectedNumVal = "neg" | "number" | "operator";
-
-// export function joinSimilars(list: string[], similars: string[]): string[] {
-//     return list.reduce((p: string[], c: string) => similars.includes(c)
-//             // ? p.length !== 0 && similars.includes(p[p.length - 1].split("")[0])
-//             //     ? [...p.slice(p.length - 1), p + c]
-//             //     : [...p, `P DOT LENGTH IS ${p.length}`]
-//             // : p.length === 0
-//             //     ? ["AKJSDKASJDHLAKJHAAAAAAAAAA"]
-//             //     : [...p, c],
-//             // []
-//             ? 
-//         )
-// }
+export type NumberOperator = "+" | "x";
+export const numberOperators: NumberOperator[] = ["+", "x"];
+export type ExpectedNumVal = "neg" | "number" | "operator" | "paran";
 
 export function joinSimilars(list: string[], similars: string[]): string[] {
     return list.reduce((p: string[], c: string) => p.length === 0
@@ -38,77 +25,24 @@ export function joinSimilars(list: string[], similars: string[]): string[] {
 // else
 //      Add the current value
 
-function makeNumExp(leftOrValue: Expression<number>, right: Expression<number> | null = null, operator: NumberOperator | "-"): Expression<number> {
-    if(right === null && operator !== "-") {
+function makeNumExp(leftOrValue: Expression<number>, right: Expression<number> | null = null, operator: NumberOperator | "-" | "paran"): Expression<number> {
+    if(right === null && !(["-", "paran"].includes(operator))) {
         throw "Error: Operator is null";
     }
     if(operator === "+") {
         return {left: leftOrValue, right: right as Expression<number>, _tag: "add"};
     }
-    return {val: leftOrValue, _tag: "neg"};
+    if(operator === "x") {
+        return {left: leftOrValue, right: right as Expression<number>, _tag: "mul"};
+    }
+    if(operator === "-") {
+        return {val: leftOrValue, _tag: "neg"};
+    }
+    if(operator === "paran") {
+        return {val: leftOrValue, _tag: "paran"};
+    }
+    throw "Error: Unexpected Operator";
 }
-// function isExpected(val: string, expectedValues: ExpectedNumVal[]): boolean {
-//     console.log(val);
-//     if(val === "+") {
-//         return expectedValues.includes("operator");
-//     }
-//     if(val === "-") {
-//         return expectedValues.includes("neg");
-//     }
-//     if(Number.isInteger(JSON.parse(val))) {
-//         return expectedValues.includes("number");
-//     }
-//     return false;
-// }
-
-// export const parseNumber: ParseInp<number> = (inp: string) => {
-//     const splitted = joinSimilars(inp.replaceAll(" ", "").split(""), "1234567890".split(""));
-//     let parsed: Expression<number> | null = null;
-//     let waiting: Waiting<NumberOperator> = makeWaiting();
-//     let expectedValue: ExpectedNumVal[] = ["neg", "number"];
-//     console.log(splitted);
-//     for(let idx = 0; idx < splitted.length; idx++) {
-//         const curVal = splitted[idx];
-
-//         if(!isExpected(curVal, expectedValue)) {
-//             throw `Error: Unexpected value "${curVal}" at ${idx}`;
-//         } else if((numberOperators as string[]).includes(curVal)) {
-//             waiting = curVal === "-" 
-//                 ? makeWaiting<NumberOperator>(null, true) 
-//                 : {...waiting, operator: curVal as NumberOperator};
-//             expectedValue = curVal === "-" ? ["number"] : ["neg", "number"];
-//         } else {
-//             const curValNum: number = JSON.parse(curVal);
-
-//             const operatorNull = waiting.operator === null;
-//             const negateNull = waiting.negate === null;
-
-//             if(parsed === null) {
-//                 if(waiting.negate) {
-//                     parsed = makeNumExp(curValNum, null, "-");
-//                 } else {
-//                     parsed = curValNum;
-//                 }
-//                 expectedValue = ["operator"];
-//                 waiting = makeWaiting();
-//             } else {
-//                 if(operatorNull) {
-//                     throw `Error at ${idx}: Operator is null`;
-//                 } else if(negateNull) {
-//                     parsed = makeNumExp(parsed, curValNum, waiting.operator as NumberOperator);
-//                     waiting = makeWaiting();
-//                     expectedValue = ["operator"];
-//                 } else {
-//                     const negated = makeNumExp(curValNum, null, "-");
-//                     parsed = makeNumExp(parsed, negated, waiting.operator as NumberOperator);
-//                     expectedValue = ["operator"];
-//                     waiting = makeWaiting();
-//                 }
-//             }
-//         }
-//     }
-//     return parsed;
-// }
 
 export function isExpected(value: string, expected: ExpectedNumVal[]): boolean {
     if((numberOperators as string[]).includes(value)) {
@@ -120,6 +54,9 @@ export function isExpected(value: string, expected: ExpectedNumVal[]): boolean {
     if(value.split("").every((n) => "1234567890".split("").includes(n))) {
         return expected.includes("number");
     }
+    if(value === "(" || value === ")") {
+        return expected.includes("paran");
+    }
     return false;
 }
 
@@ -129,7 +66,7 @@ export function valueIsOperator(
     waiting: Waiting<NumberOperator>
     ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
         const newWaiting: Waiting<NumberOperator> = {...waiting, operator: value};
-        const nextExp: ExpectedNumVal[] = ["neg", "number"];
+        const nextExp: ExpectedNumVal[] = ["neg", "number", "paran"];
         return {parsed, waiting: newWaiting, next: nextExp};
 }
 export function valueIsNumber(
@@ -152,24 +89,188 @@ export function valueIsNegate(
     waiting: Waiting<NumberOperator>
     ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
         const newWaiting: Waiting<NumberOperator> = {...waiting, negate: true};
-        const nextExp: ExpectedNumVal[] = ["number"];
+        const nextExp: ExpectedNumVal[] = ["number", "paran"];
         return {parsed, waiting: newWaiting, next: nextExp};
 }
+
+export function unclosedParan(exp: string): boolean {
+    const splitted = exp.split("");
+    const opens: number = splitted.reduce((p, c) => c === "(" ? p + 1 : p, 0);
+    const closeds: number = splitted.reduce((p, c) => c === ")" ? p + 1 : p, 0);
+    console.log(exp)
+    return opens > closeds;
+}
+
+//-------------------
+
+function openParan(
+    parsed: Expression<number> | null, 
+    waiting: Waiting<NumberOperator>
+): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
+    return {
+        parsed, 
+        waiting: {...waiting, paran: {_tag: "paranned", exp: ""}}, 
+        next: ["neg", "number", "paran"]
+    }
+}
+function closedParan(
+    parsed: Expression<number> | null, 
+    waiting: Waiting<NumberOperator>
+): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
+    const paran = waiting.paran;
+
+    if(paran._tag === "not-paranned") {
+        console.log(parsed, waiting)
+        throw "Error: No opening parantheses";
+    }
+    if(paran.exp === null || paran.exp === "") {
+        throw "Error: No expression in parantheses";
+    }
+    if(parsed !== null && waiting.operator === null) {
+        throw "Error: Operator missing";
+    }
+    if(unclosedParan(paran.exp)) {
+        console.log("heyy")
+        return {
+            parsed,
+            waiting: {...waiting, paran: {_tag: "paranned", exp: paran.exp + ")"}},
+            next: ["operator", "paran"]
+        };
+    }
+
+    const parsedParan: Paran<number> = {_tag: "paran", val: parseInput(paran.exp) as Expression<number>};
+    const negged: Expression<number> = waiting.negate ? {_tag: "neg", val: parsedParan} : parsedParan;
+    const newParsed = parsed === null 
+        ? negged 
+        : makeNumExp(parsed, negged, waiting.operator as NumberOperator);
+
+    return {
+        parsed: newParsed,
+        waiting: makeWaiting(),
+        next: ["operator", "paran"]
+    }
+}
+function inParan(
+    parsed: Expression<number> | null,
+    waiting: Waiting<NumberOperator>,
+    value: string
+): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
+    return {
+        parsed,
+        waiting: {...waiting, paran: {_tag: "paranned", exp: waiting.paran.exp + value}},
+        next: ["neg", "number", "paran", "operator"]
+    };
+}
+export function valueIsOrInParan(
+    parsed: Expression<number> | null,
+    waiting: Waiting<NumberOperator>,
+    value: string
+): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
+    // let newParan: ParanWait;
+    // let newParsed: Expression<number> | null = parsed;
+    // let newNext: ExpectedNumVal[] = [];
+    let PWN: ParsedWaitNext<number, NumberOperator, ExpectedNumVal>;
+
+    if(value === ")") {
+        PWN = closedParan(parsed, waiting);
+    } else if(waiting.paran._tag === "paranned") {
+        PWN = inParan(parsed, waiting, value);
+    } else {
+        PWN = openParan(parsed, waiting);
+    }
+    // switch (value) {
+    //     case "(":
+    //         PWN = openParan(parsed, waiting);
+    //         break;
+    //     case ")":
+    //         PWN = closedParan(parsed, waiting);
+    //         break;
+    //     default:
+    //         PWN = inParan(parsed, waiting, value);
+    // }
+    return PWN;
+}
+
+// export function valueIsOrInParan(
+//     parsed: Expression<number> | null,
+//     waiting: Waiting<NumberOperator>,
+//     value: string
+// ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
+
+    // if the value is an open parantheses
+        // set inParan to true
+        // next expected is [paran, number, neg]
+
+    // if the value is closed parantheses
+        // check if the v
+
+    //-----------
+
+    // if(value === "(") {
+    //     return {
+    //         parsed, 
+    //         waiting: {...waiting, paran: {inParan: true, exp: waiting.paran.exp + value}}, 
+    //         next: ["paran", "number", "neg"]
+    //     };
+    // } else if(value === ")") {
+    //     const next: ExpectedNumVal[] = ["operator", "paran"];
+        
+    //     if(unclosedParan(waiting.paran.exp)) {
+    //         console.log("hii", value, parsed)
+    //         return {
+    //             parsed,
+    //             waiting: {...waiting, paran: {inParan: true, exp: waiting.paran.exp + value}},
+    //             next
+    //         }
+    //     } else {
+
+    //         const parsedParan: Expression<number> | null = parseInput(waiting.paran.exp);
+
+    //         if(parsedParan === null) {
+    //             throw "Error: Expression missing in parantheses";
+    //         }
+
+    //         const paranExped: Expression<number> = makeNumExp(parsedParan, null, "paran");
+    //         const negatedParan: Expression<number> = waiting.negate 
+    //             ? makeNumExp(paranExped, null, "-")
+    //             : paranExped;
+
+    //         return {
+    //             parsed: parsed === null || waiting.operator === null
+    //                 ? negatedParan
+    //                 : makeNumExp(parsed, negatedParan, waiting.operator),
+    //             waiting: makeWaiting(),
+    //             next
+    //         }
+    //     }
+    // } else {
+    //     return {
+    //         parsed,
+    //         waiting: {...waiting, paran: {inParan: true, exp: waiting.paran.exp + value}},
+    //         next: ["neg", "number", "operator", "paran"]
+    //     }
+    // }
+// }
 
 export function parseInput(input: string): Expression<number> | null {
     const listed = joinSimilars(input.replaceAll(" ", "").split(""), "1234567890".split(""));
 
     let parsed: Expression<number> | null = null;
-    let waiting: Waiting<NumberOperator> = { operator: null, negate: false};
-    let nextExp: ExpectedNumVal[] = ["neg", "number"];
+    let waiting: Waiting<NumberOperator> = makeWaiting()
+    let nextExp: ExpectedNumVal[] = ["neg", "number", "paran"];
 
     for(let idx = 0; idx < listed.length; idx++) {
         const curVal: string = listed[idx];
         if(!isExpected(curVal, nextExp)) {
+            console.log(curVal, idx, listed, nextExp)
             throw "Error: Unexpected value";
         } else {
+            const shouldCallParan = waiting.paran._tag === "paranned" || curVal === ")" || curVal === "(";
+
             const newStorage: ParsedWaitNext<number, NumberOperator, ExpectedNumVal> = 
-            curVal === "-"
+            shouldCallParan 
+            ? valueIsOrInParan(parsed, waiting, curVal)
+            : curVal === "-"
                 ? valueIsNegate(parsed, waiting)
                 : (numberOperators as string[]).includes(curVal)
                     ? valueIsOperator(curVal as NumberOperator, parsed as Expression<number>, waiting)
@@ -179,63 +280,19 @@ export function parseInput(input: string): Expression<number> | null {
             waiting = newStorage.waiting;
             nextExp = newStorage.next;
         }
-        // } else if(curVal === "-") {
-        //     const newStorage = valueIsNegate(parsed, waiting);
-        //     parsed = newStorage.parsed;
-        //     waiting = newStorage.waiting;
-        //     nextExp = newStorage.next;
-
-        // } else if((numberOperators as string[]).includes(curVal)) {
-        //     const newStorage = valueIsOperator(curVal as NumberOperator, parsed, waiting);
-        //     parsed = newStorage.parsed;
-        //     waiting = newStorage.waiting;
-        // }
     }
     return parsed;
 }
-
-// function that checks if the value is expected
-//  (this means that this function should take care of EVERYTHING. no value that shouldn't be there should pass)
-//  cases:
-//      value is an operator (in this case just "+")
-//      value is the negation
-//      value is a number (can check this by splitting the number and seeing if each of them are included in the list of numbers)
-//      value is parantheses (TODO later)
-//      if it isn't any of these, return false
-
-// handler function for each value:
-//  each of the functions may do these things:
-//      update the Waiting
-//      update the Parsed
-//      update the Next Expected
-
-//  function for if the value is an operator
-//      Put the operator into the waiting
-//      the next expected is either a negate or a number
-
-//--------------
-
-//  function for if the value is a number
-//      if there's something in the waiting:
-//          it should check if theres a negate in the waiting 
-//              if there is, it should create a negate expression and another expression w/ the parsed and the negate
-//          if there isn't a negate
-//              create an expression with the parsed and the number
-//      otherwise, it should set parsed to the number
-
-//      next expected is an operator
-//      waiting should be reset to empty
-
-//------------------
-
-//  function for if the value is negate
-//      it should be put into the waiting
-//      everything else remains the same
 
 interface AddLeaf {
     left: Leaf<number>
     right: Leaf<number>
     _tag: "add"
+}
+interface MulLeaf {
+    left: Leaf<number>
+    right: Leaf<number>
+    _tag: "mul"
 }
 interface NegLeaf {
     val: Leaf<number>
@@ -245,12 +302,18 @@ interface NegLeaf {
 function add(exp: AddLeaf): Leaf<number> {
     return makeLeaf(exp.left.val + exp.right.val);
 }
+function mul(exp: MulLeaf): Leaf<number> {
+    return makeLeaf(exp.left.val * exp.right.val);
+}
 function neg(exp: NegLeaf): Leaf<number> {
     return makeLeaf(exp.val.val * -1);
 }
-export function evaluateNum(exp: AddLeaf | NegLeaf): Leaf<number> {
+export function evaluateNum(exp: AddLeaf | MulLeaf | NegLeaf): Leaf<number> {
     if(exp._tag === "add") {
         return add(exp);
+    }
+    if(exp._tag === "mul") {
+        return mul(exp);
     }
     return neg(exp);
 }

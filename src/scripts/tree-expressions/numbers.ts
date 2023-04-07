@@ -103,7 +103,7 @@ export function unclosedParan(exp: string): boolean {
 
 //-------------------
 
-function openParan(
+export function openParan(
     parsed: Expression<number> | null, 
     waiting: Waiting<NumberOperator>
 ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {

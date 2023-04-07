@@ -52,3 +52,45 @@ export const arbNumWaiting: fc.Arbitrary<Waiting<number>> = fc.constantFrom(...n
 export const arbStringAndNumList: fc.Arbitrary<string[]> = fc.array(fc.constantFrom(...alphabet, ..."01234567890".split("")), 
             {minLength: 0, maxLength: 50}
 )
+
+export const arb2DigitNum: fc.Arbitrary<number> = fc.integer({min: 0, max: 99});
+
+// export function arbWaitingString(
+//     str: fc.Arbitrary<string> = fc.constant(""), 
+//     next: ExpectedNumVal[] = ["neg", "number", "paran"],
+//     prev: ExpectedNumVal | null = null,
+//     length: number = 10,
+// ): fc.Arbitrary<string> {
+//     const rand = Math.floor(Math.random() * next.length);
+//     const cur: ExpectedNumVal = next[rand];
+
+//     const chainAndAdd = (addTo: fc.Arbitrary<string>, val: string) => addTo.chain(
+//         (s) => fc.constant(s + val)
+//     );
+
+//     switch(cur) {
+//         case "neg":
+//             return arbWaitingString(
+//                 chainAndAdd(str, "-"),
+//                 ["number", "paran"],
+//                 cur,
+//                 length
+//             );
+//         case "paran":
+//             if(prev === "neg" || prev === "paran") {
+//                 return arbWaitingString(
+//                     chainAndAdd(str, "("),
+//                     ["neg", "number", "paran"],
+//                     "paran",
+//                     length
+//                 )
+//             }
+//             return fc.constantFrom(")", "(").chain((p) => 
+//                 arbWaitingString(
+//                     chainAndAdd(str, p),
+//                     p === ")" ? ["operator", "paran", ],
+//                     length
+//                 )
+//             )
+//     }
+// }

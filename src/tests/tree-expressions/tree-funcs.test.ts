@@ -1,6 +1,6 @@
 import { describe, it } from "vitest";
 import { evaluateNum, parseInput } from "../../scripts/tree-expressions/numbers";
-import { evaluateTree, traverseLeftMap } from "../../scripts/tree-expressions/tree-funcs";
+import { evaluateTree } from "../../scripts/tree-expressions/tree-funcs";
 import type { Expression } from "../../scripts/tree-expressions/types";
 
 describe("Tree functions", () => {

@@ -1,30 +1,30 @@
 import type { Expression, Leaf } from "./types";
 
 
-function branchListRecurse<T>(
-    root: Expression<T>, 
-    list: Expression<T>[] = [], 
-    curBranch: Expression<T> = root) {
-    if(curBranch._tag === "leaf") {
-        console.log(list);
-        return list;
-    }
-    let newBranch: Expression<T> = curBranch;
-    if(curBranch._tag === "neg") {
-        newBranch = curBranch.val;
-    } else {
-        newBranch = curBranch.left;
-    }
-    branchListRecurse(root, [...list, newBranch], newBranch);
-}
-export function traverseLeftMap<T>(root: Expression<T>, cb: Function) {
-    let curVal = root;
-    while(curVal._tag !== "leaf") {
-        cb(curVal);
-        curVal = curVal._tag === "neg" ? curVal.val : curVal.left;
-    }
-    cb(curVal);
-}
+// function branchListRecurse<T>(
+//     root: Expression<T>, 
+//     list: Expression<T>[] = [], 
+//     curBranch: Expression<T> = root) {
+//     if(curBranch._tag === "leaf") {
+//         console.log(list);
+//         return list;
+//     }
+//     let newBranch: Expression<T> = curBranch;
+//     if(curBranch._tag === "neg") {
+//         newBranch = curBranch.val;
+//     } else {
+//         newBranch = curBranch.left;
+//     }
+//     branchListRecurse(root, [...list, newBranch], newBranch);
+// }
+// export function traverseLeftMap<T>(root: Expression<T>, cb: Function) {
+//     let curVal = root;
+//     while(curVal._tag !== "leaf") {
+//         cb(curVal);
+//         curVal = curVal._tag === "neg" ? curVal.val : curVal.left;
+//     }
+//     cb(curVal);
+// }
 
 export function evaluateTree<T>(
     tree: Expression<T>, 
@@ -34,9 +34,13 @@ export function evaluateTree<T>(
     if(tree._tag === "leaf") {
         return tree;
     } else if(branch._tag === "neg") {
-        return(evaluate(branch));
+        return branch.val._tag === "leaf" 
+        ? evaluate(branch)
+        : evaluate({_tag: "neg", val: evaluateTree(branch.val, evaluate)});
     } else if(branch._tag === "leaf") {
         return branch;
+    } else if(branch._tag === "paran") {
+        return evaluateTree(branch.val, evaluate);
     }
 
     const leftIsLeaf = branch.left._tag === "leaf";

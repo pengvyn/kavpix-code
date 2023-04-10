@@ -3,10 +3,20 @@ export interface Add<T> {
     right: Expression<T>;
     _tag: "add";
 }
+export interface Sub<T> {
+    left: Expression<T>;
+    right: Expression<T>;
+    _tag: "sub";
+}
 export interface Mul<T> {
     left: Expression<T>
     right: Expression<T>
     _tag: "mul"
+}
+export interface Div<T> {
+    left: Expression<T>
+    right: Expression<T>
+    _tag: "div"
 }
 export interface Neg<T> {
     val: Expression<T>;
@@ -41,7 +51,7 @@ export interface Waiting<Operator> {
 // waiting structure:
 // 
 
-export type Expression<T> = Add<T> | Neg<T> | Mul<T> | Paran<T> | Leaf<T>;
+export type Expression<T> = Add<T> | Sub<T> | Neg<T> | Mul<T> | Div<T> | Paran<T> | Leaf<T>;
 
 export type ParseInp<T> = (input: string) => Expression<T> | null;
 export type Evaluate<T, U> = (input: Expression<T>) => U;

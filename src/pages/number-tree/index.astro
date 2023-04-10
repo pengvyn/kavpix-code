@@ -1,0 +1,60 @@
+---
+import BaseHead from "../../components/BaseHead.astro";
+import Header from "../../components/Header.astro";
+import { SITE_TITLE } from "../../config";
+
+---
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <BaseHead title={`${SITE_TITLE} | Number Tree`} />
+    </head>
+    <body>
+        <div class="page-cont">
+            <Header back={"../"} />
+
+            <div class="code-example-cont">
+                <div class="code-example">
+                    <form class="form">
+                        <label>Type an expression with numbers and operations:</label>
+                        <input 
+                            type = "text"
+                            id = "num-exp-inp"
+                            name = "num-exp-inp"
+                            required
+                        />
+                    </form>
+
+                    <div class="result-cont">
+                        <div class="result-label">Result: </div>
+                        <div id="result"/>
+                    </div>
+
+                    <script>
+                        import { parseInput, evaluateNum } from "../../scripts/tree-expressions/numbers";
+                        import { evaluateTree } from "../../scripts/tree-expressions/tree-funcs";
+                        import type { Expression } from "../../scripts/tree-expressions/types";
+                        
+                        const f = document.querySelector(".form") as HTMLFormElement;
+
+                        function callback(ev: SubmitEvent) {
+                            ev.preventDefault();
+                            const val = (document.getElementById("num-exp-inp") as HTMLInputElement).value;
+                            const tree = parseInput(val);
+
+                            console.log(tree)
+
+                            const evalled = evaluateTree<number>(tree as Expression<number>, evaluateNum);
+                            
+                            const result = (document.getElementById("result") as HTMLElement);
+                            result.textContent = `${evalled.val}`;
+                        }
+
+                        f.addEventListener("submit", (ev) => callback(ev));
+                    </script>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

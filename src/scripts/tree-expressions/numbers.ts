@@ -1,7 +1,7 @@
 import { Add, Evaluate, Expression, Leaf, makeLeaf, makeWaiting, Neg, Paran, ParanWait, ParsedWaitNext, ParseInp, Waiting } from "./types";
 
-export type NumberOperator = "+" | "x";
-export const numberOperators: NumberOperator[] = ["+", "x"];
+export type NumberOperator = "+" | "x" | "-" | "/";
+export const numberOperators: NumberOperator[] = ["+", "x", "-", "/"];
 export type ExpectedNumVal = "neg" | "number" | "operator" | "paran";
 
 export function joinSimilars(list: string[], similars: string[]): string[] {
@@ -25,31 +25,42 @@ export function joinSimilars(list: string[], similars: string[]): string[] {
 // else
 //      Add the current value
 
-function makeNumExp(leftOrValue: Expression<number>, right: Expression<number> | null = null, operator: NumberOperator | "-" | "paran"): Expression<number> {
-    if(right === null && !(["-", "paran"].includes(operator))) {
+function makeNumExp(leftOrValue: Expression<number>, right: Expression<number> | null = null, operator: NumberOperator | "neg" | "paran"): Expression<number> {
+    if(right === null && !(["neg", "paran"].includes(operator))) {
         throw "Error: Operator is null";
     }
-    if(operator === "+") {
-        return {left: leftOrValue, right: right as Expression<number>, _tag: "add"};
+    let tag: "add" | "sub" | "mul" | "div" | "neg" | "paran";
+    switch(operator) {
+        case "+":
+            tag = "add";
+            break;
+        case "-":
+            tag = "sub";
+            break;
+        case "x":
+            tag = "mul";
+            break;
+        case "/":
+            tag = "div";
+            break;
+        case "neg":
+            tag = "neg";
+            break;
+        case "paran":
+            tag = "paran";
+            break;
+        default:
+            throw "Error: Unexpected operator";
     }
-    if(operator === "x") {
-        return {left: leftOrValue, right: right as Expression<number>, _tag: "mul"};
-    }
-    if(operator === "-") {
-        return {val: leftOrValue, _tag: "neg"};
-    }
-    if(operator === "paran") {
-        return {val: leftOrValue, _tag: "paran"};
-    }
-    throw "Error: Unexpected Operator";
+    return {left: leftOrValue, right: right as Expression<number>, _tag: tag} as Expression<number>;
 }
 
 export function isExpected(value: string, expected: ExpectedNumVal[]): boolean {
+    if(value === "-") {
+        return expected.includes("neg") || expected.includes("operator");
+    }
     if((numberOperators as string[]).includes(value)) {
         return expected.includes("operator");
-    }
-    if(value === "-") {
-        return expected.includes("neg");
     }
     if(value.split("").every((n) => "1234567890".split("").includes(n))) {
         return expected.includes("number");
@@ -65,6 +76,7 @@ export function valueIsOperator(
     parsed: Expression<number>, 
     waiting: Waiting<NumberOperator>
     ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
+        console.log(value);
         const newWaiting: Waiting<NumberOperator> = {...waiting, operator: value};
         const nextExp: ExpectedNumVal[] = ["neg", "number", "paran"];
         return {parsed, waiting: newWaiting, next: nextExp};
@@ -75,7 +87,7 @@ export function valueIsNumber(
     waiting: Waiting<NumberOperator>
     ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
         const newBranch: Expression<number> = waiting.negate 
-        ? makeNumExp(makeLeaf(value), null, "-")
+        ? makeNumExp(makeLeaf(value), null, "neg")
         : makeLeaf(value);
         const newParsed: Expression<number> = parsed === null
         ? newBranch
@@ -88,6 +100,7 @@ export function valueIsNegate(
     parsed: Expression<number> | null, 
     waiting: Waiting<NumberOperator>
     ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
+        console.log("hiii")
         const newWaiting: Waiting<NumberOperator> = {...waiting, negate: true};
         const nextExp: ExpectedNumVal[] = ["number", "paran"];
         return {parsed, waiting: newWaiting, next: nextExp};
@@ -163,9 +176,6 @@ export function valueIsOrInParan(
     waiting: Waiting<NumberOperator>,
     value: string
 ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
-    // let newParan: ParanWait;
-    // let newParsed: Expression<number> | null = parsed;
-    // let newNext: ExpectedNumVal[] = [];
     let PWN: ParsedWaitNext<number, NumberOperator, ExpectedNumVal>;
 
     if(value === ")") {
@@ -175,79 +185,10 @@ export function valueIsOrInParan(
     } else {
         PWN = openParan(parsed, waiting);
     }
-    // switch (value) {
-    //     case "(":
-    //         PWN = openParan(parsed, waiting);
-    //         break;
-    //     case ")":
-    //         PWN = closedParan(parsed, waiting);
-    //         break;
-    //     default:
-    //         PWN = inParan(parsed, waiting, value);
-    // }
+
     return PWN;
 }
 
-// export function valueIsOrInParan(
-//     parsed: Expression<number> | null,
-//     waiting: Waiting<NumberOperator>,
-//     value: string
-// ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
-
-    // if the value is an open parantheses
-        // set inParan to true
-        // next expected is [paran, number, neg]
-
-    // if the value is closed parantheses
-        // check if the v
-
-    //-----------
-
-    // if(value === "(") {
-    //     return {
-    //         parsed, 
-    //         waiting: {...waiting, paran: {inParan: true, exp: waiting.paran.exp + value}}, 
-    //         next: ["paran", "number", "neg"]
-    //     };
-    // } else if(value === ")") {
-    //     const next: ExpectedNumVal[] = ["operator", "paran"];
-        
-    //     if(unclosedParan(waiting.paran.exp)) {
-    //         console.log("hii", value, parsed)
-    //         return {
-    //             parsed,
-    //             waiting: {...waiting, paran: {inParan: true, exp: waiting.paran.exp + value}},
-    //             next
-    //         }
-    //     } else {
-
-    //         const parsedParan: Expression<number> | null = parseInput(waiting.paran.exp);
-
-    //         if(parsedParan === null) {
-    //             throw "Error: Expression missing in parantheses";
-    //         }
-
-    //         const paranExped: Expression<number> = makeNumExp(parsedParan, null, "paran");
-    //         const negatedParan: Expression<number> = waiting.negate 
-    //             ? makeNumExp(paranExped, null, "-")
-    //             : paranExped;
-
-    //         return {
-    //             parsed: parsed === null || waiting.operator === null
-    //                 ? negatedParan
-    //                 : makeNumExp(parsed, negatedParan, waiting.operator),
-    //             waiting: makeWaiting(),
-    //             next
-    //         }
-    //     }
-    // } else {
-    //     return {
-    //         parsed,
-    //         waiting: {...waiting, paran: {inParan: true, exp: waiting.paran.exp + value}},
-    //         next: ["neg", "number", "operator", "paran"]
-    //     }
-    // }
-// }
 
 export function parseInput(input: string): Expression<number> | null {
     const listed = joinSimilars(input.replaceAll(" ", "").split(""), "1234567890".split(""));
@@ -266,7 +207,7 @@ export function parseInput(input: string): Expression<number> | null {
             const newStorage: ParsedWaitNext<number, NumberOperator, ExpectedNumVal> = 
             shouldCallParan 
             ? valueIsOrInParan(parsed, waiting, curVal)
-            : curVal === "-"
+            : curVal === "-" && waiting.operator !== null
                 ? valueIsNegate(parsed, waiting)
                 : (numberOperators as string[]).includes(curVal)
                     ? valueIsOperator(curVal as NumberOperator, parsed as Expression<number>, waiting)
@@ -285,10 +226,20 @@ interface AddLeaf {
     right: Leaf<number>
     _tag: "add"
 }
+interface SubLeaf{
+    left: Leaf<number>
+    right: Leaf<number>
+    _tag: "sub"
+}
 interface MulLeaf {
     left: Leaf<number>
     right: Leaf<number>
     _tag: "mul"
+}
+interface DivLeaf {
+    left: Leaf<number>
+    right: Leaf<number>
+    _tag: "div"
 }
 interface NegLeaf {
     val: Leaf<number>
@@ -298,18 +249,31 @@ interface NegLeaf {
 function add(exp: AddLeaf): Leaf<number> {
     return makeLeaf(exp.left.val + exp.right.val);
 }
+function sub(exp: SubLeaf): Leaf<number> {
+    return makeLeaf(exp.left.val - exp.right.val);
+}
 function mul(exp: MulLeaf): Leaf<number> {
     return makeLeaf(exp.left.val * exp.right.val);
+}
+function div(exp: DivLeaf): Leaf<number> {
+    return makeLeaf(exp.left.val / exp.right.val);
 }
 function neg(exp: NegLeaf): Leaf<number> {
     return makeLeaf(exp.val.val * -1);
 }
-export function evaluateNum(exp: AddLeaf | MulLeaf | NegLeaf): Leaf<number> {
+
+export function evaluateNum(exp: AddLeaf | SubLeaf | MulLeaf | DivLeaf | NegLeaf): Leaf<number> {
     if(exp._tag === "add") {
         return add(exp);
     }
+    if(exp._tag === "sub") {
+        return sub(exp);
+    }
     if(exp._tag === "mul") {
         return mul(exp);
+    }
+    if(exp._tag === "div") {
+        return div(exp);
     }
     return neg(exp);
 }

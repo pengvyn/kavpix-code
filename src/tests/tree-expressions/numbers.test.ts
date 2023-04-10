@@ -1,6 +1,6 @@
 import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { ExpectedNumVal, isExpected, joinSimilars, NumberOperator, openParan, parseInput, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers";
+import { closedParan, ExpectedNumVal, isExpected, joinSimilars, NumberOperator, openParan, parseInput, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers";
 import { Add, Expression, Leaf, makeLeaf, makeWaiting, Neg, Waiting } from "../../scripts/tree-expressions/types";
 import { arbNumOperator, arbNumWaiting, arbStringAndNumList, strNumSet } from "../arbitraries";
 import { isEqual, negate } from "lodash";
@@ -65,7 +65,10 @@ describe("Numbers expression tree", () => {
             const result: boolean = isExpected("-", ["operator"]);
             const result2: boolean = isExpected("-", ["number"]);
             const result3: boolean = isExpected("-", ["operator", "number"]);
-            return !result && !result2 && !result3;
+            // return !result && !result2 && !result3;
+            expect(result).toBe(false);
+            expect(result2).toBe(false);
+            expect(result3).toBe(false);
         })
     })
     describe("Value is ____", () => {
@@ -191,8 +194,12 @@ describe("Numbers expression tree", () => {
                 const result = valueIsNegate(null, {operator: null, negate: false, paran: {_tag: "not-paranned", exp: null}});
                 const parsedEquals = result.parsed === null;
                 const waitEquals = isEqual(result.waiting, {operator: null, negate: true, paran: {_tag: "not-paranned", exp: null}});
-                const nextEquals = isEqual(result.next, ["number"]);
-                return parsedEquals && waitEquals && nextEquals;
+                const nextEquals = result.next.every((ne) => ["number", "paran"].includes(ne)) 
+                    && result.next.length === 2;
+                
+                expect(parsedEquals).toBe(true);
+                expect(waitEquals).toBe(true);
+                expect(nextEquals).toBe(true);
             })
             it("Parsed", () => {
                 fc.assert(fc.property(
@@ -289,24 +296,27 @@ describe("Numbers expression tree", () => {
             const results = [result1, result2, result3, result4]
 
             it("Parsed stays the same", () => {
-                return results.every((result) => 
+                const parsedEquals = results.every((result) => 
                     isEqual(result.parsed, parsed1)
                 );
+                expect(parsedEquals).toBe(true);
             })
             it("Waiting becomes paranned", () => {
-                return results.every((result) =>
+                const waitEquals = results.every((result) =>
                     isEqual(result.waiting.paran, {_tag: "paranned", exp: ""})
                 )
+                expect(waitEquals).toBe(true);
             })
             it("Next is [paran, neg, number]", () => {
                 const nextExp: ExpectedNumVal[] = ["paran", "neg", "number"];
-                return results.every((result) =>
+                const nextEquals = results.every((result) =>
                     nextExp.every((ne) => result.next.includes(ne)) && result.next.length === nextExp.length
                 )
+                expect(nextEquals).toBe(true);
             })
 
         })
-        describe.skip("Closed paran", () => {
+        describe("Closed paran", () => {
             // if the input string has more open than closed parans:
                 // parsed stays the same
                 // waiting.paran is {_tag: paranned, exp: [exp with ) attatched]}
@@ -315,6 +325,137 @@ describe("Numbers expression tree", () => {
                 // waiting gets reset to default
                 // parsed's right should be the paran expression
                 // next is [paran, operator]
+
+            const parsed: Expression<number> = {
+                _tag: "mul",
+                left: {
+                    _tag: "paran",
+                    val: {
+                        _tag: "add",
+                        left: {
+                            _tag: "leaf",
+                            val: 10
+                        },
+                        right: {
+                            _tag: "neg",
+                            val: {
+                                _tag: "leaf",
+                                val: 3,
+                            }
+                        }
+                    }
+                },
+                right: {
+                    _tag: "leaf",
+                    val: 7,
+                }
+            }
+            
+            describe("Unclosed nested paran", () => {
+                // parsed is empty
+                // parsed is the example
+                // closed paran is part of the string
+                // closed paran is ending the paran in the waiting
+                const wait1: Waiting<NumberOperator> = {
+                    operator: "x",
+                    negate: false,
+                    paran: {
+                        _tag: "paranned",
+                        exp: "1 + (2 + 3"
+                    }
+                }
+                it("1 - w/ parsed", () => {
+                    const result = closedParan(parsed, wait1);
+                    const parsedEquals = isEqual(result.parsed, parsed);
+                    const waitEquals = isEqual(result.waiting, {
+                        ...wait1, 
+                        paran: {
+                            _tag: "paranned", 
+                            exp: wait1.paran.exp + ")"
+                        }
+                    });
+                    const nextEquals = result.next.every((ne) => ["paran", "operator"].includes(ne)) && result.next.length === 2;
+                    
+                    expect(parsedEquals).toBe(true);
+                    expect(waitEquals).toBe(true);
+                    expect(nextEquals).toBe(true);
+                })
+                it("2 - w/o parsed", () => {
+                    const result = closedParan(null, wait1);
+                    const parsedEquals = result.parsed === null;
+                    const waitEquals = isEqual(result.waiting, {
+                        ...wait1, 
+                        paran: {
+                            _tag: "paranned", 
+                            exp: wait1.paran.exp + ")"
+                        }
+                    });
+                    const nextEquals = result.next.every((ne) => ["paran", "operator"].includes(ne)) && result.next.length === 2;
+
+                    expect(parsedEquals).toBe(true);
+                    expect(waitEquals).toBe(true);
+                    expect(nextEquals).toBe(true);
+                })
+            })
+            describe("No unclosed nested paran", () => {
+                const wait1: Waiting<NumberOperator> = {
+                    operator: "+",
+                    negate: true,
+                    paran: {
+                        _tag: "paranned",
+                        exp: "1 + 2",
+                    }
+                }
+                const wait2: Waiting<NumberOperator> = {
+                    operator: "x",
+                    negate: true,
+                    paran: {
+                        _tag: "paranned",
+                        exp: "1 + (2 x -3)",
+                    }
+                };
+
+                it("1 - w/ parsed", () => {
+                    const result = closedParan(parsed, wait1);
+                    const parsedEquals = !isEqual(result.parsed, parsed);
+                    const waitEquals = isEqual(result.waiting, makeWaiting());
+                    const nextEquals = result.next.every((ne) => ["paran", "operator"].includes(ne)) && result.next.length === 2;
+
+                    expect(parsedEquals).toBe(true);
+                    expect(waitEquals).toBe(true);
+                    expect(nextEquals).toBe(true);
+                })
+                it("2 - w/o parsed", () => {
+                    const result = closedParan(null, wait1);
+                    const parsedEquals = !isEqual(result.parsed, null);
+                    const waitEquals = isEqual(result.waiting, makeWaiting());
+                    const nextEquals = result.next.every((ne) => ["paran", "operator"].includes(ne)) && result.next.length === 2;
+
+                    expect(parsedEquals).toBe(true);
+                    expect(waitEquals).toBe(true);
+                    expect(nextEquals).toBe(true);
+                })
+                it("3 - w/ parsed + nested paran", () => {
+                    const result = closedParan(parsed, wait2);
+                    const parsedEquals = !isEqual(result.parsed, parsed);
+                    const waitEquals = isEqual(result.waiting, makeWaiting());
+                    const nextEquals = result.next.every((ne) => ["paran", "operator"].includes(ne)) && result.next.length === 2;
+
+                    expect(parsedEquals).toBe(true);
+                    expect(waitEquals).toBe(true);
+                    expect(nextEquals).toBe(true);
+                })
+                it("4 - w/o parsed + nested paran", () => {
+                    const result = closedParan(null, wait2);
+                    const parsedEquals = !isEqual(result.parsed, null);
+                    const waitEquals = isEqual(result.waiting, makeWaiting());
+                    const nextEquals = result.next.every((ne) => ["paran", "operator"].includes(ne)) && result.next.length === 2;
+
+                    expect(parsedEquals).toBe(true);
+                    expect(waitEquals).toBe(true);
+                    expect(nextEquals).toBe(true);
+                })
+            })
         })
         describe("Value in paran", () => {
             // parsed stays the same
@@ -390,7 +531,9 @@ describe("Numbers expression tree", () => {
                             ...wait, 
                             paran: {_tag: "paranned", exp: (wait1.paran.exp as string) + `${val}`}
                         })
-                        return parsedEquals && nextEquals && waitEquals;
+                        expect(parsedEquals).toBe(true);
+                        expect(nextEquals).toBe(true);
+                        expect(waitEquals).toBe(true);
                     }
                 ))
             })
@@ -410,7 +553,10 @@ describe("Numbers expression tree", () => {
                             ...wait, 
                             paran: {_tag: "paranned", exp: (wait2.paran.exp as string) + `${val}`}
                         })
-                        return parsedEquals && nextEquals && waitEquals;
+                        
+                        expect(parsedEquals).toBe(true);
+                        expect(waitEquals).toBe(true);
+                        expect(nextEquals).toBe(true);
                     }
                 ))
             })
@@ -430,7 +576,10 @@ describe("Numbers expression tree", () => {
                             ...wait, 
                             paran: {_tag: "paranned", exp: (wait3.paran.exp as string) + op}
                         })
-                        return parsedEquals && nextEquals && waitEquals;
+                        
+                        expect(parsedEquals).toBe(true);
+                        expect(waitEquals).toBe(true);
+                        expect(nextEquals).toBe(true);
                     }
                 ))
             })
@@ -450,7 +599,10 @@ describe("Numbers expression tree", () => {
                             ...wait, 
                             paran: {_tag: "paranned", exp: (wait4.paran.exp as string) + op}
                         })
-                        return parsedEquals && nextEquals && waitEquals;
+                        
+                        expect(parsedEquals).toBe(true);
+                        expect(waitEquals).toBe(true);
+                        expect(nextEquals).toBe(true);
                     }
                 ))
             })

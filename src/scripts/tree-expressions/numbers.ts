@@ -97,7 +97,6 @@ export function unclosedParan(exp: string): boolean {
     const splitted = exp.split("");
     const opens: number = splitted.reduce((p, c) => c === "(" ? p + 1 : p, 0);
     const closeds: number = splitted.reduce((p, c) => c === ")" ? p + 1 : p, 0);
-    console.log(exp)
     return opens > closeds;
 }
 
@@ -113,14 +112,13 @@ export function openParan(
         next: ["neg", "number", "paran"]
     }
 }
-function closedParan(
+export function closedParan(
     parsed: Expression<number> | null, 
     waiting: Waiting<NumberOperator>
 ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
     const paran = waiting.paran;
 
     if(paran._tag === "not-paranned") {
-        console.log(parsed, waiting)
         throw "Error: No opening parantheses";
     }
     if(paran.exp === null || paran.exp === "") {
@@ -130,7 +128,6 @@ function closedParan(
         throw "Error: Operator missing";
     }
     if(unclosedParan(paran.exp)) {
-        console.log("heyy")
         return {
             parsed,
             waiting: {...waiting, paran: {_tag: "paranned", exp: paran.exp + ")"}},
@@ -262,7 +259,6 @@ export function parseInput(input: string): Expression<number> | null {
     for(let idx = 0; idx < listed.length; idx++) {
         const curVal: string = listed[idx];
         if(!isExpected(curVal, nextExp)) {
-            console.log(curVal, idx, listed, nextExp)
             throw "Error: Unexpected value";
         } else {
             const shouldCallParan = waiting.paran._tag === "paranned" || curVal === ")" || curVal === "(";

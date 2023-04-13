@@ -28,31 +28,41 @@ import { SITE_TITLE } from "../../config";
 
                     <div class="result-cont">
                         <div class="result-label">Result: </div>
-                        <div id="result"/>
+                        <div id="result" />
+                        <div id="myDiagramDiv"/>
                     </div>
-
                     <script>
-                        import { parseInput, evaluateNum } from "../../scripts/tree-expressions/numbers";
-                        import { evaluateTree } from "../../scripts/tree-expressions/tree-funcs";
-                        import type { Expression } from "../../scripts/tree-expressions/types";
-                        
-                        const f = document.querySelector(".form") as HTMLFormElement;
-
-                        function callback(ev: SubmitEvent) {
-                            ev.preventDefault();
-                            const val = (document.getElementById("num-exp-inp") as HTMLInputElement).value;
-                            const tree = parseInput(val);
-
-                            console.log(tree)
-
-                            const evalled = evaluateTree<number>(tree as Expression<number>, evaluateNum);
-                            
-                            const result = (document.getElementById("result") as HTMLElement);
-                            result.textContent = `${evalled.val}`;
-                        }
-
-                        f.addEventListener("submit", (ev) => callback(ev));
+                        import { startListening } from "../../scripts/tree-expressions/numbers-browser";
+                        startListening();
                     </script>
+                    <!-- <script src="https://unpkg.com/gojs/release/go-debug.js">
+                        import { startListening } from "../../scripts/tree-expressions/numbers-browser.ts";
+
+                        startListening();
+                        // import { parseInput, evaluateNum } from "../../scripts/tree-expressions/numbers";
+                        // import { evaluateTree } from "../../scripts/tree-expressions/tree-funcs";
+                        // import type { Expression } from "../../scripts/tree-expressions/types";
+                        
+                        // const f = document.querySelector(".form") as HTMLFormElement;
+
+                        // function callback(ev: SubmitEvent) {
+                        //     ev.preventDefault();
+                        //     const val = (document.getElementById("num-exp-inp") as HTMLInputElement).value;
+                        //     const tree = parseInput(val);
+
+                        //     console.log(tree)
+
+                        //     const evalled = evaluateTree<number>(tree as Expression<number>, evaluateNum);
+                            
+                        //     const result = (document.getElementById("result") as HTMLElement);
+                        //     result.textContent = `${evalled.val}`;
+                        // }
+
+                        // f.addEventListener("submit", (ev) => callback(ev));
+                        
+
+                        // const diagram = new 
+                    </script> -->
                 </div>
             </div>
         </div>

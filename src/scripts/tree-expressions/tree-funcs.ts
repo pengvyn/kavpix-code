@@ -62,6 +62,34 @@ export function evaluateTree<T>(
     return evaluate({left: leftEval, right: rightEval, _tag: branch._tag});
 }
 
+export interface BranchElement {
+    name: string;
+    key: string;
+    parent: string | null;
+}
+
+export function listify<T>(
+    tree: Expression<T>, 
+    branch: Expression<T> = tree, 
+    parent: string = "", 
+    list: BranchElement[] = []
+): BranchElement[] {
+    const newKey = list.length === 0 ? "1" : `${JSON.parse(list[list.length - 1].key) + 1}`;
+    const newVal = {name: branch._tag, key: newKey, parent};
+
+    if(branch._tag === "leaf") {
+        return [...list, {name: `${branch.val}`, key: newKey, parent}];
+    }
+    if(branch._tag === "paran" || branch._tag === "neg") {
+        return listify(tree, branch.val, newKey, [...list, newVal]);
+    }
+    const left = listify(tree, branch.left, newKey, [...list, newVal]);
+    const leftExtra = left.slice(list.length);
+
+    const right = listify(tree, branch.right, newKey, [...list, ...leftExtra]);
+    return right;
+}
+
 // function traverseRight<T>(root: Expression<T>)
 
 // export function getBranchList<T>(tree: Expression<T>) {

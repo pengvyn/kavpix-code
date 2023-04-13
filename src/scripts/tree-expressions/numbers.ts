@@ -15,6 +15,17 @@ export function joinSimilars(list: string[], similars: string[]): string[] {
             []
     )
 }
+/*
+
+10 + (2 + 3)
+
+  add
+ /   \
+10    paran
+         \
+          add
+         /   \
+*/
 // IF the previous value is an empty list (lenght is 0)
 //      Add the current value
 // elseIF the current value is a number:

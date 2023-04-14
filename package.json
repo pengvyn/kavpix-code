@@ -20,7 +20,9 @@
     "react-dom": "^18.0.0"
   },
   "devDependencies": {
+    "@types/cytoscape": "^3.19.9",
     "@types/lodash": "^4.14.192",
+    "cytoscape": "^3.23.0",
     "fast-check": "^3.7.1",
     "gojs": "^2.3.5",
     "lodash": "^4.17.21",

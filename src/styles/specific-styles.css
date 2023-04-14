@@ -20,8 +20,9 @@
 
 #myDiagramDiv {
     width: 100vw; 
-    height: 400px; 
+    height: 600px;
     background-color: #FFFFFF;
+    text-align: left;
 }
 /* .fade-in {
     animation: 0.4s ease-out running normal none 1 0s fadein;

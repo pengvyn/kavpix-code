@@ -71,7 +71,7 @@ export interface BranchElement {
 export function listify<T>(
     tree: Expression<T>, 
     branch: Expression<T> = tree, 
-    parent: string = "", 
+    parent: string | null = null, 
     list: BranchElement[] = []
 ): BranchElement[] {
     const newKey = list.length === 0 ? "1" : `${JSON.parse(list[list.length - 1].key) + 1}`;

@@ -1,7 +1,10 @@
 import { evaluateNum, parseInput } from "./numbers";
 import type { Expression } from "./types";
 import { evaluateTree, listify } from "./tree-funcs";
-import cytoscape from "cytoscape";
+import cytoscape, { BaseLayoutOptions } from "cytoscape";
+import dagre from "cytoscape-dagre"
+
+dagre(cytoscape);
 
 
 interface CyNodeInp {
@@ -51,6 +54,7 @@ function callback(ev: SubmitEvent) {
     dgdiv.remove();
     parent?.append(fragment);
 
+
     // ----------- MAKE INPUT FOR CYTOSCAPE ----------
 
 
@@ -84,21 +88,40 @@ function callback(ev: SubmitEvent) {
             {
                 selector: "node",
                 style: {
-                    "label": "data(label)"
+                    "label": "data(label)",
+                    "text-halign": "center",
+                    "text-valign": "center",
+                    "width": "max-content",
+
+                    "border-color": "black",
+                    "border-width": "2px",
+
+                    "background-color": "orange",
+                }
+            },
+            {
+                selector: "edge",
+                style: {
+                    "line-color": "blue",
+                    "opacity": 0.5
                 }
             }
         ]
     })
     c.zoomingEnabled(false);
-   
+
     
 
-    const layout = c.layout({
-        name: "breadthfirst",
-        directed: true,
+    c.layout({
+        name: "dagre",
+        rankDir: "TB",
+        fit: true,
+
         animate: true,
-    });
-    layout.run();
+        // fit: true,
+        // directed: true,
+        // animate: true,
+    } as BaseLayoutOptions).run();
 
     c.resize()
     c.center()

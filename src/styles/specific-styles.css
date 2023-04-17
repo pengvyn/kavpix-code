@@ -18,9 +18,18 @@
     display: none;
 }
 
+#result {
+    height: 1rem;
+    width: 100vw;
+}
+
+.diagram-cont {
+    width: 100vw;
+}
 #myDiagramDiv {
-    width: 100vw; 
-    height: 600px;
+    width: calc(100vw - 10%); 
+    height: 100vh;
+    margin: 0 auto;
     background-color: #FFFFFF;
     text-align: left;
 }

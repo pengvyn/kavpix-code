@@ -1,8 +1,8 @@
-import { Add, Evaluate, Expression, Leaf, makeLeaf, makeWaiting, Neg, Paran, ParanWait, ParsedWaitNext, ParseInp, Waiting } from "./types";
+import { Add, Evaluate, Expression, Leaf, makeLeaf, makeWaiting, Neg, Paran, ParanWait, ParsedWaitNext, ParseInp, Var, Variable, variables, Waiting } from "./types";
 
 export type NumberOperator = "+" | "*" | "-" | "/";
 export const numberOperators: NumberOperator[] = ["+", "*", "-", "/"];
-export type ExpectedNumVal = "neg" | "number" | "operator" | "paran";
+export type ExpectedNumVal = "neg" | "number" | "operator" | "paran"| "variable";
 
 export function joinSimilars(list: string[], similars: string[]): string[] {
     return list.reduce((p: string[], c: string) => p.length === 0
@@ -78,6 +78,9 @@ export function isExpected(value: string, expected: ExpectedNumVal[]): boolean {
     if((numberOperators as string[]).includes(value)) {
         return expected.includes("operator");
     }
+    if((variables as string[]).includes(value)) {
+        return expected.includes("variable");
+    }
     if(value.split("").every((n) => "1234567890".split("").includes(n))) {
         return expected.includes("number");
     }
@@ -94,7 +97,7 @@ export function valueIsOperator(
     ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
         console.log(value);
         const newWaiting: Waiting<NumberOperator> = {...waiting, operator: value};
-        const nextExp: ExpectedNumVal[] = ["neg", "number", "paran"];
+        const nextExp: ExpectedNumVal[] = ["neg", "number", "paran", "variable"];
         return {parsed, waiting: newWaiting, next: nextExp};
 }
 export function valueIsNumber(
@@ -118,7 +121,7 @@ export function valueIsNegate(
     waiting: Waiting<NumberOperator>
     ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
         const newWaiting: Waiting<NumberOperator> = {...waiting, negate: true};
-        const nextExp: ExpectedNumVal[] = ["number", "paran"];
+        const nextExp: ExpectedNumVal[] = ["number", "paran", "variable"];
         return {parsed, waiting: newWaiting, next: nextExp};
 }
 
@@ -138,7 +141,7 @@ export function openParan(
     return {
         parsed, 
         waiting: {...waiting, paran: {_tag: "paranned", exp: ""}}, 
-        next: ["neg", "number", "paran"]
+        next: ["neg", "number", "paran", "variable"]
     }
 }
 export function closedParan(
@@ -184,7 +187,7 @@ function inParan(
     return {
         parsed,
         waiting: {...waiting, paran: {_tag: "paranned", exp: waiting.paran.exp + value}},
-        next: ["neg", "number", "paran", "operator"]
+        next: ["neg", "number", "paran", "operator", "variable"]
     };
 }
 export function valueIsOrInParan(
@@ -205,13 +208,37 @@ export function valueIsOrInParan(
     return PWN;
 }
 
+export function valueIsVar(
+    parsed: Expression<number> | null,
+    waiting: Waiting<NumberOperator>,
+    value: Variable,
+): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
+    const valExp: Var = {val: value, _tag: "var"};
+    const negd: Expression<number> = waiting.negate 
+        ? makeNumExp(valExp, null, "neg")
+        : valExp;
+
+    const newParsed = waiting.operator === null
+        ? valExp
+        : makeNumExp(parsed as Expression<number>, negd, waiting.operator);
+    const newWaiting = makeWaiting<NumberOperator>();
+    const next: ExpectedNumVal[] = ["operator", "paran"];
+    return {
+        parsed: newParsed,
+        waiting: newWaiting,
+        next
+    }
+}
+// --------------== variables ==-------------------
+
+// ----------
 
 export function parseInput(input: string): Expression<number> | null {
     const listed = joinSimilars(input.replaceAll(" ", "").split(""), "1234567890".split(""));
 
     let parsed: Expression<number> | null = null;
     let waiting: Waiting<NumberOperator> = makeWaiting()
-    let nextExp: ExpectedNumVal[] = ["neg", "number", "paran"];
+    let nextExp: ExpectedNumVal[] = ["neg", "number", "paran", "variable"];
 
     for(let idx = 0; idx < listed.length; idx++) {
         const curVal: string = listed[idx];
@@ -227,13 +254,16 @@ export function parseInput(input: string): Expression<number> | null {
                 ? valueIsNegate(parsed, waiting)
                 : (numberOperators as string[]).includes(curVal)
                     ? valueIsOperator(curVal as NumberOperator, parsed as Expression<number>, waiting)
-                    : valueIsNumber(JSON.parse(curVal), parsed, waiting);
+                    : (variables as string[]).includes(curVal) 
+                        ? valueIsVar(parsed, waiting, curVal as Variable)
+                        : valueIsNumber(JSON.parse(curVal), parsed, waiting);
             
             parsed = newStorage.parsed;
             waiting = newStorage.waiting;
             nextExp = newStorage.next;
         }
     }
+    console.log(parsed)
     return parsed;
 }
 

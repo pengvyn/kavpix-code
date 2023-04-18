@@ -31,6 +31,14 @@ export interface Paran<T> {
     _tag: "paran"
 }
 
+export type Variable = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z";
+export const variables: Variable[] = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
+
+export interface Var {
+    val: Variable
+    _tag: "var"
+}
+
 
 interface Paranned {
     exp: string
@@ -51,7 +59,7 @@ export interface Waiting<Operator> {
 // waiting structure:
 // 
 
-export type Expression<T> = Add<T> | Sub<T> | Neg<T> | Mul<T> | Div<T> | Paran<T> | Leaf<T>;
+export type Expression<T> = Add<T> | Sub<T> | Neg<T> | Mul<T> | Div<T> | Paran<T> | Leaf<T> | Var;
 
 export type ParseInp<T> = (input: string) => Expression<T> | null;
 export type Evaluate<T, U> = (input: Expression<T>) => U;

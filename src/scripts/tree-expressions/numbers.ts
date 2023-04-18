@@ -1,7 +1,7 @@
 import { Add, Evaluate, Expression, Leaf, makeLeaf, makeWaiting, Neg, Paran, ParanWait, ParsedWaitNext, ParseInp, Waiting } from "./types";
 
-export type NumberOperator = "+" | "x" | "-" | "/";
-export const numberOperators: NumberOperator[] = ["+", "x", "-", "/"];
+export type NumberOperator = "+" | "*" | "-" | "/";
+export const numberOperators: NumberOperator[] = ["+", "*", "-", "/"];
 export type ExpectedNumVal = "neg" | "number" | "operator" | "paran";
 
 export function joinSimilars(list: string[], similars: string[]): string[] {
@@ -41,6 +41,7 @@ function makeNumExp(leftOrValue: Expression<number>, right: Expression<number> |
         throw "Error: Operator is null";
     }
     let tag: "add" | "sub" | "mul" | "div" | "neg" | "paran";
+    let noRight: boolean = false;
     switch(operator) {
         case "+":
             tag = "add";
@@ -48,22 +49,26 @@ function makeNumExp(leftOrValue: Expression<number>, right: Expression<number> |
         case "-":
             tag = "sub";
             break;
-        case "x":
+        case "*":
             tag = "mul";
             break;
         case "/":
             tag = "div";
             break;
         case "neg":
+            noRight = true;
             tag = "neg";
             break;
         case "paran":
+            noRight = true;
             tag = "paran";
             break;
         default:
             throw "Error: Unexpected operator";
     }
-    return {left: leftOrValue, right: right as Expression<number>, _tag: tag} as Expression<number>;
+    return noRight 
+        ? {val: leftOrValue, _tag: tag} as Expression<number>
+        : {left: leftOrValue, right: right as Expression<number>, _tag: tag} as Expression<number>;
 }
 
 export function isExpected(value: string, expected: ExpectedNumVal[]): boolean {
@@ -97,6 +102,7 @@ export function valueIsNumber(
     parsed: Expression<number> | null, 
     waiting: Waiting<NumberOperator>
     ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
+        console.log(parsed, waiting);
         const newBranch: Expression<number> = waiting.negate 
         ? makeNumExp(makeLeaf(value), null, "neg")
         : makeLeaf(value);
@@ -111,7 +117,6 @@ export function valueIsNegate(
     parsed: Expression<number> | null, 
     waiting: Waiting<NumberOperator>
     ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
-        console.log("hiii")
         const newWaiting: Waiting<NumberOperator> = {...waiting, negate: true};
         const nextExp: ExpectedNumVal[] = ["number", "paran"];
         return {parsed, waiting: newWaiting, next: nextExp};

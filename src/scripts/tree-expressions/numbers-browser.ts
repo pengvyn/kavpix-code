@@ -21,6 +21,25 @@ interface CyEdgeInp {
     }
 }
 
+function translateLabel(label: string): string {
+    switch(label) {
+        case "add":
+            return "+";
+        case "sub":
+            return "-";
+        case "mul":
+            return "*";
+        case "div":
+            return "÷" // U+00F7
+        case "paran":
+            return "()";
+        case "neg":
+            return "-";
+        default:
+            return label;
+    }
+}
+
 const f = document.querySelector(".form") as HTMLFormElement;
 
 function callback(ev: SubmitEvent) {
@@ -61,7 +80,7 @@ function callback(ev: SubmitEvent) {
     // const nodes: {data: {id: string}}[] = listified.map((val) => {n: val.key});
     // console.log(listified.map((val) => {data: {id: val.key}}));
     function makeNode(key: string, label: string): CyNodeInp { 
-        return {data: {id: key, label: label} }
+        return {data: {id: key, label: translateLabel(label)} };
     };
     function makeEdge(key: string, parent: string): CyEdgeInp {
         return {data: {source: parent, target: key, id: parent + "-" + key}};
@@ -96,7 +115,11 @@ function callback(ev: SubmitEvent) {
                     "border-color": "black",
                     "border-width": "2px",
 
-                    "background-color": "orange",
+                    "background-color": function(n) {
+                        return ["()", "+", "-", "*", "/"].includes(n.data("label")) 
+                            ? "orange"
+                            : "#F5D60F"
+                    },
                 }
             },
             {

@@ -1,4 +1,4 @@
-import { Add, Evaluate, Expression, Leaf, makeLeaf, makeWaiting, Neg, Paran, ParanWait, ParsedWaitNext, ParseInp, Var, Variable, variables, Waiting } from "./types";
+import { Add, Div, Evaluate, Expression, Leaf, makeLeaf, makeWaiting, Mul, Neg, Paran, ParanWait, ParsedWaitNext, ParseInp, Sub, Tag, Variable, variables, VarLeaf, Waiting } from "./types";
 
 export type NumberOperator = "+" | "*" | "-" | "/";
 export const numberOperators: NumberOperator[] = ["+", "*", "-", "/"];
@@ -213,7 +213,7 @@ export function valueIsVar(
     waiting: Waiting<NumberOperator>,
     value: Variable,
 ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
-    const valExp: Var = {val: value, _tag: "var"};
+    const valExp: VarLeaf = {val: value, _tag: "var"};
     const negd: Expression<number> = waiting.negate 
         ? makeNumExp(valExp, null, "neg")
         : valExp;
@@ -292,34 +292,82 @@ interface NegLeaf {
     _tag: "neg"
 }
 
-function add(exp: AddLeaf): Leaf<number> {
-    return makeLeaf(exp.left.val + exp.right.val);
+// function add(exp: AddLeaf): Leaf<number> {
+//     return makeLeaf(exp.left.val + exp.right.val);
+// }
+// function sub(exp: SubLeaf): Leaf<number> {
+//     return makeLeaf(exp.left.val - exp.right.val);
+// }
+// function mul(exp: MulLeaf): Leaf<number> {
+//     return makeLeaf(exp.left.val * exp.right.val);
+// }
+// function div(exp: DivLeaf): Leaf<number> {
+//     return makeLeaf(exp.left.val / exp.right.val);
+// }
+// function neg(exp: NegLeaf): Leaf<number> {
+//     return makeLeaf(exp.val.val * -1);
+// }
+
+// export function evaluateNum(exp: AddLeaf | SubLeaf | MulLeaf | DivLeaf | NegLeaf): Leaf<number> {
+//     if(exp._tag === "add") {
+//         return add(exp);
+//     }
+//     if(exp._tag === "sub") {
+//         return sub(exp);
+//     }
+//     if(exp._tag === "mul") {
+//         return mul(exp);
+//     }
+//     if(exp._tag === "div") {
+//         return div(exp);
+//     }
+//     return neg(exp);
+// }
+
+function add(left: Leaf<number>, right: Leaf<number>): AddLeaf | number {
+    if(left.val._tag === "var" || right.val._tag === "var") {
+        return {_tag: "add", left, right};
+    }
+    return left.val.val + right.val.val;
 }
-function sub(exp: SubLeaf): Leaf<number> {
-    return makeLeaf(exp.left.val - exp.right.val);
+function sub(left: Leaf<number>, right: Leaf<number>): SubLeaf | number {
+    if(left.val._tag === "var" || right.val._tag === "var") {
+        return {_tag: "sub", left, right};
+    }
+    return left.val.val - right.val.val;
 }
-function mul(exp: MulLeaf): Leaf<number> {
-    return makeLeaf(exp.left.val * exp.right.val);
+function mul(left: Leaf<number>, right: Leaf<number>): MulLeaf | number {
+    if(left.val._tag === "var" || right.val._tag === "var") {
+        return {_tag: "mul", left, right};
+    }
+    return left.val.val * right.val.val;
 }
-function div(exp: DivLeaf): Leaf<number> {
-    return makeLeaf(exp.left.val / exp.right.val);
+function div(left: Leaf<number>, right: Leaf<number>): DivLeaf | number {
+    if(left.val._tag === "var" || right.val._tag === "var") {
+        return {_tag: "div", left, right};
+    }
+    return left.val.val / right.val.val;
 }
-function neg(exp: NegLeaf): Leaf<number> {
-    return makeLeaf(exp.val.val * -1);
+function neg(val: Leaf<number>): NegLeaf | number {
+    if(val.val._tag === "var") {
+        return {_tag: "neg", val};
+    }
+    return -1 * val.val.val;
 }
 
-export function evaluateNum(exp: AddLeaf | SubLeaf | MulLeaf | DivLeaf | NegLeaf): Leaf<number> {
-    if(exp._tag === "add") {
-        return add(exp);
+type LeafExp = AddLeaf | SubLeaf | MulLeaf | DivLeaf | NegLeaf;
+
+export function evaluateNumVar(exp: LeafExp): LeafExp | number {
+    switch(exp._tag) {
+        case "add":
+            return add(exp.left, exp.right);
+        case "sub":
+            return sub(exp.left, exp.right);
+        case "mul":
+            return mul(exp.left, exp.right);
+        case "div":
+            return div(exp.left, exp.right);
+        case "neg":
+            return neg(exp.val);
     }
-    if(exp._tag === "sub") {
-        return sub(exp);
-    }
-    if(exp._tag === "mul") {
-        return mul(exp);
-    }
-    if(exp._tag === "div") {
-        return div(exp);
-    }
-    return neg(exp);
 }

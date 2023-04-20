@@ -23,21 +23,31 @@ export interface Neg<T> {
     _tag: "neg"
 }
 export interface Leaf<T> {
-    val: T
+    val: VarLeaf | ValLeaf<T>
     _tag: "leaf"
 }
 export interface Paran<T> {
     val: Expression<T>
     _tag: "paran"
 }
+export interface VarLeaf {
+    val: Variable
+    _tag: "var"
+}
+export interface ValLeaf<T> {
+    val: T
+    _tag: "val"
+}
+
+export type Tag = "add" | "sub" | "mul" | "div" | "neg" | "paran" | "val" | "var" | "leaf";
 
 export type Variable = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z";
 export const variables: Variable[] = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
 
-export interface Var {
-    val: Variable
-    _tag: "var"
-}
+// export interface Var {
+//     val: Variable
+//     _tag: "var"
+// }
 
 
 interface Paranned {
@@ -59,10 +69,11 @@ export interface Waiting<Operator> {
 // waiting structure:
 // 
 
-export type Expression<T> = Add<T> | Sub<T> | Neg<T> | Mul<T> | Div<T> | Paran<T> | Leaf<T> | Var;
+export type Expression<T> = Add<T> | Sub<T> | Neg<T> | Mul<T> | Div<T> | Paran<T> | Leaf<T> | ValLeaf<T> | VarLeaf;
+
 
 export type ParseInp<T> = (input: string) => Expression<T> | null;
-export type Evaluate<T, U> = (input: Expression<T>) => U;
+export type Evaluate<T> = (exp: Expression<T>) => Expression<T>;
 
 export function makeWaiting<Operator> (
     operator: Operator | null = null, 

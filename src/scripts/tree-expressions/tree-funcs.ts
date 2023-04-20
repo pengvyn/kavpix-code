@@ -1,4 +1,4 @@
-import type { Expression, Leaf } from "./types";
+import type {Evaluate, Expression, Leaf } from "./types";
 
 
 // function branchListRecurse<T>(
@@ -26,40 +26,65 @@ import type { Expression, Leaf } from "./types";
 //     cb(curVal);
 // }
 
-export function evaluateTree<T>(
-    tree: Expression<T>, 
-    evaluate: Function, 
-    branch: Expression<T> = tree): Leaf<T> {
+// export function evaluateTree<T>(
+//     tree: Expression<T>, 
+//     evaluate: Function, 
+//     branch: Expression<T> = tree): Leaf<T> {
 
-    if(tree._tag === "leaf") {
-        return tree;
-    } else if(branch._tag === "neg") {
-        return branch.val._tag === "leaf" 
-        ? evaluate(branch)
-        : evaluate({_tag: "neg", val: evaluateTree(branch.val, evaluate)});
-    } else if(branch._tag === "leaf") {
-        return branch;
-    } else if(branch._tag === "paran") {
-        return evaluateTree(branch.val, evaluate);
+//     if(tree._tag === "leaf") {
+//         return tree;
+//     } else if(branch._tag === "neg") {
+//         return branch.val._tag === "leaf" 
+//         ? evaluate(branch)
+//         : evaluate({_tag: "neg", val: evaluateTree(branch.val, evaluate)});
+//     } else if(branch._tag === "leaf") {
+//         return branch;
+//     } else if(branch._tag === "paran") {
+//         return evaluateTree(branch.val, evaluate);
+//     }
+
+//     const leftIsLeaf = branch.left._tag === "leaf";
+//     const rightIsLeaf = branch.right._tag === "leaf";
+//     if(leftIsLeaf) {
+//         if(rightIsLeaf) {
+//             return(evaluate(branch));
+//         }
+//         const rightEval: Leaf<T> = evaluateTree(branch.right, evaluate);
+//         return evaluate({left: branch.left, right: rightEval, _tag: branch._tag});
+//     }
+
+//     const leftEval: Leaf<T> = evaluateTree(branch.left, evaluate);
+
+//     if(rightIsLeaf) {
+//         return evaluate({left: leftEval, right: branch.right, _tag: branch._tag});
+//     }
+//     const rightEval: Leaf<T> = evaluateTree(branch.right, evaluate);
+//     return evaluate({left: leftEval, right: rightEval, _tag: branch._tag});
+// }
+
+export function evaluateTreeVar<T> (
+    branch: Expression<T>,
+    evaluate: Evaluate<T>,
+): Expression<T> {
+    if(branch._tag === "leaf") {
+        return branch.val;
     }
-
+    if(branch._tag === "neg") {
+        return evaluate(branch.val);
+    }
+    if(branch._tag === "paran") {
+        return evaluateTreeVar(branch.val, evaluate);
+    }
+    if(branch._tag === "val" || branch._tag === "var") {
+        return branch;
+    }
+    
     const leftIsLeaf = branch.left._tag === "leaf";
     const rightIsLeaf = branch.right._tag === "leaf";
-    if(leftIsLeaf) {
-        if(rightIsLeaf) {
-            return(evaluate(branch));
-        }
-        const rightEval: Leaf<T> = evaluateTree(branch.right, evaluate);
-        return evaluate({left: branch.left, right: rightEval, _tag: branch._tag});
-    }
-
-    const leftEval: Leaf<T> = evaluateTree(branch.left, evaluate);
-
-    if(rightIsLeaf) {
-        return evaluate({left: leftEval, right: branch.right, _tag: branch._tag});
-    }
-    const rightEval: Leaf<T> = evaluateTree(branch.right, evaluate);
-    return evaluate({left: leftEval, right: rightEval, _tag: branch._tag});
+    
+    const leftEval = leftIsLeaf ? branch.left : evaluateTreeVar(branch.left, evaluate);
+    const rightEval = rightIsLeaf ? branch.right : evaluateTreeVar(branch.right, evaluate);
+    return evaluate({_tag: branch._tag, left: leftEval, right: rightEval});
 }
 
 export interface BranchElement {

@@ -1,6 +1,6 @@
-import { evaluateNum, parseInput } from "./numbers";
+import {evaluateNumVar, parseInput } from "./numbers";
 import type { Expression } from "./types";
-import { evaluateTree, listify } from "./tree-funcs";
+import { evaluateTreeVar, listify } from "./tree-funcs";
 import cytoscape, { BaseLayoutOptions } from "cytoscape";
 import dagre from "cytoscape-dagre"
 
@@ -55,7 +55,7 @@ function callback(ev: SubmitEvent) {
 
     const listified = listify(tree);
 
-    const evalled = evaluateTree<number>(tree as Expression<number>, evaluateNum);
+    const evalled = evaluateTreeVar<number>(tree as Expression<number>, evaluateNumVar);
     
     const result = (document.getElementById("result") as HTMLElement);
     result.textContent = `${evalled.val}`;

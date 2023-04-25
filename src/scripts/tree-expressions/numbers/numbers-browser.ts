@@ -1,6 +1,6 @@
 import {evaluateNumVar, parseInput } from "./numbers";
-import type { Expression } from "./types";
-import { evaluateTreeVar, listify } from "./tree-funcs";
+import type { Expression } from "../types";
+import { evaluateTreeVar, listify } from "../tree-funcs";
 import cytoscape, { BaseLayoutOptions } from "cytoscape";
 import dagre from "cytoscape-dagre"
 
@@ -53,12 +53,12 @@ function callback(ev: SubmitEvent) {
 
     //---
 
-    const listified = listify(tree);
+    // const listified = listify(tree);
 
     const evalled = evaluateTreeVar<number>(tree as Expression<number>, evaluateNumVar);
     
     const result = (document.getElementById("result") as HTMLElement);
-    result.textContent = `${evalled.val}`;
+    // result.textContent = `${evalled.val}`;
 
     // -------------- RESET DIV / DIAGRAM -----------------
 
@@ -79,6 +79,7 @@ function callback(ev: SubmitEvent) {
 
     // const nodes: {data: {id: string}}[] = listified.map((val) => {n: val.key});
     // console.log(listified.map((val) => {data: {id: val.key}}));
+    /*
     function makeNode(key: string, label: string): CyNodeInp { 
         return {data: {id: key, label: translateLabel(label)} };
     };
@@ -148,6 +149,7 @@ function callback(ev: SubmitEvent) {
 
     c.resize()
     c.center()
+    */
 }
 
 

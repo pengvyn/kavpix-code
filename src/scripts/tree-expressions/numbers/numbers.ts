@@ -1,4 +1,5 @@
-import { Add, Div, Evaluate, Expression, Leaf, makeLeaf, makeWaiting, Mul, Neg, Paran, ParanWait, ParsedWaitNext, ParseInp, Sub, Tag, Variable, variables, VarLeaf, Waiting } from "./types";
+import { isEqual } from "lodash";
+import { Add, Div, Evaluate, Expression, Leaf, makeLeaf, makeWaiting, Mul, Neg, Paran, ParanWait, ParsedWaitNext, ParseInp, Sub, Tag, ValLeaf, Variable, variables, VarLeaf, Waiting } from "../types";
 
 export type NumberOperator = "+" | "*" | "-" | "/";
 export const numberOperators: NumberOperator[] = ["+", "*", "-", "/"];
@@ -324,40 +325,70 @@ interface NegLeaf {
 //     return neg(exp);
 // }
 
-function add(left: Leaf<number>, right: Leaf<number>): AddLeaf | number {
+function add(left: Leaf<number>, right: Leaf<number>): AddLeaf | Leaf<number> {
     if(left.val._tag === "var" || right.val._tag === "var") {
         return {_tag: "add", left, right};
     }
-    return left.val.val + right.val.val;
+    return {
+        _tag: "leaf",
+        val: {
+            _tag: "val",
+            val: left.val.val + right.val.val
+        }
+    }
 }
-function sub(left: Leaf<number>, right: Leaf<number>): SubLeaf | number {
+function sub(left: Leaf<number>, right: Leaf<number>): SubLeaf | Leaf<number> {
     if(left.val._tag === "var" || right.val._tag === "var") {
         return {_tag: "sub", left, right};
     }
-    return left.val.val - right.val.val;
+    return {
+        _tag: "leaf",
+        val: {
+            _tag: "val",
+            val: left.val.val - right.val.val
+        }
+    }
 }
-function mul(left: Leaf<number>, right: Leaf<number>): MulLeaf | number {
+function mul(left: Leaf<number>, right: Leaf<number>): MulLeaf | Leaf<number> {
     if(left.val._tag === "var" || right.val._tag === "var") {
         return {_tag: "mul", left, right};
     }
-    return left.val.val * right.val.val;
+    return {
+        _tag: "leaf",
+        val: {
+            _tag: "val",
+            val: left.val.val * right.val.val
+        }
+    }
 }
-function div(left: Leaf<number>, right: Leaf<number>): DivLeaf | number {
+function div(left: Leaf<number>, right: Leaf<number>): DivLeaf | Leaf<number> {
     if(left.val._tag === "var" || right.val._tag === "var") {
         return {_tag: "div", left, right};
     }
-    return left.val.val / right.val.val;
+    return {
+        _tag: "leaf",
+        val: {
+            _tag: "val",
+            val: -1 * left.val.val / right.val.val
+        }
+    };
 }
-function neg(val: Leaf<number>): NegLeaf | number {
+function neg(val: Leaf<number>): NegLeaf | Leaf<number> {
     if(val.val._tag === "var") {
         return {_tag: "neg", val};
     }
-    return -1 * val.val.val;
+    return {
+        _tag: "leaf",
+        val: {
+            _tag: "val",
+            val: -1 * val.val.val
+        }
+    };
 }
 
 type LeafExp = AddLeaf | SubLeaf | MulLeaf | DivLeaf | NegLeaf;
 
-export function evaluateNumVar(exp: LeafExp): LeafExp | number {
+export function evaluateNumExp(exp: LeafExp): Expression<number> | Leaf<number> {
     switch(exp._tag) {
         case "add":
             return add(exp.left, exp.right);
@@ -371,3 +402,222 @@ export function evaluateNumVar(exp: LeafExp): LeafExp | number {
             return neg(exp.val);
     }
 }
+
+// there needs to be a simplify function 
+// anything that isn't a variable is evaluated immediately, so those get reduced
+// when there is a variable, it creates an expression with the evaluated value and the variable
+// if the expression w/ a variable is add or sub, and the operation is add to the next value, it should re arrange it and evaluate that
+// if the expression has a number on the right (and var on left), and there is an operation with the next value whihc is a number, it should do the op
+/*
+
+    mul
+   /   \
+ add    3
+ / \
+x   10
+
+^ it should distribute the 3?
+
+     add
+    /   \
+  add    10
+ /   \
+x     3
+
+^ it should add the 3 and the 10, so the final result will be {left: "x", right: 13, _tag: "add"} (with the leaf though)
+
+     add
+    /   \
+  add    10
+ /   \
+3     x
+
+^ it should look at the two adds and then add everything that isn't a variable
+how do i do that bsdfsdfhs
+
+it can maybe keep track of all the adds and subtracts in a "counter" or something ??
+what about division and multiplication ?
+
+the add, sub, mul, etc, functions return the expression if a variable is there. the simplify func compresses it if possible
+
+*/
+
+
+// there should be 2 funcs, one evaluate and one simplify 
+// the evaluate function does whatever it used to do, it evaluates what it can and leaves the variable expressions in place
+// it calls the simplify function after each recurse
+
+// simplify function:
+
+/*
+    if the expression is a leaf, var, or val the value should just be returned
+    1. simplify left
+    2. simplify right
+
+    switch:
+        left is add/sub
+            func:
+                performs as many operations as it can
+        left is mul/div
+            func: 
+                same as above
+        left is paran
+            func:
+                im not suree ... fsdnfs
+        left is neg
+            func:
+                multiply with val if its a number, otherwise just return as is
+        left is leaf/val/var
+            func: return as it is
+*/
+
+// if the expression is a leaf, var, or val the value should just be returned
+// 
+
+export function simplify(exp: Expression<number>, evaluate: Function): Expression<number> {
+    console.log("__________________________________")
+    console.log(exp);
+    // if the tag is either add or sub
+        // first check if the left is add/sub w/ variables (it wouldn't be without variables though since that would be evaluated already)
+        // same with right
+        // add/sub whatever is not a variable, create a new expression with that, and return
+    // if exp.tag is div or mul 
+        // if exp.left.right(if present) is a number
+            // perform the operation w/ exp.left.right and exp.right
+        // else just return the exp
+    // if it is a paran or neg
+        // return the exp (??)
+    if(exp._tag === "leaf") {
+        console.log("exp is leaf");
+        return exp;
+    }
+    if(exp._tag === "neg") {
+        if(exp.val._tag === "leaf") {
+            return exp.val.val._tag === "val"
+                ? {
+                    _tag: "leaf",
+                    val: {
+                        _tag: "val",
+                        val: -1 * exp.val.val.val
+                    }
+                }
+                : exp;
+        }
+        return exp;
+    }
+    if(exp._tag === "add" || exp._tag === "sub") {
+        console.log("Exp is add/sub")
+        const left = simplify(exp.left, evaluate);
+        const right = simplify(exp.right, evaluate);
+        console.log("------------------------", "the two console.logs above are from recursion !!!!!")
+        console.log("L AND R", left, "---", right);
+
+        if(left._tag === "add" || left._tag === "sub") {
+            console.log("left is add/sub");
+            const ll: Expression<number> = left.left;
+            // const lr: Expression<number> = exp.left.right._tag === "val" 
+            //     ? {
+            //         _tag: "leaf",
+            //         val: {
+            //             _tag: "val",
+            //             val: exp.left.right.val * -1
+            //         }
+            //     }
+            //     : {_tag: "neg", val: exp.left.right};
+            const lr: Expression<number> = left.right;
+
+
+            
+            if(right._tag === "add" || right._tag === "sub") {
+                const ll = left.left;
+                const lr = left.right;
+                const rl = right.left;
+                const rr = right.right;
+            } else if(right._tag === "leaf") {
+                const ll = left.left;
+                const lr = left.right;
+                if(ll._tag === "leaf") {
+                    
+                }
+            }
+        } else if(left._tag === "leaf" && left.val._tag === "val") {
+            console.log("LEFT IS LEAF VAL AJHKDJFHS")
+            if(right._tag === "add" || right._tag === "sub") {
+                const rl = right.left;
+                const rr = right.right;
+                if(rr._tag === "leaf") {
+                } else if(rl._tag === "leaf" && rl.val._tag === "val") {
+                    const newLeft = evaluate({
+                        _tag: exp._tag,
+                        left,
+                        right: rl
+                    })
+                    console.log("newwwwwwwwwwwww left:", newLeft)
+
+                    return {
+                        _tag: right._tag,
+                        left: newLeft,
+                        right: rr,
+                    };
+
+                }
+
+                return {
+                    _tag: exp._tag,
+                    left,
+                    right
+                }
+            } else if(right._tag === "leaf") {
+                if(right.val._tag === "var") {
+                    return exp;
+                }
+                return evaluate(exp);
+            }
+        }
+        // checks if exp.left and exp.right have add/sub tags
+            // if yes 
+                // get the numbers in exp.left and exp.right
+                // add the numbers
+                // create a new expression with the result and the variables
+            // if no
+                // just return the expression
+        return exp;
+    }
+    if(exp._tag === "div" || exp._tag === "mul") {
+        return exp;
+    }
+    if(exp._tag === "paran") {
+        return exp;
+    }
+}
+
+export function evaluateNumVar(exp: Expression<number>) {
+
+}
+/*
+export function evaluateNumVar(exp: Expression<number>): Expression<number> | number | Variable {
+    if(exp._tag === "val" || exp._tag === "var") {
+        return exp.val;
+    }
+    if(exp._tag === "neg") {
+        if(exp.val._tag === "leaf") {
+            return exp.val.val._tag === "val"
+                ? -1 * exp.val.val.val
+                : exp
+        }
+
+    }
+    // switch(exp._tag) {
+    //     case "add":
+    //         return add(exp.left, exp.right);
+    //     case "sub":
+    //         return sub(exp.left, exp.right);
+    //     case "mul":
+    //         return mul(exp.left, exp.right);
+    //     case "div":
+    //         return div(exp.left, exp.right);
+    //     case "neg":
+    //         return neg(exp.val);
+    // }
+}
+*/

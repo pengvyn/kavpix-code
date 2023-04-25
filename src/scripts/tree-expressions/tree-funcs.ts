@@ -62,7 +62,7 @@ import type {Evaluate, Expression, Leaf } from "./types";
 //     return evaluate({left: leftEval, right: rightEval, _tag: branch._tag});
 // }
 
-export function evaluateTreeVar<T> (
+export function evaluateTreeVar<T> (    
     branch: Expression<T>,
     evaluate: Evaluate<T>,
 ): Expression<T> {

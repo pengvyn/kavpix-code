@@ -1,6 +1,6 @@
 import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { closedParan, ExpectedNumVal, isExpected, joinSimilars, NumberOperator, openParan, parseInput, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers";
+import { closedParan, evaluateNumExp, ExpectedNumVal, isExpected, joinSimilars, NumberOperator, openParan, parseInput, simplify, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers/numbers";
 import { Add, Expression, Leaf, makeLeaf, makeWaiting, Neg, Waiting } from "../../scripts/tree-expressions/types";
 import { arbNumOperator, arbNumWaiting, arbStringAndNumList, strNumSet } from "../arbitraries";
 import { isEqual, negate } from "lodash";
@@ -239,17 +239,26 @@ describe("Numbers expression tree", () => {
                 _tag: "add",
                 left: {
                     _tag: "leaf",
-                    val: 1
+                    val: {
+                        _tag: "val",
+                        val: 1
+                    },
                 },
                 right: {
                     _tag: "add",
                     left: {
                         _tag: "leaf",
-                        val: 2,
+                        val: {
+                            _tag: "val",
+                            val: 2
+                        },
                     },
                     right: {
                         _tag: "leaf",
-                        val: 2,
+                        val: {
+                            _tag: "val",
+                            val: 2
+                        },
                     }
                 }
             }
@@ -334,20 +343,29 @@ describe("Numbers expression tree", () => {
                         _tag: "add",
                         left: {
                             _tag: "leaf",
-                            val: 10
+                            val: {
+                                _tag: "val",
+                                val: 10
+                            }
                         },
                         right: {
                             _tag: "neg",
                             val: {
                                 _tag: "leaf",
-                                val: 3,
+                                val: {
+                                    _tag: "val",
+                                    val: 3
+                                },
                             }
                         }
                     }
                 },
                 right: {
                     _tag: "leaf",
-                    val: 7,
+                    val: {
+                        _tag: "val",
+                        val: 7
+                    }
                 }
             }
             
@@ -357,7 +375,7 @@ describe("Numbers expression tree", () => {
                 // closed paran is part of the string
                 // closed paran is ending the paran in the waiting
                 const wait1: Waiting<NumberOperator> = {
-                    operator: "x",
+                    operator: "*",
                     negate: false,
                     paran: {
                         _tag: "paranned",
@@ -407,7 +425,7 @@ describe("Numbers expression tree", () => {
                     }
                 }
                 const wait2: Waiting<NumberOperator> = {
-                    operator: "x",
+                    operator: "*",
                     negate: true,
                     paran: {
                         _tag: "paranned",
@@ -469,17 +487,26 @@ describe("Numbers expression tree", () => {
                         _tag: "neg",
                         val: {
                             _tag: "leaf",
-                            val: 1,
+                            val: {
+                                _tag: "val",
+                                val: 1
+                            },
                         },
                     },
                     right: {
                         _tag: "leaf",
-                        val: 2
+                        val: {
+                            _tag: "val",
+                            val: 2
+                        }
                     }
                 },
                 right: {
                     _tag: "leaf",
-                    val: 3
+                    val: {
+                        _tag: "val",
+                        val: 3
+                    }
                 }
             }
 
@@ -500,7 +527,7 @@ describe("Numbers expression tree", () => {
                 }
             }
             const wait3: Waiting<NumberOperator> = {
-                operator: "x",
+                operator: "*",
                 negate: true,
                 paran: {
                     _tag: "paranned",
@@ -606,6 +633,40 @@ describe("Numbers expression tree", () => {
                     }
                 ))
             })
+        })
+    })
+    describe.only("Simplify", () => {
+        it("Simplify", () => {
+            const exp: Expression<number> = {
+                _tag: "add",
+                left: {
+                    _tag: "add",
+                    left: {
+                        _tag: "leaf",
+                        val: {
+                            _tag: "val",
+                            val: 10
+                        }
+                    },
+                    right: {
+                        _tag: "leaf",
+                        val: {
+                            _tag: "var",
+                            val: "x",
+                        }
+                    }
+                },
+                right: {
+                    _tag: "leaf",
+                    val: {
+                        _tag: "val",
+                        val: 5
+                    }
+                }
+            };
+
+            const result = simplify(exp, evaluateNumExp);
+            console.log("hiiiiiiiiiiiiiiiiiiiiii", result, isEqual(result, exp));
         })
     })
 })

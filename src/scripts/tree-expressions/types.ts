@@ -92,5 +92,11 @@ export interface ParsedWaitNext<T, O, NE> {
 }
 
 export function makeLeaf<T>(leaf: T): Leaf<T> {
-    return { val: leaf, _tag: "leaf" };
+    return { 
+        val: {
+            _tag: "val",
+            val: leaf
+        }, 
+        _tag: "leaf" 
+    };
 }

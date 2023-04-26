@@ -1,6 +1,6 @@
 import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { closedParan, evaluateNumExp, ExpectedNumVal, isExpected, joinSimilars, NumberOperator, openParan, parseInput, simplify, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers/numbers";
+import { closedParan, evaluateNumExp, evaluateRecurse, ExpectedNumVal, isExpected, isFullyEvaluated, joinSimilars, NumberOperator, openParan, parseInput, simplify, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers/numbers";
 import { Add, Expression, Leaf, makeLeaf, makeWaiting, Neg, Waiting } from "../../scripts/tree-expressions/types";
 import { arbNumOperator, arbNumWaiting, arbStringAndNumList, strNumSet } from "../arbitraries";
 import { isEqual, negate } from "lodash";
@@ -635,7 +635,7 @@ describe("Numbers expression tree", () => {
             })
         })
     })
-    describe.only("Simplify", () => {
+    describe("Simplify", () => {
         it("Simplify", () => {
             const exp: Expression<number> = {
                 _tag: "add",
@@ -668,5 +668,78 @@ describe("Numbers expression tree", () => {
             const result = simplify(exp, evaluateNumExp);
             console.log("hiiiiiiiiiiiiiiiiiiiiii", result, isEqual(result, exp));
         })
+    })
+    it.only("is fully evaluated", () => {
+        const exp: Expression<number> = {
+            _tag: "add",
+            left: {
+                _tag: "add",
+                left: {
+                    _tag: "leaf",
+                    val: {
+                        _tag: "val",
+                        val: 10
+                    }
+                },
+                right: {
+                    _tag: "leaf",
+                    val: {
+                        _tag: "var",
+                        val: "x",
+                    }
+                }
+            },
+            right: {
+                _tag: "leaf",
+                val: {
+                    _tag: "val",
+                    val: 5
+                }
+            }
+        };
+        const exp2: Expression<number> = {
+            _tag: "add",
+            left: {_tag: "leaf", val: {_tag: "val", val: 1}},
+            right: {_tag: "leaf", val: {_tag: "var", val: "a"}}
+        };
+        const exp3: Expression<number> = {
+            _tag: "add",
+            left: {_tag: "leaf", val: {_tag: "val", val: 10}},
+            right: {_tag: "leaf", val: {_tag: "val", val: 12}}
+        }
+        console.log(isFullyEvaluated(exp), isFullyEvaluated(exp2), isFullyEvaluated(exp3));
+    })
+    it.only("Evaluate recurse", () => {
+        const exp: Expression<number> = {
+            _tag: "mul",
+            left: {
+                _tag: "paran",
+                val: {
+                    _tag: "add",
+                    left: {
+                        _tag: "leaf",
+                        val: {
+                            _tag: "val",
+                            val: 10,
+                        }
+                    },
+                    right: {
+                        _tag: "leaf",
+                        val: {
+                            _tag: "val",
+                            val: 20
+                        }
+                    }
+                }
+            },
+            right: {
+                _tag: "leaf",
+                val: {
+                    _tag: "var",
+                    val: "x",
+                }
+            }
+        }
+        console.log(evaluateRecurse(exp, evaluateNumExp));
     })
 })

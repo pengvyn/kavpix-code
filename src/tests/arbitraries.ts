@@ -1,5 +1,5 @@
 import * as fc from "fast-check";
-import { ExpectedNumVal, NumberOperator, numberOperators } from "../scripts/tree-expressions/numbers";
+import { ExpectedNumVal, NumberOperator, numberOperators } from "../scripts/tree-expressions/numbers/numbers";
 import type { Expression, Waiting } from "../scripts/tree-expressions/types";
 import type { Statement } from "../scripts/truth-tables/truth-tables";
 

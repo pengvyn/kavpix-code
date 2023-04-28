@@ -355,7 +355,7 @@ function neg(val: Leaf<number>): NegLeaf | Leaf<number> {
     };
 }
 
-type LeafExp = AddLeaf | SubLeaf | MulLeaf | DivLeaf | NegLeaf;
+type LeafExp = AddLeaf | SubLeaf | MulLeaf | DivLeaf | NegLeaf | Leaf<number>;
 
 export function evaluateNumExp(exp: LeafExp): Expression<number> | Leaf<number> {
     switch(exp._tag) {
@@ -369,6 +369,8 @@ export function evaluateNumExp(exp: LeafExp): Expression<number> | Leaf<number> 
             return div(exp.left, exp.right);
         case "neg":
             return neg(exp.val);
+        case "leaf":
+            return exp;
     }
 }
 
@@ -496,15 +498,21 @@ export function evaluateRecurse(exp: Expression<number>, evaluate: Function): Ex
     }
     if(exp._tag === "neg" || exp._tag === "paran") {
         const evValled = evaluateRecurse(exp.val, evaluate);
-        return evaluate({_tag: exp._tag, val: evValled} as Neg<number> | Paran<number>);
+        const r = exp._tag === "neg" 
+            ? evaluate({_tag: exp._tag, val: evValled} as Neg<number>)
+            : evValled;
+        console.log("PARAN/NEG", evValled, r);
+        return r
     }
     if(isFullyEvaluated(exp)) {
-        return evaluate(exp);
+        console.log("hii")
+        return exp;
     }
     console.log("aaaaaaaaaaaa")
     const leftEvalled = evaluateRecurse(exp.left, evaluate);
-    console.log(leftEvalled, exp.left);
+    console.log("LEFT EVALUATED", leftEvalled, exp.left);
     const rightEvalled = evaluateRecurse(exp.right, evaluate);
+    console.log("RIGHT EVALUATED", rightEvalled, exp.right)
     const newExp: Expression<number> = {
         _tag: exp._tag,
         left: leftEvalled,

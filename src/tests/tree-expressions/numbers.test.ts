@@ -740,6 +740,67 @@ describe("Numbers expression tree", () => {
                 }
             }
         }
-        console.log(evaluateRecurse(exp, evaluateNumExp));
+        const exp2: Expression<number> = {
+            _tag: "add",
+            left: {
+                _tag: "paran",
+                val: {
+                    _tag: "div",
+                    left: {
+                        _tag: "leaf",
+                        val: {
+                            _tag: "var",
+                            val: "x"
+                        }
+                    },
+                    right: {
+                        _tag: "leaf",
+                        val: {
+                            _tag: "val",
+                            val: 10
+                        }
+                    }
+                }
+            },
+            right: {
+                _tag: "leaf",
+                val: {
+                    _tag: "var",
+                    val: "x"
+                }
+            }
+        }
+        const exp3: Expression<number> = {
+            _tag: "add",
+            left: {
+                _tag: "paran",
+                val: {
+                    _tag: "sub",
+                    left: {
+                        _tag: "leaf",
+                        val: {
+                            _tag: "var",
+                            val: "x"
+                        }
+                    },
+                    right: {
+                        _tag: "leaf",
+                        val: {
+                            _tag: "var",
+                            val: "x"
+                        }
+                    }
+                }
+            },
+            right: {
+                _tag: "leaf",
+                val: {
+                    _tag: "val",
+                    val: 1
+                }
+            }
+        }
+        // console.log("========================================== RESULT:", evaluateRecurse(exp, evaluateNumExp));
+        console.log("========================================== RESULT:", evaluateRecurse(parseInput("a - a") as Expression<number>, evaluateNumExp));
     })
 })

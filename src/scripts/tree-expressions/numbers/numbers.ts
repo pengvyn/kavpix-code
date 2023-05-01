@@ -96,7 +96,6 @@ export function valueIsOperator(
     parsed: Expression<number>, 
     waiting: Waiting<NumberOperator>
     ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
-        console.log(value);
         const newWaiting: Waiting<NumberOperator> = {...waiting, operator: value};
         const nextExp: ExpectedNumVal[] = ["neg", "number", "paran", "variable"];
         return {parsed, waiting: newWaiting, next: nextExp};
@@ -106,7 +105,6 @@ export function valueIsNumber(
     parsed: Expression<number> | null, 
     waiting: Waiting<NumberOperator>
     ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
-        console.log(parsed, waiting);
         const newBranch: Expression<number> = waiting.negate 
         ? makeNumExp(makeLeaf(value), null, "neg")
         : makeLeaf(value);
@@ -214,7 +212,13 @@ export function valueIsVar(
     waiting: Waiting<NumberOperator>,
     value: Variable,
 ): ParsedWaitNext<number, NumberOperator, ExpectedNumVal> {
-    const valExp: VarLeaf = {val: value, _tag: "var"};
+    const valExp: Leaf<number> = {
+        _tag: "leaf",
+        val: {
+            _tag: "var",
+            val: value
+        }
+    }
     const negd: Expression<number> = waiting.negate 
         ? makeNumExp(valExp, null, "neg")
         : valExp;
@@ -264,7 +268,6 @@ export function parseInput(input: string): Expression<number> | null {
             nextExp = newStorage.next;
         }
     }
-    console.log(parsed)
     return parsed;
 }
 
@@ -294,6 +297,7 @@ interface NegLeaf {
 }
 
 function add(left: Leaf<number>, right: Leaf<number>): AddLeaf | Leaf<number> {
+    console.log(left, right);
     if(left.val._tag === "var" || right.val._tag === "var") {
         return {_tag: "add", left, right};
     }
@@ -318,7 +322,6 @@ function sub(left: Leaf<number>, right: Leaf<number>): SubLeaf | Leaf<number> {
     }
 }
 function mul(left: Leaf<number>, right: Leaf<number>): MulLeaf | Leaf<number> {
-    console.log(left, right);
     if(left.val._tag === "var" || right.val._tag === "var") {
         return {_tag: "mul", left, right};
     }
@@ -357,7 +360,14 @@ function neg(val: Leaf<number>): NegLeaf | Leaf<number> {
 
 type LeafExp = AddLeaf | SubLeaf | MulLeaf | DivLeaf | NegLeaf | Leaf<number>;
 
-export function evaluateNumExp(exp: LeafExp): Expression<number> | Leaf<number> {
+export function evaluateNumExp(exp: Expression<number>): Expression<number> | Leaf<number> {
+    if(exp._tag === "neg" || exp._tag === "paran") {
+        return exp.val._tag === "leaf" ? exp.val : exp;
+    } else if(exp._tag === "leaf" || exp._tag === "var" || exp._tag === "val") {
+        return exp;
+    } else if(exp.left._tag !== "leaf" || exp.right._tag !== "leaf") {
+        return exp;
+    }
     switch(exp._tag) {
         case "add":
             return add(exp.left, exp.right);
@@ -367,9 +377,7 @@ export function evaluateNumExp(exp: LeafExp): Expression<number> | Leaf<number> 
             return mul(exp.left, exp.right);
         case "div":
             return div(exp.left, exp.right);
-        case "neg":
-            return neg(exp.val);
-        case "leaf":
+        default:
             return exp;
     }
 }
@@ -470,6 +478,10 @@ export function isFullyEvaluated(exp: Expression<number>): boolean {
     if(exp._tag === "leaf" || exp._tag === "val" || exp._tag === "var") {
         return true;
     }
+    if(exp._tag === "neg" && exp.val._tag === "leaf" && exp.val.val._tag === "val") {
+        // ^ checking if the neg is for a number and not a var or exp
+        return false;
+    }
     if(exp._tag === "neg" || exp._tag === "paran") {
         return isFullyEvaluated(exp.val) 
     }
@@ -487,8 +499,6 @@ export function isFullyEvaluated(exp: Expression<number>): boolean {
 }
 
 export function evaluateRecurse(exp: Expression<number>, evaluate: Function): Expression<number> {
-    console.log("------------------------------")
-    console.log(exp._tag)
     if(
         exp._tag === "leaf" 
         || exp._tag === "val" 
@@ -501,24 +511,82 @@ export function evaluateRecurse(exp: Expression<number>, evaluate: Function): Ex
         const r = exp._tag === "neg" 
             ? evaluate({_tag: exp._tag, val: evValled} as Neg<number>)
             : evValled;
-        console.log("PARAN/NEG", evValled, r);
         return r
     }
     if(isFullyEvaluated(exp)) {
-        console.log("hii")
         return exp;
     }
-    console.log("aaaaaaaaaaaa")
+    console.log(exp)
     const leftEvalled = evaluateRecurse(exp.left, evaluate);
-    console.log("LEFT EVALUATED", leftEvalled, exp.left);
     const rightEvalled = evaluateRecurse(exp.right, evaluate);
-    console.log("RIGHT EVALUATED", rightEvalled, exp.right)
     const newExp: Expression<number> = {
         _tag: exp._tag,
         left: leftEvalled,
         right: rightEvalled,
     }
     const evalled = evaluate(newExp);
-    console.log(evalled, "evaluatedddddddddddddddddd");
     return evalled;
+}
+
+// function translateTag(exp: Expression<number>): string {
+//     switch(exp._tag) {
+//         case "add":
+//             return "+";
+//         case "sub":
+//             return "-";
+//         case "neg":
+//             return "-";
+//         case "div":
+//             return "/";
+//         case "mul":
+//             return "*";
+//         case ""
+//     }
+// }
+
+export function reverseParse(exp: Expression<number>): string {
+    // does the same as evaluation, first evaluates left, then right
+    // or evaluates val
+    // if its a leaf, it returns the value
+    // if it's an expression (like add/neg/div etc) 
+    // it does the left, right/val and translates the tag and adds it together
+    const revParBoth = (
+        left: Expression<number>, 
+        right: Expression<number>, 
+        sy: NumberOperator
+    ) => `${reverseParse(left)} ${sy} ${reverseParse(right)}`;
+
+    switch(exp._tag) {
+        case "val":
+            return `${exp.val}`;
+        case "var":
+            return exp.val;
+        case "leaf":
+            return `${exp.val.val}`;
+        case "add":
+            return revParBoth(exp.left, exp.right, "+");
+        case "sub":
+            return revParBoth(exp.left, exp.right, "-");
+        case "div":
+            return revParBoth(exp.left, exp.right, "/");
+        case "mul":
+            return revParBoth(exp.left, exp.right, "*");
+        case "neg":
+            return "-" + reverseParse(exp.val);
+        case "paran":
+            return "(" + reverseParse(exp.val) + ")";
+    }
+
+    // if(exp._tag === "paran") {
+    //     const paranVal = reverseParse(exp.val);
+    //     return "(" + paranVal + ")";
+    // }
+    // if(exp._tag === "leaf") {
+    //     return `${exp.val.val}`;
+    // }
+    // if(exp.)
+    // switch(exp._tag) {
+    //     case "add":
+    //         return "+"
+    // }
 }

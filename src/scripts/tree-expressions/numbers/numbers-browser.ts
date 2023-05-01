@@ -1,4 +1,4 @@
-import {evaluateNumVar, parseInput } from "./numbers";
+import {evaluateNumExp, evaluateRecurse, parseInput, reverseParse } from "./numbers";
 import type { Expression } from "../types";
 import { evaluateTreeVar, listify } from "../tree-funcs";
 import cytoscape, { BaseLayoutOptions } from "cytoscape";
@@ -54,11 +54,12 @@ function callback(ev: SubmitEvent) {
     //---
 
     // const listified = listify(tree);
-
-    const evalled = evaluateTreeVar<number>(tree as Expression<number>, evaluateNumVar);
+    console.log("hey")
+    const evalled = evaluateRecurse(tree as Expression<number>, evaluateNumExp);
+    console.log(evalled);
     
     const result = (document.getElementById("result") as HTMLElement);
-    // result.textContent = `${evalled.val}`;
+    result.textContent = `${reverseParse(evalled)}`;
 
     // -------------- RESET DIV / DIAGRAM -----------------
 

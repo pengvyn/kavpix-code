@@ -449,8 +449,75 @@ the add, sub, mul, etc, functions return the expression if a variable is there. 
         left is leaf/val/var
             func: return as it is
 */
+export function simplifyAddRecurse(exp: Add<number>, branch: Add<number> | Sub<number> = exp, vals: Leaf<number>[] = []): Leaf<number>[] {
+    let newVals: Leaf<number>[] = vals;
+    switch(branch.left._tag) {
+        case "add":
+            newVals = [...newVals, ...simplifyAddRecurse(exp, branch.left, newVals)];
+            break;
+        case "sub":
+            newVals = [...newVals, ...simplifyAddRecurse(exp, branch.left, newVals)];
+            break;
+    }
 
+    return newVals;
+}
+export function simplifyAdd(exp: Add<number> | Sub<number>): Expression<number>[] {
+    const left = exp.left;
+    const right = exp.right;
 
+    // recursion:
+    // it checks the left and right
+    // if it's a leaf, it adds it into the list
+    // if it's a neg, 
+        // if the value is a number, it multiplies it by -1 and adds it to the list
+        // if the value is a variable, it just adds the neg to the list
+    // if it's add/sub, it does the recurse, and adds the values to the list
+    // if it's none of those, it just returns the list ??
+
+    // what
+    // each recurse should return a new expression with the list as the root of the expression
+    // when recursing, no need to give the list as input, just returns the expression list
+    function isAcceptableExp(e: Expression<number>): boolean {
+        const applicableTags: Tag[] = ["add", "sub", "leaf", "val", "var", "neg"];
+        return applicableTags.includes(e._tag);
+    }
+
+    if(!isAcceptableExp(exp)) {
+        return [exp];
+    }
+
+    function makeNewVal(e: Expression<number>): Expression<number>[] {
+        if(e._tag === "add" || e._tag === "sub") {
+            return simplifyAdd(e);
+        }
+        if(e._tag === "neg") {
+            console.log("heyaiiaia")
+            return e.val._tag === "leaf" && e.val.val._tag === "val"
+                ? [
+                    {_tag: "leaf", val: {
+                            _tag: "val", val: -1 * e.val.val.val
+                        }
+                    }
+                ]
+                : [e];
+        }
+        return [e];
+    }
+    const newLeft = makeNewVal(left);
+    const newRight = makeNewVal(exp._tag === "sub" ? {_tag: "neg", val: right} : right);
+    const listed = [...newLeft, ...newRight];
+    
+    const nums = listed.filter((val) => val._tag === "leaf" && val.val._tag === "val") as {_tag: "leaf", val: {_tag: "val", val: number}}[];
+    const notNums = listed.filter(
+        (val) => 
+            (val._tag === "leaf" && val.val._tag !== "val") 
+            || val._tag !== "leaf"
+    );
+    
+    const added = nums.reduce((p, c) => p + c.val.val, 0);
+    return [makeLeaf(added), ...notNums];
+}
 export function simplify(exp: Expression<number>, evaluate: Function): Expression<number> {
     switch(exp._tag) {
         case "add":

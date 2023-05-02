@@ -1,6 +1,6 @@
 import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { closedParan, evaluateNumExp, evaluateRecurse, ExpectedNumVal, isExpected, isFullyEvaluated, joinSimilars, NumberOperator, openParan, parseInput, simplify, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers/numbers";
+import { closedParan, evaluateNumExp, evaluateRecurse, ExpectedNumVal, isExpected, isFullyEvaluated, joinSimilars, NumberOperator, openParan, parseInput, simplify, simplifyAdd, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers/numbers";
 import { Add, Expression, Leaf, makeLeaf, makeWaiting, Neg, Waiting } from "../../scripts/tree-expressions/types";
 import { arbNumOperator, arbNumWaiting, arbStringAndNumList, strNumSet } from "../arbitraries";
 import { isEqual, negate } from "lodash";
@@ -669,7 +669,7 @@ describe("Numbers expression tree", () => {
             console.log("hiiiiiiiiiiiiiiiiiiiiii", result, isEqual(result, exp));
         })
     })
-    it.only("is fully evaluated", () => {
+    it("is fully evaluated", () => {
         const exp: Expression<number> = {
             _tag: "add",
             left: {
@@ -709,7 +709,7 @@ describe("Numbers expression tree", () => {
         }
         console.log(isFullyEvaluated(exp), isFullyEvaluated(exp2), isFullyEvaluated(exp3));
     })
-    it.only("Evaluate recurse", () => {
+    it("Evaluate recurse", () => {
         const exp: Expression<number> = {
             _tag: "mul",
             left: {
@@ -802,5 +802,10 @@ describe("Numbers expression tree", () => {
         }
         // console.log("========================================== RESULT:", evaluateRecurse(exp, evaluateNumExp));
         console.log("========================================== RESULT:", evaluateRecurse(parseInput("a - a") as Expression<number>, evaluateNumExp));
+    })
+    it.only("simplify add", () => {
+        const exp = parseInput("-1 - x + 2") as Add<number>;
+        console.log(exp.left)
+        console.log(simplifyAdd(exp));
     })
 })

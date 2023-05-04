@@ -364,10 +364,7 @@ the add, sub, mul, etc, functions return the expression if a variable is there. 
         left is leaf/val/var
             func: return as it is
 */
-export function simplifyAdd(exp: Add<number> | Sub<number>): Expression<number>[] {
-    const left = exp.left;
-    const right = exp.right;
-
+export function simplifyAdd(exp: Expression<number>): Expression<number>[] {
     // recursion:
     // it checks the left and right
     // if it's a leaf, it adds it into the list
@@ -380,14 +377,6 @@ export function simplifyAdd(exp: Add<number> | Sub<number>): Expression<number>[
     // what
     // each recurse should return a new expression with the list as the root of the expression
     // when recursing, no need to give the list as input, just returns the expression list
-    function isAcceptableExp(e: Expression<number>): boolean {
-        const applicableTags: Tag[] = ["add", "sub", "leaf", "val", "var", "neg"];
-        return applicableTags.includes(e._tag);
-    }
-
-    if(!isAcceptableExp(exp)) {
-        return [exp];
-    }
 
     function makeNewVal(e: Expression<number>): Expression<number>[] {
         if(e._tag === "add" || e._tag === "sub") {
@@ -405,6 +394,14 @@ export function simplifyAdd(exp: Add<number> | Sub<number>): Expression<number>[
         }
         return [e];
     }
+
+    if(exp._tag !== "add" && exp._tag !== "sub") {
+        return [exp];
+    }
+
+    const left = exp.left;
+    const right = exp.right;
+
     const newLeft = makeNewVal(left);
     const newRight = makeNewVal(exp._tag === "sub" ? {_tag: "neg", val: right} : right);
     const listed = [...newLeft, ...newRight];
@@ -426,6 +423,10 @@ export function addListToExp(list: Expression<number>[]): Expression<number> {
             ? {_tag: "sub", left: p, right: c.val}
             : {_tag: "add", left: p, right: c}
     )
+}
+
+export function simplify(tree: Expression<number>): Expression<number> {
+    return addListToExp(simplifyAdd(tree));
 }
 
 export function isFullyEvaluated(exp: Expression<number>): boolean {

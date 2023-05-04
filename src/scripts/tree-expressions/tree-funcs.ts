@@ -102,8 +102,11 @@ export function listify<T>(
     const newKey = list.length === 0 ? "1" : `${JSON.parse(list[list.length - 1].key) + 1}`;
     const newVal = {name: branch._tag, key: newKey, parent};
 
+    if(branch._tag === "var" || branch._tag === "val") {
+        return list;
+    }
     if(branch._tag === "leaf") {
-        return [...list, {name: `${branch.val}`, key: newKey, parent}];
+        return [...list, {name: `${branch.val.val}`, key: newKey, parent}];
     }
     if(branch._tag === "paran" || branch._tag === "neg") {
         return listify(tree, branch.val, newKey, [...list, newVal]);

@@ -1,7 +1,7 @@
 import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { addListToExp, closedParan, evaluateRecurse, ExpectedNumVal, isExpected, isFullyEvaluated, joinSimilars, NumberOperator, openParan, parseInput, reverseParse, simplifyAdd, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers/numbers";
-import { add, evaluateNumExp } from "../../scripts/tree-expressions/numbers/evaluate";
+import { add, evaluateNumExp, sub, mul, div, neg } from "../../scripts/tree-expressions/numbers/evaluate";
 import { Add, Expression, Leaf, makeLeaf, makeWaiting, Neg, Sub, Variable, variables, Waiting } from "../../scripts/tree-expressions/types";
 import { arbNumOperator, arbNumWaiting, arbStringAndNumList, arbVarOrNum, strNumSet } from "../arbitraries";
 import { isEqual, negate } from "lodash";
@@ -55,17 +55,17 @@ describe("Numbers expression tree", () => {
         it("Unexpected operator", () => {
             fc.assert(fc.property(
                 arbNumOperator, (operator: NumberOperator) => {
-                    const result: boolean = isExpected(operator, ["neg"]);
+                    const result: boolean = isExpected(operator, ["paran"]);
                     const result2: boolean = isExpected(operator, ["number"]);
-                    const result3: boolean = isExpected(operator, ["neg", "number"]);
+                    const result3: boolean = isExpected(operator, ["variable", "number"]);
                     return !result && !result2 && !result3;
                 }
             ))
         })
         it("Unexpected negative", () => {
-            const result: boolean = isExpected("-", ["operator"]);
+            const result: boolean = isExpected("-", ["paran"]);
             const result2: boolean = isExpected("-", ["number"]);
-            const result3: boolean = isExpected("-", ["operator", "number"]);
+            const result3: boolean = isExpected("-", ["variable", "number", "paran"]);
             // return !result && !result2 && !result3;
             expect(result).toBe(false);
             expect(result2).toBe(false);
@@ -177,7 +177,7 @@ describe("Numbers expression tree", () => {
                     }
                     const result = valueIsOperator(operator, parsed, {operator: null, negate: false, paran: {_tag: "not-paranned", exp: null}});
 
-                    const negNum: ExpectedNumVal[] = ["neg", "number", "paran"];
+                    const negNum: ExpectedNumVal[] = ["neg", "number", "paran", "variable"];
 
                     const waitEquals = isEqual(result.waiting, {operator, negate: false, paran: {_tag: "not-paranned", exp: null}});
                     const nextEquals = result.next.every((ne) => negNum.includes(ne))
@@ -195,8 +195,8 @@ describe("Numbers expression tree", () => {
                 const result = valueIsNegate(null, {operator: null, negate: false, paran: {_tag: "not-paranned", exp: null}});
                 const parsedEquals = result.parsed === null;
                 const waitEquals = isEqual(result.waiting, {operator: null, negate: true, paran: {_tag: "not-paranned", exp: null}});
-                const nextEquals = result.next.every((ne) => ["number", "paran"].includes(ne)) 
-                    && result.next.length === 2;
+                const nextEquals = result.next.every((ne) => ["number", "paran", "variable"].includes(ne)) 
+                    && result.next.length === 3;
                 
                 expect(parsedEquals).toBe(true);
                 expect(waitEquals).toBe(true);
@@ -215,7 +215,7 @@ describe("Numbers expression tree", () => {
                         const parsedEquals = isEqual(result.parsed, parsed);
                         const waitEquals = isEqual(result.waiting, {operator: operator, negate: true, paran: {_tag: "not-paranned", exp: null}});
 
-                        const nextExp: ExpectedNumVal[] = ["paran", "number"];
+                        const nextExp: ExpectedNumVal[] = ["paran", "number", "variable"];
                         const nextEquals = 
                             nextExp.every((ne) => result.next.includes(ne)) 
                             && nextExp.length === result.next.length;
@@ -225,9 +225,6 @@ describe("Numbers expression tree", () => {
                 ))
             })
         })
-    })
-    describe.skip("Parse input", () => {
-        // 
     })
     describe("Paran functions", () => {
         
@@ -317,8 +314,8 @@ describe("Numbers expression tree", () => {
                 )
                 expect(waitEquals).toBe(true);
             })
-            it("Next is [paran, neg, number]", () => {
-                const nextExp: ExpectedNumVal[] = ["paran", "neg", "number"];
+            it("Next is [paran, neg, number, variable]", () => {
+                const nextExp: ExpectedNumVal[] = ["paran", "neg", "number", "variable"];
                 const nextEquals = results.every((result) =>
                     nextExp.every((ne) => result.next.includes(ne)) && result.next.length === nextExp.length
                 )
@@ -430,7 +427,7 @@ describe("Numbers expression tree", () => {
                     negate: true,
                     paran: {
                         _tag: "paranned",
-                        exp: "1 + (2 x -3)",
+                        exp: "1 + (2 * -3)",
                     }
                 };
 
@@ -532,7 +529,7 @@ describe("Numbers expression tree", () => {
                 negate: true,
                 paran: {
                     _tag: "paranned",
-                    exp: "1x(2+3)"
+                    exp: "1*(2+3)"
                 }
             }
             const wait4: Waiting<NumberOperator> = {
@@ -540,7 +537,7 @@ describe("Numbers expression tree", () => {
                 negate: true,
                 paran: {
                     _tag: "paranned",
-                    exp: "1x10+7+(10 + 1)",
+                    exp: "1*10+7+(10 + 1)",
                 }
             }
             it("1", () => {
@@ -551,7 +548,7 @@ describe("Numbers expression tree", () => {
                         const wait = result.waiting;
 
                         const parsedEquals = isEqual(result.parsed, parsed);
-                        const nextExp: ExpectedNumVal[] = ["neg", "paran", "number", "operator"];
+                        const nextExp: ExpectedNumVal[] = ["neg", "paran", "number", "operator", "variable"];
                         const nextEquals = 
                             nextExp.every(ne => result.next.includes(ne)) 
                             && nextExp.length === result.next.length;
@@ -573,7 +570,7 @@ describe("Numbers expression tree", () => {
                         const wait = result.waiting;
 
                         const parsedEquals = isEqual(result.parsed, parsed);
-                        const nextExp: ExpectedNumVal[] = ["neg", "paran", "number", "operator"];
+                        const nextExp: ExpectedNumVal[] = ["neg", "paran", "number", "operator", "variable"];
                         const nextEquals = 
                             nextExp.every(ne => result.next.includes(ne)) 
                             && nextExp.length === result.next.length;
@@ -596,7 +593,7 @@ describe("Numbers expression tree", () => {
                         const wait = result.waiting;
 
                         const parsedEquals = isEqual(result.parsed, null);
-                        const nextExp: ExpectedNumVal[] = ["neg", "paran", "number", "operator"];
+                        const nextExp: ExpectedNumVal[] = ["neg", "paran", "number", "operator", "variable"];
                         const nextEquals = 
                             nextExp.every(ne => result.next.includes(ne)) 
                             && nextExp.length === result.next.length;
@@ -619,7 +616,7 @@ describe("Numbers expression tree", () => {
                         const wait = result.waiting;
 
                         const parsedEquals = isEqual(result.parsed, parsed);
-                        const nextExp: ExpectedNumVal[] = ["neg", "paran", "number", "operator"];
+                        const nextExp: ExpectedNumVal[] = ["neg", "paran", "number", "variable", "operator"];
                         const nextEquals = 
                             nextExp.every(ne => result.next.includes(ne)) 
                             && nextExp.length === result.next.length;
@@ -674,7 +671,6 @@ describe("Numbers expression tree", () => {
             left: {_tag: "leaf", val: {_tag: "val", val: 10}},
             right: {_tag: "leaf", val: {_tag: "val", val: 12}}
         }
-        console.log(isFullyEvaluated(exp), isFullyEvaluated(exp2), isFullyEvaluated(exp3));
     })
     it("Evaluate recurse", () => {
         const exp: Expression<number> = {
@@ -767,17 +763,13 @@ describe("Numbers expression tree", () => {
                 }
             }
         }
-        // console.log("========================================== RESULT:", evaluateRecurse(exp, evaluateNumExp));
-        console.log("========================================== RESULT:", evaluateRecurse(parseInput("a - a") as Expression<number>, evaluateNumExp));
     })
     it("simplify add", () => {
         const exp = parseInput("10 / 3 + x") as Add<number>;
         const evalled = evaluateRecurse(exp, evaluateNumExp);
         const r = simplifyAdd(evalled as Add<number> | Sub<number>);
-        console.log(r);
-        console.log(reverseParse(addListToExp(r)));
     })
-    describe.only("Evaluate functions", () => {
+    describe("Evaluate functions", () => {
         describe("add", () => {
             it("Left and right are numbers", () => {
                 fc.assert(fc.property(
@@ -795,6 +787,72 @@ describe("Numbers expression tree", () => {
                         const result = add(makeLeaf(left), makeLeaf(right));
                         return variables.includes(left as Variable) || variables.includes(right as Variable)
                             ? result._tag === "add"
+                            : result._tag === "leaf"
+                    }
+                ))
+            })
+        })
+        describe("sub", () => {
+            it("Left and right are numbers", () => {
+                fc.assert(fc.property(
+                    fc.integer(), fc.integer(),
+                    (left: number, right: number) => {
+                        const result = sub(makeLeaf(left), makeLeaf(right));
+                        return result._tag === "leaf" && result.val.val === left - right;
+                    }
+                ))
+            })
+            it("Left and right are var or num", () => {
+                fc.assert(fc.property(
+                    arbVarOrNum, arbVarOrNum,
+                    (left: Variable | number, right: Variable | number) => {
+                        const result = sub(makeLeaf(left), makeLeaf(right));
+                        return variables.includes(left as Variable) || variables.includes(right as Variable)
+                            ? result._tag === "sub"
+                            : result._tag === "leaf"
+                    }
+                ))
+            })
+        })
+        describe("add", () => {
+            it("Left and right are numbers", () => {
+                fc.assert(fc.property(
+                    fc.integer(), fc.integer(),
+                    (left: number, right: number) => {
+                        const result = mul(makeLeaf(left), makeLeaf(right));
+                        return result._tag === "leaf" && result.val.val === left * right;
+                    }
+                ))
+            })
+            it("Left and right are var or num", () => {
+                fc.assert(fc.property(
+                    arbVarOrNum, arbVarOrNum,
+                    (left: Variable | number, right: Variable | number) => {
+                        const result = mul(makeLeaf(left), makeLeaf(right));
+                        return variables.includes(left as Variable) || variables.includes(right as Variable)
+                            ? result._tag === "mul"
+                            : result._tag === "leaf"
+                    }
+                ))
+            })
+        })
+        describe("add", () => {
+            it("Left and right are numbers", () => {
+                fc.assert(fc.property(
+                    fc.integer(), fc.integer(),
+                    (left: number, right: number) => {
+                        const result = div(makeLeaf(left), makeLeaf(right));
+                        return result._tag === "leaf" && result.val.val === left / right;
+                    }
+                ))
+            })
+            it("Left and right are var or num", () => {
+                fc.assert(fc.property(
+                    arbVarOrNum, arbVarOrNum,
+                    (left: Variable | number, right: Variable | number) => {
+                        const result = div(makeLeaf(left), makeLeaf(right));
+                        return variables.includes(left as Variable) || variables.includes(right as Variable)
+                            ? result._tag === "div"
                             : result._tag === "leaf"
                     }
                 ))

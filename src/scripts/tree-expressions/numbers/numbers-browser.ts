@@ -1,8 +1,9 @@
-import {evaluateNumExp, evaluateRecurse, parseInput, reverseParse } from "./numbers";
+import {evaluateRecurse, parseInput, reverseParse, simplify, simplifyAdd } from "./numbers";
 import type { Expression } from "../types";
 import { evaluateTreeVar, listify } from "../tree-funcs";
 import cytoscape, { BaseLayoutOptions } from "cytoscape";
 import dagre from "cytoscape-dagre"
+import { evaluateNumExp } from "./evaluate";
 
 dagre(cytoscape);
 
@@ -53,13 +54,13 @@ function callback(ev: SubmitEvent) {
 
     //---
 
-    // const listified = listify(tree);
-    console.log("hey")
     const evalled = evaluateRecurse(tree as Expression<number>, evaluateNumExp);
-    console.log(evalled);
+    const simplified = simplify(evalled);
+    const listified = listify(simplified);
+
     
     const result = (document.getElementById("result") as HTMLElement);
-    result.textContent = `${reverseParse(evalled)}`;
+    result.textContent = `${reverseParse(simplified)}`;
 
     // -------------- RESET DIV / DIAGRAM -----------------
 
@@ -80,7 +81,7 @@ function callback(ev: SubmitEvent) {
 
     // const nodes: {data: {id: string}}[] = listified.map((val) => {n: val.key});
     // console.log(listified.map((val) => {data: {id: val.key}}));
-    /*
+    
     function makeNode(key: string, label: string): CyNodeInp { 
         return {data: {id: key, label: translateLabel(label)} };
     };
@@ -150,7 +151,6 @@ function callback(ev: SubmitEvent) {
 
     c.resize()
     c.center()
-    */
 }
 
 

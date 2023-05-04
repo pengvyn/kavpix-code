@@ -1,6 +1,6 @@
 import * as fc from "fast-check";
 import { ExpectedNumVal, NumberOperator, numberOperators } from "../scripts/tree-expressions/numbers/numbers";
-import type { Expression, Waiting } from "../scripts/tree-expressions/types";
+import { Expression, Leaf, Variable, Waiting, makeLeaf, variables } from "../scripts/tree-expressions/types";
 import type { Statement } from "../scripts/truth-tables/truth-tables";
 
 const lowercaseLetters = "abcdefghijklmnopqrstuvwxyz";
@@ -94,3 +94,10 @@ export const arb2DigitNum: fc.Arbitrary<number> = fc.integer({min: 0, max: 99});
 //             )
 //     }
 // }
+
+// -----
+
+export const arbVar: fc.Arbitrary<Variable> = fc.constantFrom(...variables);
+export const arbVarOrNum: fc.Arbitrary<Variable | number> = fc.integer().chain(
+    (n) => arbVar.chain((v) => fc.constantFrom(...[n, v]))
+);

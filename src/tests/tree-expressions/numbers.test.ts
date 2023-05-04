@@ -1,8 +1,9 @@
 import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { closedParan, evaluateNumExp, evaluateRecurse, ExpectedNumVal, isExpected, isFullyEvaluated, joinSimilars, NumberOperator, openParan, parseInput, simplify, simplifyAdd, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers/numbers";
-import { Add, Expression, Leaf, makeLeaf, makeWaiting, Neg, Waiting } from "../../scripts/tree-expressions/types";
-import { arbNumOperator, arbNumWaiting, arbStringAndNumList, strNumSet } from "../arbitraries";
+import { addListToExp, closedParan, evaluateRecurse, ExpectedNumVal, isExpected, isFullyEvaluated, joinSimilars, NumberOperator, openParan, parseInput, reverseParse, simplifyAdd, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers/numbers";
+import { add, evaluateNumExp } from "../../scripts/tree-expressions/numbers/evaluate";
+import { Add, Expression, Leaf, makeLeaf, makeWaiting, Neg, Sub, Variable, variables, Waiting } from "../../scripts/tree-expressions/types";
+import { arbNumOperator, arbNumWaiting, arbStringAndNumList, arbVarOrNum, strNumSet } from "../arbitraries";
 import { isEqual, negate } from "lodash";
 
 describe("Numbers expression tree", () => {
@@ -635,40 +636,6 @@ describe("Numbers expression tree", () => {
             })
         })
     })
-    describe("Simplify", () => {
-        it("Simplify", () => {
-            const exp: Expression<number> = {
-                _tag: "add",
-                left: {
-                    _tag: "add",
-                    left: {
-                        _tag: "leaf",
-                        val: {
-                            _tag: "val",
-                            val: 10
-                        }
-                    },
-                    right: {
-                        _tag: "leaf",
-                        val: {
-                            _tag: "var",
-                            val: "x",
-                        }
-                    }
-                },
-                right: {
-                    _tag: "leaf",
-                    val: {
-                        _tag: "val",
-                        val: 5
-                    }
-                }
-            };
-
-            const result = simplify(exp, evaluateNumExp);
-            console.log("hiiiiiiiiiiiiiiiiiiiiii", result, isEqual(result, exp));
-        })
-    })
     it("is fully evaluated", () => {
         const exp: Expression<number> = {
             _tag: "add",
@@ -803,9 +770,35 @@ describe("Numbers expression tree", () => {
         // console.log("========================================== RESULT:", evaluateRecurse(exp, evaluateNumExp));
         console.log("========================================== RESULT:", evaluateRecurse(parseInput("a - a") as Expression<number>, evaluateNumExp));
     })
-    it.only("simplify add", () => {
-        const exp = parseInput("-1 - x + 2") as Add<number>;
-        console.log(exp.left)
-        console.log(simplifyAdd(exp));
+    it("simplify add", () => {
+        const exp = parseInput("10 / 3 + x") as Add<number>;
+        const evalled = evaluateRecurse(exp, evaluateNumExp);
+        const r = simplifyAdd(evalled as Add<number> | Sub<number>);
+        console.log(r);
+        console.log(reverseParse(addListToExp(r)));
+    })
+    describe.only("Evaluate functions", () => {
+        describe("add", () => {
+            it("Left and right are numbers", () => {
+                fc.assert(fc.property(
+                    fc.integer(), fc.integer(),
+                    (left: number, right: number) => {
+                        const result = add(makeLeaf(left), makeLeaf(right));
+                        return result._tag === "leaf" && result.val.val === left + right;
+                    }
+                ))
+            })
+            it("Left and right are var or num", () => {
+                fc.assert(fc.property(
+                    arbVarOrNum, arbVarOrNum,
+                    (left: Variable | number, right: Variable | number) => {
+                        const result = add(makeLeaf(left), makeLeaf(right));
+                        return variables.includes(left as Variable) || variables.includes(right as Variable)
+                            ? result._tag === "add"
+                            : result._tag === "leaf"
+                    }
+                ))
+            })
+        })
     })
 })

@@ -1,4 +1,3 @@
-import { isEqual } from "lodash";
 import { Add, Div, Evaluate, Expression, Leaf, makeLeaf, makeWaiting, Mul, Neg, Paran, ParanWait, ParsedWaitNext, ParseInp, Sub, Tag, ValLeaf, Variable, variables, VarLeaf, Waiting } from "../types";
 
 export type NumberOperator = "+" | "*" | "-" | "/";
@@ -271,116 +270,32 @@ export function parseInput(input: string): Expression<number> | null {
     return parsed;
 }
 
-interface AddLeaf {
+export interface AddLeaf {
     left: Leaf<number>
     right: Leaf<number>
     _tag: "add"
 }
-interface SubLeaf{
+export interface SubLeaf{
     left: Leaf<number>
     right: Leaf<number>
     _tag: "sub"
 }
-interface MulLeaf {
+export interface MulLeaf {
     left: Leaf<number>
     right: Leaf<number>
     _tag: "mul"
 }
-interface DivLeaf {
+export interface DivLeaf {
     left: Leaf<number>
     right: Leaf<number>
     _tag: "div"
 }
-interface NegLeaf {
+export interface NegLeaf {
     val: Leaf<number>
     _tag: "neg"
 }
 
-function add(left: Leaf<number>, right: Leaf<number>): AddLeaf | Leaf<number> {
-    console.log(left, right);
-    if(left.val._tag === "var" || right.val._tag === "var") {
-        return {_tag: "add", left, right};
-    }
-    return {
-        _tag: "leaf",
-        val: {
-            _tag: "val",
-            val: left.val.val + right.val.val
-        }
-    }
-}
-function sub(left: Leaf<number>, right: Leaf<number>): SubLeaf | Leaf<number> {
-    if(left.val._tag === "var" || right.val._tag === "var") {
-        return {_tag: "sub", left, right};
-    }
-    return {
-        _tag: "leaf",
-        val: {
-            _tag: "val",
-            val: left.val.val - right.val.val
-        }
-    }
-}
-function mul(left: Leaf<number>, right: Leaf<number>): MulLeaf | Leaf<number> {
-    if(left.val._tag === "var" || right.val._tag === "var") {
-        return {_tag: "mul", left, right};
-    }
-    return {
-        _tag: "leaf",
-        val: {
-            _tag: "val",
-            val: left.val.val * right.val.val
-        }
-    }
-}
-function div(left: Leaf<number>, right: Leaf<number>): DivLeaf | Leaf<number> {
-    if(left.val._tag === "var" || right.val._tag === "var") {
-        return {_tag: "div", left, right};
-    }
-    return {
-        _tag: "leaf",
-        val: {
-            _tag: "val",
-            val: -1 * left.val.val / right.val.val
-        }
-    };
-}
-function neg(val: Leaf<number>): NegLeaf | Leaf<number> {
-    if(val.val._tag === "var") {
-        return {_tag: "neg", val};
-    }
-    return {
-        _tag: "leaf",
-        val: {
-            _tag: "val",
-            val: -1 * val.val.val
-        }
-    };
-}
-
 type LeafExp = AddLeaf | SubLeaf | MulLeaf | DivLeaf | NegLeaf | Leaf<number>;
-
-export function evaluateNumExp(exp: Expression<number>): Expression<number> | Leaf<number> {
-    if(exp._tag === "neg" || exp._tag === "paran") {
-        return exp.val._tag === "leaf" ? exp.val : exp;
-    } else if(exp._tag === "leaf" || exp._tag === "var" || exp._tag === "val") {
-        return exp;
-    } else if(exp.left._tag !== "leaf" || exp.right._tag !== "leaf") {
-        return exp;
-    }
-    switch(exp._tag) {
-        case "add":
-            return add(exp.left, exp.right);
-        case "sub":
-            return sub(exp.left, exp.right);
-        case "mul":
-            return mul(exp.left, exp.right);
-        case "div":
-            return div(exp.left, exp.right);
-        default:
-            return exp;
-    }
-}
 
 // there needs to be a simplify function 
 // anything that isn't a variable is evaluated immediately, so those get reduced
@@ -449,19 +364,6 @@ the add, sub, mul, etc, functions return the expression if a variable is there. 
         left is leaf/val/var
             func: return as it is
 */
-export function simplifyAddRecurse(exp: Add<number>, branch: Add<number> | Sub<number> = exp, vals: Leaf<number>[] = []): Leaf<number>[] {
-    let newVals: Leaf<number>[] = vals;
-    switch(branch.left._tag) {
-        case "add":
-            newVals = [...newVals, ...simplifyAddRecurse(exp, branch.left, newVals)];
-            break;
-        case "sub":
-            newVals = [...newVals, ...simplifyAddRecurse(exp, branch.left, newVals)];
-            break;
-    }
-
-    return newVals;
-}
 export function simplifyAdd(exp: Add<number> | Sub<number>): Expression<number>[] {
     const left = exp.left;
     const right = exp.right;
@@ -492,7 +394,6 @@ export function simplifyAdd(exp: Add<number> | Sub<number>): Expression<number>[
             return simplifyAdd(e);
         }
         if(e._tag === "neg") {
-            console.log("heyaiiaia")
             return e.val._tag === "leaf" && e.val.val._tag === "val"
                 ? [
                     {_tag: "leaf", val: {
@@ -518,27 +419,13 @@ export function simplifyAdd(exp: Add<number> | Sub<number>): Expression<number>[
     const added = nums.reduce((p, c) => p + c.val.val, 0);
     return [makeLeaf(added), ...notNums];
 }
-export function simplify(exp: Expression<number>, evaluate: Function): Expression<number> {
-    switch(exp._tag) {
-        case "add":
-            
-        case "sub":
-            
-        case "mul":
 
-        case "div":
-
-        case "neg":
-
-        case "paran":
-
-        case "leaf":
-
-        case "val":
-
-        case "var":
-
-    }
+export function addListToExp(list: Expression<number>[]): Expression<number> {
+    return list.reduce(
+        (p, c) => c._tag === "neg"
+            ? {_tag: "sub", left: p, right: c.val}
+            : {_tag: "add", left: p, right: c}
+    )
 }
 
 export function isFullyEvaluated(exp: Expression<number>): boolean {
@@ -583,7 +470,6 @@ export function evaluateRecurse(exp: Expression<number>, evaluate: Function): Ex
     if(isFullyEvaluated(exp)) {
         return exp;
     }
-    console.log(exp)
     const leftEvalled = evaluateRecurse(exp.left, evaluate);
     const rightEvalled = evaluateRecurse(exp.right, evaluate);
     const newExp: Expression<number> = {

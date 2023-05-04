@@ -39,6 +39,15 @@ export interface ValLeaf<T> {
     _tag: "val"
 }
 
+export interface LeafWithVar {
+    _tag: "leaf",
+    val: VarLeaf,
+}
+export interface LeafWithVal<T> {
+    _tag: "leaf"
+    val: ValLeaf<T>
+}
+
 export type Tag = "add" | "sub" | "mul" | "div" | "neg" | "paran" | "val" | "var" | "leaf";
 
 export type Variable = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z";
@@ -91,12 +100,21 @@ export interface ParsedWaitNext<T, O, NE> {
     next: NE[];
 }
 
-export function makeLeaf<T>(leaf: T): Leaf<T> {
-    return { 
-        val: {
-            _tag: "val",
-            val: leaf
-        }, 
-        _tag: "leaf" 
-    };
+export function makeLeafVal<T>(val: T | Variable): ValLeaf<T> | VarLeaf {
+    return variables.includes(val as Variable)
+        ? {_tag: "var", val: val as Variable} 
+        : {_tag: "val", val: val as T};
+}
+export function makeLeaf<T>(val: T | Variable): Leaf<T> {
+    return {
+        _tag: "leaf",
+        val: makeLeafVal(val)
+    }
+    // return { 
+    //     val: {
+    //         _tag: "val",
+    //         val: leaf
+    //     }, 
+    //     _tag: "leaf" 
+    // };
 }

@@ -1,6 +1,6 @@
 import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { addListToExp, closedParan, evaluateRecurse, ExpectedNumVal, isExpected, isFullyEvaluated, joinSimilars, NumberOperator, openParan, parseInput, reverseParse, simplifyAdd, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers/numbers";
+import { addListToExp, closedParan, evaluateRecurse, ExpectedNumVal, isExpected, isFullyEvaluated, joinSimilars, NumberOperator, openParan, parseInput, reverseParse, simplify, simplifyRecurse, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers/numbers";
 import { add, evaluateNumExp, sub, mul, div, neg } from "../../scripts/tree-expressions/numbers/evaluate";
 import { Add, Expression, Leaf, makeLeaf, makeWaiting, Neg, Sub, Variable, variables, Waiting } from "../../scripts/tree-expressions/types";
 import { arbNumOperator, arbNumWaiting, arbStringAndNumList, arbVarOrNum, strNumSet } from "../arbitraries";
@@ -767,7 +767,7 @@ describe("Numbers expression tree", () => {
     it("simplify add", () => {
         const exp = parseInput("10 / 3 + x") as Add<number>;
         const evalled = evaluateRecurse(exp, evaluateNumExp);
-        const r = simplifyAdd(evalled as Add<number> | Sub<number>);
+        const r = simplifyRecurse(evalled as Add<number> | Sub<number>);
     })
     describe("Evaluate functions", () => {
         describe("add", () => {
@@ -858,5 +858,10 @@ describe("Numbers expression tree", () => {
                 ))
             })
         })
+    })
+    it.only("thing", () => {
+        const parsed = parseInput("1 + (-2 / a)");
+        const evalled = evaluateRecurse(parsed as Expression<number>, evaluateNumExp);
+        console.log(reverseParse(simplify(evalled)));
     })
 })

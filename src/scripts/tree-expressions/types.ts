@@ -39,6 +39,8 @@ export interface ValLeaf<T> {
     _tag: "val"
 }
 
+export type Expression<T> = Add<T> | Sub<T> | Neg<T> | Mul<T> | Div<T> | Paran<T> | Leaf<T> | ValLeaf<T> | VarLeaf;
+
 export interface LeafWithVar {
     _tag: "leaf",
     val: VarLeaf,
@@ -48,10 +50,12 @@ export interface LeafWithVal<T> {
     val: ValLeaf<T>
 }
 
-export type Tag = "add" | "sub" | "mul" | "div" | "neg" | "paran" | "val" | "var" | "leaf";
+export type Tag = Expression<unknown>["_tag"]
 
-export type Variable = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z";
-export const variables: Variable[] = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
+// export type Variable = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z";
+export const _variables = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"] as const;
+export type Variable = typeof _variables[number];
+export const variables: readonly Variable[] = _variables;
 
 // export interface Var {
 //     val: Variable
@@ -77,8 +81,6 @@ export interface Waiting<Operator> {
 
 // waiting structure:
 // 
-
-export type Expression<T> = Add<T> | Sub<T> | Neg<T> | Mul<T> | Div<T> | Paran<T> | Leaf<T> | ValLeaf<T> | VarLeaf;
 
 
 export type ParseInp<T> = (input: string) => Expression<T> | null;

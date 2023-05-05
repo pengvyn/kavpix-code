@@ -15,26 +15,6 @@ export function joinSimilars(list: string[], similars: string[]): string[] {
             []
     )
 }
-/*
-
-10 + (2 + 3)
-
-  add
- /   \
-10    paran
-         \
-          add
-         /   \
-*/
-// IF the previous value is an empty list (lenght is 0)
-//      Add the current value
-// elseIF the current value is a number:
-//      IF the last element of the previous value is a number:
-//          Add the last el of prev value to the current value and spread it into the previous value list
-//      else
-//          Add the current value
-// else
-//      Add the current value
 
 function makeNumExp(leftOrValue: Expression<number>, right: Expression<number> | null = null, operator: NumberOperator | "neg" | "paran"): Expression<number> {
     if(right === null && !(["neg", "paran"].includes(operator))) {
@@ -71,6 +51,8 @@ function makeNumExp(leftOrValue: Expression<number>, right: Expression<number> |
         : {left: leftOrValue, right: right as Expression<number>, _tag: tag} as Expression<number>;
 }
 
+const oneDigitNums = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
+
 export function isExpected(value: string, expected: ExpectedNumVal[]): boolean {
     if(value === "-") {
         return expected.includes("neg") || expected.includes("operator");
@@ -81,7 +63,7 @@ export function isExpected(value: string, expected: ExpectedNumVal[]): boolean {
     if((variables as string[]).includes(value)) {
         return expected.includes("variable");
     }
-    if(value.split("").every((n) => "1234567890".split("").includes(n))) {
+    if(value.split("").every((n) => oneDigitNums.includes(n))) {
         return expected.includes("number");
     }
     if(value === "(" || value === ")") {
@@ -89,6 +71,8 @@ export function isExpected(value: string, expected: ExpectedNumVal[]): boolean {
     }
     return false;
 }
+
+// ------------- VALUE IS ____ FUNCS ----------
 
 export function valueIsOperator(
     value: NumberOperator, 
@@ -254,7 +238,7 @@ export function parseInput(input: string): Expression<number> | null {
             const newStorage: ParsedWaitNext<number, NumberOperator, ExpectedNumVal> = 
             shouldCallParan 
             ? valueIsOrInParan(parsed, waiting, curVal)
-            : curVal === "-" && waiting.operator !== null
+            : curVal === "-" && (waiting.operator !== null || parsed === null)
                 ? valueIsNegate(parsed, waiting)
                 : (numberOperators as string[]).includes(curVal)
                     ? valueIsOperator(curVal as NumberOperator, parsed as Expression<number>, waiting)
@@ -297,74 +281,25 @@ export interface NegLeaf {
 
 type LeafExp = AddLeaf | SubLeaf | MulLeaf | DivLeaf | NegLeaf | Leaf<number>;
 
-// there needs to be a simplify function 
-// anything that isn't a variable is evaluated immediately, so those get reduced
-// when there is a variable, it creates an expression with the evaluated value and the variable
-// if the expression w/ a variable is add or sub, and the operation is add to the next value, it should re arrange it and evaluate that
-// if the expression has a number on the right (and var on left), and there is an operation with the next value whihc is a number, it should do the op
-/*
+function makeNewVal(e: Expression<number>): Expression<number>[] {
+    if(e._tag === "add" || e._tag === "sub") {
+        return simplifyRecurse(e);
+    }
+    if(e._tag === "neg") {
+        // console.log("hii", e)
+        return e.val._tag === "leaf" && e.val.val._tag === "val"
+            ? [
+                {_tag: "leaf", val: {
+                        _tag: "val", val: -1 * e.val.val.val
+                    }
+                }
+            ]
+            : [e];
+    }
+    return [e];
+}
 
-    mul
-   /   \
- add    3
- / \
-x   10
-
-^ it should distribute the 3?
-
-     add
-    /   \
-  add    10
- /   \
-x     3
-
-^ it should add the 3 and the 10, so the final result will be {left: "x", right: 13, _tag: "add"} (with the leaf though)
-
-     add
-    /   \
-  add    10
- /   \
-3     x
-
-^ it should look at the two adds and then add everything that isn't a variable
-how do i do that bsdfsdfhs
-
-it can maybe keep track of all the adds and subtracts in a "counter" or something ??
-what about division and multiplication ?
-
-the add, sub, mul, etc, functions return the expression if a variable is there. the simplify func compresses it if possible
-
-*/
-
-
-// there should be 2 funcs, one evaluate and one simplify 
-// the evaluate function does whatever it used to do, it evaluates what it can and leaves the variable expressions in place
-// it calls the simplify function after each recurse
-
-// simplify function:
-
-/*
-    if the expression is a leaf, var, or val the value should just be returned
-    1. simplify left
-    2. simplify right
-
-    switch:
-        left is add/sub
-            func:
-                performs as many operations as it can
-        left is mul/div
-            func: 
-                same as above
-        left is paran
-            func:
-                im not suree ... fsdnfs
-        left is neg
-            func:
-                multiply with val if its a number, otherwise just return as is
-        left is leaf/val/var
-            func: return as it is
-*/
-export function simplifyAdd(exp: Expression<number>): Expression<number>[] {
+export function simplifyRecurse(exp: Expression<number>): Expression<number>[] {
     // recursion:
     // it checks the left and right
     // if it's a leaf, it adds it into the list
@@ -378,22 +313,7 @@ export function simplifyAdd(exp: Expression<number>): Expression<number>[] {
     // each recurse should return a new expression with the list as the root of the expression
     // when recursing, no need to give the list as input, just returns the expression list
 
-    function makeNewVal(e: Expression<number>): Expression<number>[] {
-        if(e._tag === "add" || e._tag === "sub") {
-            return simplifyAdd(e);
-        }
-        if(e._tag === "neg") {
-            return e.val._tag === "leaf" && e.val.val._tag === "val"
-                ? [
-                    {_tag: "leaf", val: {
-                            _tag: "val", val: -1 * e.val.val.val
-                        }
-                    }
-                ]
-                : [e];
-        }
-        return [e];
-    }
+    
 
     if(exp._tag !== "add" && exp._tag !== "sub") {
         return [exp];
@@ -403,7 +323,11 @@ export function simplifyAdd(exp: Expression<number>): Expression<number>[] {
     const right = exp.right;
 
     const newLeft = makeNewVal(left);
-    const newRight = makeNewVal(exp._tag === "sub" ? {_tag: "neg", val: right} : right);
+    const newRight = makeNewVal(
+        exp._tag === "sub" 
+            ? {_tag: "neg", val: right} 
+            : right
+    );
     const listed = [...newLeft, ...newRight];
     
     const nums = listed.filter((val) => val._tag === "leaf" && val.val._tag === "val") as {_tag: "leaf", val: {_tag: "val", val: number}}[];
@@ -412,7 +336,7 @@ export function simplifyAdd(exp: Expression<number>): Expression<number>[] {
             (val._tag === "leaf" && val.val._tag !== "val") 
             || val._tag !== "leaf"
     );
-    
+
     const added = nums.reduce((p, c) => p + c.val.val, 0);
     return [makeLeaf(added), ...notNums];
 }
@@ -426,7 +350,7 @@ export function addListToExp(list: Expression<number>[]): Expression<number> {
 }
 
 export function simplify(tree: Expression<number>): Expression<number> {
-    return addListToExp(simplifyAdd(tree));
+    return addListToExp(simplifyRecurse(tree));
 }
 
 export function isFullyEvaluated(exp: Expression<number>): boolean {
@@ -481,22 +405,6 @@ export function evaluateRecurse(exp: Expression<number>, evaluate: Function): Ex
     const evalled = evaluate(newExp);
     return evalled;
 }
-
-// function translateTag(exp: Expression<number>): string {
-//     switch(exp._tag) {
-//         case "add":
-//             return "+";
-//         case "sub":
-//             return "-";
-//         case "neg":
-//             return "-";
-//         case "div":
-//             return "/";
-//         case "mul":
-//             return "*";
-//         case ""
-//     }
-// }
 
 export function reverseParse(exp: Expression<number>): string {
     // does the same as evaluation, first evaluates left, then right

@@ -1,4 +1,4 @@
-import type { Expression, Leaf } from "../types";
+import type { Expression, Leaf, Neg, Paran } from "../types";
 import type { AddLeaf, DivLeaf, MulLeaf, NegLeaf, SubLeaf } from "./numbers";
 
 export function add(left: Leaf<number>, right: Leaf<number>): AddLeaf | Leaf<number> {
@@ -64,22 +64,57 @@ export function neg(val: Leaf<number>): NegLeaf | Leaf<number> {
 
 
 export function evaluateNumExp(exp: Expression<number>): Expression<number> | Leaf<number> {
-    if(exp._tag === "neg" || exp._tag === "paran") {
-        return exp.val._tag === "leaf" ? exp.val : exp;
-    } else if(exp._tag === "leaf" || exp._tag === "var" || exp._tag === "val") {
-        return exp;
-    } else if(exp.left._tag !== "leaf" || exp.right._tag !== "leaf") {
+    // if(exp._tag === "neg" || exp._tag === "paran") {
+    //     return exp.val._tag === "leaf" ? exp.val : exp;
+    // } else if(exp._tag === "leaf" || exp._tag === "var" || exp._tag === "val") {
+    //     return exp;
+    // } else if(exp.left._tag !== "leaf" || exp.right._tag !== "leaf") {
+    //     return exp;
+    // }
+    if(
+        ((exp._tag === "neg" || exp._tag === "paran") && exp.val._tag !== "leaf")
+    ) {
         return exp;
     }
+    if(
+        (exp._tag === "div" || exp._tag === "mul" || exp._tag === "add" || exp._tag === "sub")
+        && (exp.left._tag !== "leaf" || exp.right._tag !== "leaf")
+    ) {
+        return exp
+    }
     switch(exp._tag) {
+        case "leaf":
+        case "var":
+        case "val":
+            return exp;
+
         case "add":
-            return add(exp.left, exp.right);
+            return add(
+                exp.left as Leaf<number>, 
+                exp.right as Leaf<number>
+            );
         case "sub":
-            return sub(exp.left, exp.right);
+            return sub(
+                exp.left as Leaf<number>, 
+                exp.right as Leaf<number>
+            );
         case "mul":
-            return mul(exp.left, exp.right);
+            return mul(
+                exp.left as Leaf<number>, 
+                exp.right as Leaf<number>
+            );
         case "div":
-            return div(exp.left, exp.right);
+            return div(
+                exp.left as Leaf<number>, 
+                exp.right as Leaf<number>
+            );
+
+        case "neg":
+            const val = (exp.val as Leaf<number>).val;
+            const result: Neg<number> | Leaf<number> = val._tag === "val" 
+                ? {_tag: "leaf", val: {_tag: "val", val: val.val * -1}}
+                : exp;
+            return result;
         default:
             return exp;
     }

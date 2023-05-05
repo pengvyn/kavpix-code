@@ -1,4 +1,4 @@
-import {evaluateRecurse, parseInput, reverseParse, simplify, simplifyAdd } from "./numbers";
+import {evaluateRecurse, parseInput, reverseParse, simplify, simplifyRecurse } from "./numbers";
 import type { Expression } from "../types";
 import { evaluateTreeVar, listify } from "../tree-funcs";
 import cytoscape, { BaseLayoutOptions } from "cytoscape";

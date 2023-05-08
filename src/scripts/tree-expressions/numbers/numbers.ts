@@ -338,7 +338,7 @@ export function simplifyRecurse(exp: Expression<number>): Expression<number>[] {
     );
 
     const added = nums.reduce((p, c) => p + c.val.val, 0);
-    return [makeLeaf(added), ...notNums];
+    return [...(added === 0 ? [] : [makeLeaf(added)]), ...notNums];
 }
 
 export function addListToExp(list: Expression<number>[]): Expression<number> {
@@ -350,7 +350,9 @@ export function addListToExp(list: Expression<number>[]): Expression<number> {
 }
 
 export function simplify(tree: Expression<number>): Expression<number> {
-    return addListToExp(simplifyRecurse(tree));
+    const simplifyRecursed = simplifyRecurse(tree);
+    console.log(simplifyRecursed);
+    return addListToExp(simplifyRecursed);
 }
 
 export function isFullyEvaluated(exp: Expression<number>): boolean {
@@ -377,7 +379,9 @@ export function isFullyEvaluated(exp: Expression<number>): boolean {
 
 }
 
-export function evaluateRecurse(exp: Expression<number>, evaluate: Function): Expression<number> {
+export function evaluateRecurse(expWithParan: Expression<number>, evaluate: Function): Expression<number> {
+    const exp = removeParan(expWithParan);
+
     if(
         exp._tag === "leaf" 
         || exp._tag === "val" 
@@ -385,11 +389,13 @@ export function evaluateRecurse(exp: Expression<number>, evaluate: Function): Ex
     ) {
         return exp;
     }
+
     if(exp._tag === "neg" || exp._tag === "paran") {
         const evValled = evaluateRecurse(exp.val, evaluate);
         const r = exp._tag === "neg" 
             ? evaluate({_tag: exp._tag, val: evValled} as Neg<number>)
-            : evValled;
+            : {_tag: "paran", val: evValled};
+        console.log("EXP._TAG IS NEG OR PARANNNNNNNNNNNNNN")
         return r
     }
     if(isFullyEvaluated(exp)) {
@@ -404,6 +410,33 @@ export function evaluateRecurse(exp: Expression<number>, evaluate: Function): Ex
     }
     const evalled = evaluate(newExp);
     return evalled;
+}
+
+export function removeParan(exp: Expression<number>): Expression<number> {
+    switch(exp._tag) {
+        case "add":
+        case "sub":
+            const left = exp.left;
+            const right = exp.right;
+
+            const leftIsParan = left._tag === "paran";
+            const rightIsParan = right._tag === "paran";
+            
+            if(!leftIsParan && !rightIsParan) {
+                return exp;
+            }
+
+            const newLeft = leftIsParan && (left.val._tag === "add" || left.val._tag === "sub")
+                ? left.val
+                : left;
+            const newRight = rightIsParan && (right.val._tag === "add" || right.val._tag === "sub")
+            ? right.val
+            : right;
+            // console.log(newLeft, newRight)
+            return {_tag: exp._tag, left: newLeft, right: newRight};
+        default:
+            return exp;
+    }
 }
 
 export function reverseParse(exp: Expression<number>): string {

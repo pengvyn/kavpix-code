@@ -860,8 +860,11 @@ describe("Numbers expression tree", () => {
         })
     })
     it.only("thing", () => {
-        const parsed = parseInput("1 + (-2 / a)");
+        const parsed = parseInput("a - a");
         const evalled = evaluateRecurse(parsed as Expression<number>, evaluateNumExp);
-        console.log(reverseParse(simplify(evalled)));
+        const simplified = simplify(evalled);
+        // console.log(simplified.left.left, "Aaaaaaaaaaaaaaaaaskadasda", simplified.right)
+        const revParred = reverseParse(simplified);
+        console.log(revParred);
     })
 })

@@ -1,3 +1,4 @@
+import { isEqual } from "lodash";
 import { Add, Div, Evaluate, Expression, Leaf, makeLeaf, makeWaiting, Mul, Neg, Paran, ParanWait, ParsedWaitNext, ParseInp, Sub, Tag, ValLeaf, Variable, variables, VarLeaf, Waiting } from "../types";
 
 export type NumberOperator = "+" | "*" | "-" | "/";
@@ -299,6 +300,10 @@ function makeNewVal(e: Expression<number>): Expression<number>[] {
     return [e];
 }
 
+const findEqualNegExp = (list: Expression<number>[], cur: Expression<number>) => list.findIndex(
+    (exp) => (exp._tag === "neg" && isEqual(exp.val, cur)) || (cur._tag === "neg" && isEqual(exp, cur.val))
+);
+
 export function simplifyRecurse(exp: Expression<number>): Expression<number>[] {
     // recursion:
     // it checks the left and right
@@ -336,9 +341,16 @@ export function simplifyRecurse(exp: Expression<number>): Expression<number>[] {
             (val._tag === "leaf" && val.val._tag !== "val") 
             || val._tag !== "leaf"
     );
+    
+    const varEvalled = notNums.reduce(
+        (p, c) => findEqualNegExp(p, c) === -1
+            ? [...p, c] 
+            : [...p.slice(0, findEqualNegExp(p, c)), ...p.slice(findEqualNegExp(p, c) + 1)], 
+        [] as Expression<number>[]
+    )
 
     const added = nums.reduce((p, c) => p + c.val.val, 0);
-    return [...(added === 0 ? [] : [makeLeaf(added)]), ...notNums];
+    return [...(added === 0 ? [] : [makeLeaf(added)]), ...(varEvalled.length === 0 ? [makeLeaf(0)] : varEvalled)];
 }
 
 export function addListToExp(list: Expression<number>[]): Expression<number> {

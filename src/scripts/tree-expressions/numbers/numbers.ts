@@ -203,14 +203,16 @@ export function valueIsVar(
             val: value
         }
     }
+
     const negd: Expression<number> = waiting.negate 
         ? makeNumExp(valExp, null, "neg")
         : valExp;
 
-    const newParsed = waiting.operator === null
-        ? valExp
+        const newParsed = waiting.operator === null
+        ? negd
         : makeNumExp(parsed as Expression<number>, negd, waiting.operator);
-    const newWaiting = makeWaiting<NumberOperator>();
+
+        const newWaiting = makeWaiting<NumberOperator>();
     const next: ExpectedNumVal[] = ["operator", "paran"];
     return {
         parsed: newParsed,
@@ -287,15 +289,19 @@ function makeNewVal(e: Expression<number>): Expression<number>[] {
         return simplifyRecurse(e);
     }
     if(e._tag === "neg") {
-        // console.log("hii", e)
-        return e.val._tag === "leaf" && e.val.val._tag === "val"
-            ? [
-                {_tag: "leaf", val: {
-                        _tag: "val", val: -1 * e.val.val.val
+        return e.val._tag === "leaf"
+            ? e.val.val._tag === "val" 
+                ? [
+                    {_tag: "leaf", val: {
+                            _tag: "val", val: -1 * e.val.val.val
+                        }
                     }
-                }
-            ]
-            : [e];
+                ]
+                : [e]
+            : negateAll(makeNewVal(e.val));
+    }
+    if(e._tag === "paran") {
+        return makeNewVal(e.val);
     }
     return [e];
 }
@@ -303,6 +309,13 @@ function makeNewVal(e: Expression<number>): Expression<number>[] {
 const findEqualNegExp = (list: Expression<number>[], cur: Expression<number>) => list.findIndex(
     (exp) => (exp._tag === "neg" && isEqual(exp.val, cur)) || (cur._tag === "neg" && isEqual(exp, cur.val))
 );
+function negateAll(exps: Expression<number>[]): Expression<number>[] {
+    return exps.map(
+        (exp) => exp._tag === "neg"
+            ? exp.val
+            : makeNumExp(exp, undefined, "neg") as Neg<number>
+    );
+}
 
 export function simplifyRecurse(exp: Expression<number>): Expression<number>[] {
     // recursion:
@@ -333,15 +346,16 @@ export function simplifyRecurse(exp: Expression<number>): Expression<number>[] {
             ? {_tag: "neg", val: right} 
             : right
     );
+
     const listed = [...newLeft, ...newRight];
-    
+
     const nums = listed.filter((val) => val._tag === "leaf" && val.val._tag === "val") as {_tag: "leaf", val: {_tag: "val", val: number}}[];
     const notNums = listed.filter(
         (val) => 
-            (val._tag === "leaf" && val.val._tag !== "val") 
+            (val._tag === "leaf" && val.val._tag === "var") 
             || val._tag !== "leaf"
     );
-    
+
     const varEvalled = notNums.reduce(
         (p, c) => findEqualNegExp(p, c) === -1
             ? [...p, c] 
@@ -350,20 +364,23 @@ export function simplifyRecurse(exp: Expression<number>): Expression<number>[] {
     )
 
     const added = nums.reduce((p, c) => p + c.val.val, 0);
-    return [...(added === 0 ? [] : [makeLeaf(added)]), ...(varEvalled.length === 0 ? [makeLeaf(0)] : varEvalled)];
+    
+    return [...(added === 0 ? [] : [makeLeaf(added)]), ...varEvalled];
 }
 
 export function addListToExp(list: Expression<number>[]): Expression<number> {
+    if(list.length === 0) {
+        return makeLeaf(0);
+    }
     return list.reduce(
         (p, c) => c._tag === "neg"
             ? {_tag: "sub", left: p, right: c.val}
-            : {_tag: "add", left: p, right: c}
+            : {_tag: "add", left: p, right: c},
     )
 }
 
 export function simplify(tree: Expression<number>): Expression<number> {
     const simplifyRecursed = simplifyRecurse(tree);
-    console.log(simplifyRecursed);
     return addListToExp(simplifyRecursed);
 }
 
@@ -376,7 +393,8 @@ export function isFullyEvaluated(exp: Expression<number>): boolean {
         return false;
     }
     if(exp._tag === "neg" || exp._tag === "paran") {
-        return isFullyEvaluated(exp.val) 
+        const r =  isFullyEvaluated(exp.val);
+        return r;
     }
     const leftEvalled = isFullyEvaluated(exp.left);
     const rightEvalled = isFullyEvaluated(exp.right);
@@ -387,7 +405,7 @@ export function isFullyEvaluated(exp: Expression<number>): boolean {
     const isVar = (e: Expression<number>) => e._tag === "leaf" && e.val._tag === "var";
 
     // one of it (left or right) is either a variable OR not a leaf
-    return isVar(exp.left) || isVar(exp.right) || exp.left._tag !== "leaf" || exp.right._tag !== "leaf";
+    return ((isVar(exp.left) || isVar(exp.right)) && !isEqual(exp.left, exp.right)) || exp.left._tag !== "leaf" || exp.right._tag !== "leaf";
 
 }
 
@@ -407,7 +425,6 @@ export function evaluateRecurse(expWithParan: Expression<number>, evaluate: Func
         const r = exp._tag === "neg" 
             ? evaluate({_tag: exp._tag, val: evValled} as Neg<number>)
             : {_tag: "paran", val: evValled};
-        console.log("EXP._TAG IS NEG OR PARANNNNNNNNNNNNNN")
         return r
     }
     if(isFullyEvaluated(exp)) {
@@ -421,6 +438,7 @@ export function evaluateRecurse(expWithParan: Expression<number>, evaluate: Func
         right: rightEvalled,
     }
     const evalled = evaluate(newExp);
+
     return evalled;
 }
 
@@ -444,7 +462,6 @@ export function removeParan(exp: Expression<number>): Expression<number> {
             const newRight = rightIsParan && (right.val._tag === "add" || right.val._tag === "sub")
             ? right.val
             : right;
-            // console.log(newLeft, newRight)
             return {_tag: exp._tag, left: newLeft, right: newRight};
         default:
             return exp;

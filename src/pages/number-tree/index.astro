@@ -1,5 +1,6 @@
 ---
 import BaseHead from "../../components/BaseHead.astro";
+import Footer from "../../components/Footer.astro";
 import Header from "../../components/Header.astro";
 import { SITE_TITLE } from "../../config";
 
@@ -17,7 +18,26 @@ import { SITE_TITLE } from "../../config";
             <div class="code-example-cont">
                 <div class="code-example">
                     <form class="form">
-                        <label>Type an expression with numbers and operations:</label>
+                        <label>
+                            <div>
+                                Type an expression with numbers,
+                                <div class="label-hover-info">
+                                    <div class="text"> variables</div>
+                                    <div class="info">Any lower-case english letters</div>
+                                </div> and 
+                                <div class="label-hover-info">
+                                    <div class="text"> operations</div>
+                                    <div class="info">
+                                        + (addition), <br>
+                                        - (subtraction), <br>
+                                        * (multiplication), <br>
+                                        / (division), <br>
+                                        - (negation), <br>
+                                        () (parantheses)
+                                    </div>
+                                </div>:
+                            </div>
+                        </label>
                         <input 
                             type = "text"
                             id = "num-exp-inp"
@@ -37,36 +57,9 @@ import { SITE_TITLE } from "../../config";
                         import { startListening } from "../../scripts/tree-expressions/numbers/numbers-browser";
                         startListening();
                     </script>
-                    <!-- <script src="https://unpkg.com/gojs/release/go-debug.js">
-                        import { startListening } from "../../scripts/tree-expressions/numbers-browser.ts";
-
-                        startListening();
-                        // import { parseInput, evaluateNum } from "../../scripts/tree-expressions/numbers";
-                        // import { evaluateTree } from "../../scripts/tree-expressions/tree-funcs";
-                        // import type { Expression } from "../../scripts/tree-expressions/types";
-                        
-                        // const f = document.querySelector(".form") as HTMLFormElement;
-
-                        // function callback(ev: SubmitEvent) {
-                        //     ev.preventDefault();
-                        //     const val = (document.getElementById("num-exp-inp") as HTMLInputElement).value;
-                        //     const tree = parseInput(val);
-
-                        //     console.log(tree)
-
-                        //     const evalled = evaluateTree<number>(tree as Expression<number>, evaluateNum);
-                            
-                        //     const result = (document.getElementById("result") as HTMLElement);
-                        //     result.textContent = `${evalled.val}`;
-                        // }
-
-                        // f.addEventListener("submit", (ev) => callback(ev));
-                        
-
-                        // const diagram = new 
-                    </script> -->
                 </div>
             </div>
+            <Footer />
         </div>
     </body>
 </html>

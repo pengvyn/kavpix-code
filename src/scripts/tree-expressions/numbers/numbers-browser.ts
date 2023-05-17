@@ -5,8 +5,11 @@ import cytoscape, { BaseLayoutOptions } from "cytoscape";
 import dagre from "cytoscape-dagre"
 import { evaluateNumExp } from "./evaluate";
 
-dagre(cytoscape);
+function isNodeOperator(n: cytoscape.NodeSingular): boolean {
+    return ["()", "+", "-", "*", "/"].includes(n.data("label"));
+}
 
+dagre(cytoscape);
 
 interface CyNodeInp {
     data: {
@@ -80,7 +83,6 @@ function callback(ev: SubmitEvent) {
 
 
     // const nodes: {data: {id: string}}[] = listified.map((val) => {n: val.key});
-    // console.log(listified.map((val) => {data: {id: val.key}}));
     
     function makeNode(key: string, label: string): CyNodeInp { 
         return {data: {id: key, label: translateLabel(label)} };
@@ -113,23 +115,36 @@ function callback(ev: SubmitEvent) {
                     "label": "data(label)",
                     "text-halign": "center",
                     "text-valign": "center",
-                    "width": "max-content",
 
-                    "border-color": "black",
+                    // "border-color": function(n) {
+                    //     return isNodeOperator(n)
+                    //         ? "#1101dd"
+                    //         : "#ffb2a1"
+                    // },
+                    // "border-opacity": 0.5,
                     "border-width": "2px",
+                    "border-color": "white",
 
                     "background-color": function(n) {
-                        return ["()", "+", "-", "*", "/"].includes(n.data("label")) 
+                        return isNodeOperator(n)
                             ? "orange"
                             : "#F5D60F"
                     },
+                    "shape": function(n) {
+                        return isNodeOperator(n)
+                            ? "ellipse"
+                            : "round-octagon"
+                    }
                 }
             },
             {
                 selector: "edge",
                 style: {
-                    "line-color": "blue",
-                    "opacity": 0.5
+                    // "line-color": "blue",
+                    "opacity": 0.9,
+                    "line-fill": "linear-gradient",
+                    "line-gradient-stop-colors": ["white", "orange", "white"],
+                    "line-gradient-stop-positions": [5, 100, 10]
                 }
             }
         ]

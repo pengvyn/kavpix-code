@@ -3,7 +3,6 @@ import { Expression, Leaf, Neg, Paran, makeLeaf } from "../types";
 import type { AddLeaf, DivLeaf, MulLeaf, NegLeaf, SubLeaf } from "./numbers";
 
 export function add(left: Leaf<number>, right: Leaf<number>): AddLeaf | Leaf<number> {
-    // console.log("add", left, right);
     if(left.val._tag === "var" || right.val._tag === "var") {
         return {_tag: "add", left, right};
     }
@@ -16,7 +15,6 @@ export function add(left: Leaf<number>, right: Leaf<number>): AddLeaf | Leaf<num
     }
 }
 export function sub(left: Leaf<number>, right: Leaf<number>): SubLeaf | Leaf<number> {
-    console.log("---------START OF LOG---------", "SUBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", left, "|||||||", right, "---------END OF LOG---------")
     if(left.val._tag === "var" || right.val._tag === "var") {
         if(isEqual(left, right)) {
             return makeLeaf(0);

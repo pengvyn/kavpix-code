@@ -3,8 +3,25 @@
     width: 100%;
     text-align: center;
 }
+.code-example {
+    height: 100%;
+
+    display: grid;
+    grid-template-rows: 30% 1fr;
+}
+
+.result-cont {
+    display: grid;
+    grid-template-rows: 1rem 1rem 1fr;
+}
+.result-cont .result-label {
+    font-size: 0.6rem;
+}
+
 #result {
-    margin: 1rem;
+    /* margin: 1rem 0rem; */
+    height: 100%;
+    font-size: 0.7rem;
 }
 .power-set-inp-cont {
     display: flex;
@@ -23,15 +40,45 @@
     width: 100vw;
 }
 
+/* ------ NUMBER TREE ------- */
+
+.form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+}
+.form label div {
+    display: flex;
+}
+.form input {
+    width: 50%;
+    height: 2rem;
+    font-size: 0.8rem;
+    text-align: center;
+    border-radius: 7px;
+    border: none;
+    outline: none;
+}
+.form label {
+    font-size: 0.8rem;
+}
+
+.label-hover-info .info {
+    display: none;
+}
+
 .diagram-cont {
     width: 100vw;
+    height: 100%;
 }
 #myDiagramDiv {
     width: calc(100vw - 10%); 
-    height: 100vh;
+    height: 100%;
     margin: 0 auto;
     background-color: #FFFFFF;
     text-align: left;
+    border-radius: 10px;
 }
 /* .fade-in {
     animation: 0.4s ease-out running normal none 1 0s fadein;

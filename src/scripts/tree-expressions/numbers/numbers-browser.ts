@@ -134,7 +134,7 @@ function callback(ev: SubmitEvent) {
                         return isNodeOperator(n)
                             ? "ellipse"
                             : "round-octagon"
-                    }
+                    },
                 }
             },
             {
@@ -149,7 +149,7 @@ function callback(ev: SubmitEvent) {
             }
         ]
     })
-    c.zoomingEnabled(false);
+    c.zoomingEnabled(true);
 
     
 

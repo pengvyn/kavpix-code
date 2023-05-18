@@ -332,7 +332,25 @@ export function simplifyRecurse(exp: Expression<number>): Expression<number>[] {
     // when recursing, no need to give the list as input, just returns the expression list
 
     
-
+    if(exp._tag === "mul" || exp._tag === "div") {
+        // return [...simplifyRecurse(exp.left), ...simplifyRecurse(exp.right)];
+        console.log("hiii")
+        const newLeft = simplifyRecurse(exp.left);
+        const newRight = simplifyRecurse(exp.right);
+        console.log(exp);
+        console.log(newLeft, newRight);
+        console.log("_____________")
+        return [
+            {
+                _tag: exp._tag,
+                left: addListToExp(newLeft),
+                right: addListToExp(newRight)
+            }
+        ]
+    }
+    if(exp._tag === "neg" || exp._tag === "paran") {
+        return simplifyRecurse(exp.val);
+    }
     if(exp._tag !== "add" && exp._tag !== "sub") {
         return [exp];
     }

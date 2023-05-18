@@ -15,13 +15,13 @@
     grid-template-rows: 1rem 1rem 1fr;
 }
 .result-cont .result-label {
-    font-size: 0.6rem;
+    font-size: 75%;
 }
 
 #result {
     /* margin: 1rem 0rem; */
     height: 100%;
-    font-size: 0.7rem;
+    font-size: 90%;
 }
 .power-set-inp-cont {
     display: flex;
@@ -53,19 +53,43 @@
 }
 .form input {
     width: 50%;
-    height: 2rem;
-    font-size: 0.8rem;
+    height: 20%;
+    font-size: 80%;
     text-align: center;
     border-radius: 7px;
     border: none;
     outline: none;
+    color: #5054a1;
+}
+.form input:focus {
+    color: black;
 }
 .form label {
     font-size: 0.8rem;
 }
 
+.label-hover-info .text {
+    text-decoration: underline;
+}
 .label-hover-info .info {
     display: none;
+}
+.label-hover-info:hover .info {
+    /* display: flex; */
+    z-index: 1000;
+    
+    position: relative;
+    bottom: 2rem;
+    left: -50%;
+
+    background-color: white;
+
+    font-size: 70%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* padding: 1rem; */
+    
 }
 
 .diagram-cont {
@@ -91,11 +115,5 @@
     }
     100% {
         opacity: 100;
-    }
-}
-
-@media (min-width: 1000px) {
-    html {
-        font-size: 35px;
     }
 }

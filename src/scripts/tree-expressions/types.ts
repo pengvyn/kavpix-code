@@ -39,6 +39,7 @@ export interface ValLeaf<T> {
     _tag: "val"
 }
 
+// TODO: Get rid of Leaf<T>
 export type Expression<T> = Add<T> | Sub<T> | Neg<T> | Mul<T> | Div<T> | Paran<T> | Leaf<T> | ValLeaf<T> | VarLeaf;
 
 export interface LeafWithVar {

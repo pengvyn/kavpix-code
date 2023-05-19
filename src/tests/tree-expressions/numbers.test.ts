@@ -866,14 +866,9 @@ describe("Numbers expression tree", () => {
         const revParred = reverseParse(simplified);
     })
     it.only("simplify", () => {
-        const exp1 = parseInput("a - a");
-        const exp2 = parseInput("a + 1 - a");
-        const exp3 = parseInput("a - b - c + c");
-        const exp4 = parseInput("(a + a) - (-a - a)");
+        const exp = parseInput("a + (1 + b - 2) + (3 - a + 4) + 2 * a - 3 * a / a") as Expression<number>;
 
-        const curExp = exp4 as Expression<number>
-
-        const evalled = evaluateRecurse(curExp, evaluateNumExp);
+        const evalled = evaluateRecurse(exp, evaluateNumExp);
         const r = simplify(evalled);
         console.log("--------------- RESULT ------------------");
         console.log(r);

@@ -36,7 +36,7 @@ function translateLabel(label: string): string {
         case "div":
             return "÷" // U+00F7
         case "paran":
-            return "()";
+            return "( )";
         case "neg":
             return "-";
         default:
@@ -58,8 +58,12 @@ function callback(ev: SubmitEvent) {
     //---
 
     const evalled = evaluateRecurse(tree as Expression<number>, evaluateNumExp);
+
     const simplified = simplify(evalled);
+
     const listified = listify(simplified);
+    // console.log("treeeeeeeeee", simplified)
+
 
     
     const result = (document.getElementById("result") as HTMLElement);

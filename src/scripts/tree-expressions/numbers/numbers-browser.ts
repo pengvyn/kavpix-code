@@ -1,6 +1,6 @@
-import {evaluateRecurse, parseInput, reverseParse, simplify, simplifyRecurse } from "./numbers";
+import {evaluateRecurse, numOrder, parseInput, reverseParse, simplify, simplifyRecurse } from "./numbers";
 import type { Expression } from "../types";
-import { evaluateTreeVar, listify } from "../tree-funcs";
+import { evaluateTreeVar, listify, orderOfOperations } from "../tree-funcs";
 import cytoscape, { BaseLayoutOptions } from "cytoscape";
 import dagre from "cytoscape-dagre"
 import { evaluateNumExp } from "./evaluate";
@@ -56,8 +56,8 @@ function callback(ev: SubmitEvent) {
     }
 
     //---
-
-    const evalled = evaluateRecurse(tree as Expression<number>, evaluateNumExp);
+    const orofop = orderOfOperations(tree, numOrder);
+    const evalled = evaluateRecurse(orofop as Expression<number>, evaluateNumExp);
 
     const simplified = simplify(evalled);
 

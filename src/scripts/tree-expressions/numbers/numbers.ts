@@ -1,5 +1,6 @@
 import { isEqual } from "lodash";
 import { Add, Div, Evaluate, Expression, Leaf, makeLeaf, makeWaiting, Mul, Neg, Paran, ParanWait, ParsedWaitNext, ParseInp, Sub, Tag, ValLeaf, Variable, variables, VarLeaf, Waiting } from "../types";
+import type { OrderOfOp } from "../tree-funcs";
 
 export type NumberOperator = "+" | "*" | "-" | "/";
 export const numberOperators: NumberOperator[] = ["+", "*", "-", "/"];
@@ -318,7 +319,6 @@ function negateAll(exps: Expression<number>[]): Expression<number>[] {
 }
 
 export function simplifyRecurse(exp: Expression<number>): Expression<number>[] {
-    console.log("Simplify recursinggggggggggggg..........", exp);
     // recursion:
     // it checks the left and right
     // if it's a leaf, it adds it into the list
@@ -365,7 +365,6 @@ export function simplifyRecurse(exp: Expression<number>): Expression<number>[] {
     const listed = [...newLeft, ...newRight];
 
     const nums = listed.filter((val) => val._tag === "leaf" && val.val._tag === "val") as {_tag: "leaf", val: {_tag: "val", val: number}}[];
-    console.log("numssssssss", nums)
     
     const notNums = listed.filter(
         (val) => 
@@ -397,7 +396,6 @@ export function addListToExp(list: Expression<number>[]): Expression<number> {
 
 export function simplify(tree: Expression<number>): Expression<number> {
     const simplifyRecursed = simplifyRecurse(tree);
-    console.log(simplifyRecursed);
     return addListToExp(simplifyRecursed);
 }
 
@@ -531,3 +529,5 @@ export function reverseParse(exp: Expression<number>): string {
     //         return "+"
     // }
 }
+
+export const numOrder: OrderOfOp = [["leaf", "val", "var"], ["neg"], ["add", "sub"], ["mul", "div"], ["paran"]];

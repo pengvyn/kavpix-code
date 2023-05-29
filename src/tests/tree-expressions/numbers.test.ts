@@ -1,10 +1,11 @@
 import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { addListToExp, closedParan, evaluateRecurse, ExpectedNumVal, isExpected, isFullyEvaluated, joinSimilars, NumberOperator, openParan, parseInput, reverseParse, simplify, simplifyRecurse, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers/numbers";
+import { addListToExp, closedParan, evaluateRecurse, ExpectedNumVal, isExpected, isFullyEvaluated, joinSimilars, NumberOperator, numOrder, openParan, parseInput, reverseParse, simplify, simplifyRecurse, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers/numbers";
 import { add, evaluateNumExp, sub, mul, div, neg } from "../../scripts/tree-expressions/numbers/evaluate";
 import { Add, Expression, Leaf, makeLeaf, makeWaiting, Neg, Sub, Variable, variables, Waiting } from "../../scripts/tree-expressions/types";
 import { arbNumOperator, arbNumWaiting, arbStringAndNumList, arbVarOrNum, strNumSet } from "../arbitraries";
-import { isEqual, negate } from "lodash";
+import { isEqual, negate, reverse } from "lodash";
+import { evaluateTreeVar, orderOfOperations } from "../../scripts/tree-expressions/tree-funcs";
 
 describe("Numbers expression tree", () => {
     describe("Join similars", () => {
@@ -808,7 +809,9 @@ describe("Numbers expression tree", () => {
                     (left: Variable | number, right: Variable | number) => {
                         const result = sub(makeLeaf(left), makeLeaf(right));
                         return variables.includes(left as Variable) || variables.includes(right as Variable)
-                            ? result._tag === "sub"
+                            ? left === right
+                                ? result._tag === "leaf" && result.val.val === 0
+                                : result._tag === "sub"
                             : result._tag === "leaf"
                     }
                 ))
@@ -865,7 +868,7 @@ describe("Numbers expression tree", () => {
         const simplified = simplify(evalled);
         const revParred = reverseParse(simplified);
     })
-    it.only("simplify", () => {
+    it("simplify", () => {
         const exp = parseInput("a + (1 + b - 2) + (3 - a + 4) + 2 * a - 3 * a / a") as Expression<number>;
 
         const evalled = evaluateRecurse(exp, evaluateNumExp);
@@ -873,5 +876,41 @@ describe("Numbers expression tree", () => {
         console.log("--------------- RESULT ------------------");
         console.log(r);
         console.log(reverseParse(r));
+    })
+    describe("Order of operations", () => {
+        it.each([
+            [
+                "1 + 2 * 3",
+                "7",
+            ],
+            [
+                "2 / 4 * 10",
+                "5",
+            ],
+            [
+                "(1 * 2) + 5",
+                "7"
+            ],
+            [
+                "1 + 2 * 3 + 5",
+                "12"
+            ],
+            [
+                "2 / -1 * 5",
+                "-10"
+            ]
+        ])("order of operations", (input: string, expected: string) => {
+
+            const parsed = parseInput(input);
+            const result = orderOfOperations(parsed as Expression<number>, numOrder)
+            const evalled = evaluateTreeVar(result, evaluateNumExp);
+            const simplified = simplify(evalled);
+            const stringed = reverseParse(simplified);
+            console.log("==========+++++--- ORDER OF OPERATIONS START ---+++++==========")
+            console.log(result);
+            console.log(evalled)
+            console.log("==========+++++--- ORDER OF OPERATIONS END ---+++++==========")
+            expect(stringed).toBe(expected);
+        })
     })
 })

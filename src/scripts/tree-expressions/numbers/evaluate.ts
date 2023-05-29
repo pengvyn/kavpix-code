@@ -114,7 +114,7 @@ export function evaluateNumExp(exp: Expression<number>): Expression<number> | Le
             );
 
         case "neg":
-            const val = (exp.val as Leaf<number>).val;
+            const val = (exp.val as Leaf<number>).val;            
             const result: Neg<number> | Leaf<number> = val._tag === "val" 
                 ? {_tag: "leaf", val: {_tag: "val", val: val.val * -1}}
                 : exp;

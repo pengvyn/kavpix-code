@@ -46,11 +46,62 @@ function translateLabel(label: string): string {
 
 const f = document.querySelector(".form") as HTMLFormElement;
 
+function animateError() {
+    const inp = f.querySelector("input");
+    console.log(inp);
+    
+    const keyframes: Keyframe[] = [
+        { 
+            border: "2px solid #dd3333",
+            transform: "translateX(0.3rem) scale(1.3)",
+        },
+        {
+            border: "2px solid #dd3333",
+            transform: "translateX(-0.3rem) scale(1)",
+        },
+        {
+            border: "2px solid #dd3333",
+            transform: "translateX(-0.3rem)",
+        },
+        {
+            border: "2px solid #dd3333",
+            transform: "translateX(0.1rem)",
+        },
+        {
+            border: "2px solid #dd3333",
+            transform: "translateX(-0.1rem)",
+        },
+        {
+            border: "2px solid #dd3333",
+            transform: "translateX(-0.1rem)",
+        },
+        {
+            borderColor: "blue",
+            borderOpacity: 1,
+        }
+    ]
+
+    inp?.animate(keyframes, 300);
+}
+
 function callback(ev: SubmitEvent) {
     ev.preventDefault();
     const val = (document.getElementById("num-exp-inp") as HTMLInputElement).value;
-    const tree = parseInput(val);
 
+    let errored = false;
+
+    try {
+        parseInput(val);
+    } catch(error) {
+        errored = true;
+    } finally {
+        if(errored) {
+            console.log("hiii")
+            animateError();
+            return;
+        }
+    }
+    const tree = parseInput(val);
     if(tree === null) {
         return;
     }

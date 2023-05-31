@@ -8,20 +8,19 @@
 
     display: grid;
     grid-template-rows: 30% 1fr;
+    font-size: 20px;
 }
 
 .result-cont {
     display: grid;
-    grid-template-rows: 1rem 1rem 1fr;
+    grid-template-rows: 2rem 2rem 1fr;
+    font-size: 1rem;
 }
-.result-cont .result-label {
-    font-size: 75%;
-}
-
 #result {
     /* margin: 1rem 0rem; */
     height: 100%;
-    font-size: 90%;
+    width: 100vw;
+    /* font-size: 90%; */
 }
 .power-set-inp-cont {
     display: flex;
@@ -35,10 +34,10 @@
     display: none;
 }
 
-#result {
+/* #result {
     height: 1rem;
     width: 100vw;
-}
+} */
 
 /* ------ NUMBER TREE ------- */
 
@@ -47,9 +46,6 @@
     flex-direction: column;
     align-items: center;
     justify-content: space-around;
-}
-.form label div {
-    display: flex;
 }
 .form input {
     width: 50%;
@@ -65,11 +61,18 @@
     color: black;
 }
 .form label {
-    font-size: 0.8rem;
+    display: flex;
+}
+label div {
+    display: inline;
 }
 
+.label-hover-info {
+    position: relative;
+}
 .label-hover-info .text {
     text-decoration: underline;
+    display: inline;
 }
 .label-hover-info .info {
     display: none;
@@ -78,19 +81,54 @@
     /* display: flex; */
     z-index: 1000;
     
-    position: relative;
-    bottom: 2rem;
-    left: -50%;
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 1rem);
+
+    transform: translate(-50%, 0%);
+
 
     background-color: white;
 
-    font-size: 70%;
+    /* font-size: 70%; */
     display: flex;
     align-items: center;
     justify-content: center;
-    /* padding: 1rem; */
-    
+
+    width: max-content;
+
+    padding: 0.5rem 1rem;
+    border-radius: 1rem 1rem 2rem 2rem;
+    border: 2px solid #5054a155;
 }
+
+/* ----- examples --------- */
+
+.examples {
+    display: flex;
+    justify-content: center;
+}
+.example { 
+    /* SAME STYLES FROM .filter-tag IN KAVPIX.COM */
+    margin: 0.3rem;
+    padding: 0.4rem 0.6rem;
+    background-color: #c3b6e0;
+    border: 2px solid #c8dce0;
+    border-radius: 1rem;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.8rem;
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+.example:hover {
+    border-color: black;
+}
+
+/* */
 
 .diagram-cont {
     width: 100vw;

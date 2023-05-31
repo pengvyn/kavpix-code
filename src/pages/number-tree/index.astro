@@ -10,7 +10,6 @@ import { SITE_TITLE } from "../../config";
 <html lang="en">
     <head>
         <BaseHead title={`${SITE_TITLE} | Number Tree`} />
-        <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
     </head>
     <body>
         <div class="page-cont">
@@ -21,22 +20,22 @@ import { SITE_TITLE } from "../../config";
                     <form class="form">
                         <label>
                             <div>
-                                Type an expression with numbers,
+                                Type an expression with integers,
                                 <div class="label-hover-info">
                                     <div class="text"> variables</div>
-                                    <div class="info">Any lower-case english letters</div>
+                                    <div class="info">Any lower-case <br/> english letters</div>
                                 </div> and 
                                 <div class="label-hover-info">
                                     <div class="text"> operations</div>
                                     <div class="info">
-                                        + (addition), <br>
-                                        - (subtraction), <br>
-                                        * (multiplication), <br>
-                                        / (division), <br>
-                                        - (negation), <br>
+                                        + (addition)<br>
+                                        - (subtraction) <br>
+                                        * (multiplication) <br>
+                                        / (division) <br>
+                                        - (negation) <br>
                                         () (parantheses)
                                     </div>
-                                </div>:
+                                </div>
                             </div>
                         </label>
                         <input 
@@ -48,7 +47,23 @@ import { SITE_TITLE } from "../../config";
                     </form>
 
                     <div class="result-cont">
-                        <div class="result-label">Result: </div>
+                        <div class="examples">
+                            <div class="example">
+                                10 + a * 2
+                            </div>
+                            <div class="example">
+                                x * -(1 - y)
+                            </div>
+                            <div class="example">
+                                7 * 3 + 100
+                            </div>
+                            <div class="example">
+                                12 / -10 * a
+                            </div>
+                            <div class="example">
+                                x + x * (x) - x - x + x / x * x
+                            </div>
+                        </div>
                         <div id="result" />
                         <div class="diagram-cont">
                             <div id="myDiagramDiv"/>

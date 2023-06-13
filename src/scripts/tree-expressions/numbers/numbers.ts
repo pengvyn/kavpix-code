@@ -18,39 +18,39 @@ export function joinSimilars(list: string[], similars: string[]): string[] {
     )
 }
 
-function makeNumExp(leftOrValue: Expression<number>, right: Expression<number> | null = null, operator: NumberOperator | "neg" | "paran"): Expression<number> {
-    if(right === null && !(["neg", "paran"].includes(operator))) {
+function makeNumExp(leftOrValue: Expression<number>, right: Expression<number> | null = null, tag: NumberOperator | "neg" | "paran"): Expression<number> {
+    if(right === null && !(["neg", "paran"].includes(tag))) {
         throw "Error: Operator is null";
     }
-    let tag: "add" | "sub" | "mul" | "div" | "neg" | "paran";
+    let _tag: "add" | "sub" | "mul" | "div" | "neg" | "paran";
     let noRight: boolean = false;
-    switch(operator) {
+    switch(tag) {
         case "+":
-            tag = "add";
+            _tag = "add";
             break;
         case "-":
-            tag = "sub";
+            _tag = "sub";
             break;
         case "*":
-            tag = "mul";
+            _tag = "mul";
             break;
         case "/":
-            tag = "div";
+            _tag = "div";
             break;
         case "neg":
             noRight = true;
-            tag = "neg";
+            _tag = "neg";
             break;
         case "paran":
             noRight = true;
-            tag = "paran";
+            _tag = "paran";
             break;
         default:
             throw "Error: Unexpected operator";
     }
     return noRight 
         ? {val: leftOrValue, _tag: tag} as Expression<number>
-        : {left: leftOrValue, right: right as Expression<number>, _tag: tag} as Expression<number>;
+        : {left: leftOrValue, right: right as Expression<number>, _tag} as Expression<number>;
 }
 
 const oneDigitNums = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
@@ -96,7 +96,7 @@ export function valueIsNumber(
         const newParsed: Expression<number> = parsed === null
         ? newBranch
         : makeNumExp(parsed, newBranch, waiting.operator as NumberOperator);
-        const nextExp: ExpectedNumVal[] = ["operator"];
+        const nextExp: ExpectedNumVal[] = ["operator", "paran"];
         const newWaiting: Waiting<NumberOperator> = makeWaiting();
         return {parsed: newParsed, next: nextExp, waiting: newWaiting};
 }

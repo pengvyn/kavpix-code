@@ -1,108 +1,151 @@
-The expression tree is a different form of an expression. Any expression you take, it can be shown as a tree. Why does this matter? The order of operations become very clear. It’s obvious which numbers are being added, which variables are being multiplied, etc. 
+# **Expression Tree**
 
-When looking at an expression like “x + 10 * y”, we know that the first thing to do is 10 * y and only after that add x, but we can’t really see the order. For example, with the same example, this is what the tree would look like:
+## **Intro**
 
-   add
-   /     \  
-x       mul
-          /   \
-       10    y
+The expression tree is a different representation of an expression. Every expression can be shown as a tree. Why does this matter? It's needed for code. It would be very inconvenient to use it when calculating, but for code it's perfect. The tree isn't only a different way of writing an expression, but it's also a *data structure*. Without this tree structure, it would be extremely difficult to write code for the expressions.
 
-With this tree, we can tell that we do the multiplication first, and then do the addition. But with `x + 10 * y`, the most natural thing is to go from left to right and do `(x + 10) * y`. Here 2 trees for the same example, `x + 10 * y`, one going left to right and the other following the order of operations:
+## **Order of Operations**
 
-      mul
-      /     \  
-   add     y
-  /    \
-x      10
+When looking at an expression like `x + 10 * y`, we know that the first thing to do is `10 * y` and then add `x`, but we can’t *see* the order. Here's how the tree would look like with the same example:
 
-  add
-   /     \  
-x       mul
-          /   \
-       10    y
+```mermaid
+    graph TD;
+        add --> x;
+        add --> mul;
+        mul --> 10;
+        mul --> y;
+```
+
+With this tree, we can tell that we do the multiplication first, and the addition second. But with `x + 10 * y`, the most natural thing for people who are used to left-to-right reading is to solve it like `(x + 10) * y`. Here are 2 trees for the same example, one going left to right and the other following the order of operations:
+
+```mermaid
+    graph TD;
+        mul --> add;
+        mul --> y;
+        add --> x;
+        add --> 10;
+```
+
+
+
+```mermaid
+    graph TD;
+        add --> x;
+        add --> mul;
+        mul --> 10;
+        mul --> y;
+```
+
+## **Properties**
 
 All the properties of operations (commutation, association, distribution) are also easy to visualize with the tree:
 
-commutation:
+### **Commutation**
 
-   add                          add
-   /     \      		    /     \
- a       b			  b       a
+```mermaid
+    graph TD;
+        add --> a;
+        add --> b;
+```
 
-association:
-
-   add
-  /      \
-a      add
-        /     \
-      b      c
-
-       add
-      /       \
-  add      c
- /      \
-a      b
-
-Normally I would have to use parentheses to show the difference: `a + (b + c) = (a + b) + c`, but that isn’t really necessary here since the tree takes care of it. 
-
-and finally, distribution:
-
-   mul
-  /     \
-2     paran
-              \
-             add
-             /     \
-            x      y
+```mermaid
+    graph TD;
+        add --> b;
+        add --> a;
+```
 
 
-         add
-        /      \
-   mul       mul
-  /    \        /     \
-2     x      2      y
 
-(note: distribution isn’t added to the actual thing yet)
+### **Association**
 
-The one downside to the tree format is that there is always something that comes before something else. For example, when adding `1 + a + 3`, it doesn’t matter which 2 numbers you add first, but with the tree you *have* to have an order. So, the tree will look like this:
+```mermaid
+    graph TD;
+        add --> a;
+        add --> addd;
+        addd --> b;
+        addd --> c;
+```
+```mermaid
+    graph TD;
+        add --> addd;
+        add --> c;
+        addd --> a;
+        addd --> b;
+```
 
-        add
-       /      \ 
-   add    3
-  /     \
-1      a
+### **Distribution**
 
-The ideal solution we want is a + 4, but in this format, it will first add `1 + a`, which isn't possibile since `a` is a variable, and then add `3` to it. This will just result in `1 + a + 3` again.
+```mermaid
+    graph TD;
+        mul --> 2;
+        mul --> paran;
+        paran --> add;
+        add --> x;
+        add --> y;
+```
+
+```mermaid
+    graph TD;
+        add --> mul;
+        add --> mull;
+        mul --> 2;
+        mul --> x;
+        mull --> 2_;
+        mull --> y;
+```
+
+(note: distribution hasn't been implimented in my code [yet](#to-do-list))
+
+The one downside to the tree format is that there are always different levels. For example, when adding `1 + a + 3`, it doesn’t matter which 2 numbers you add first, but with the tree you *have* to have an order. So, the tree will look like this:
+
+```mermaid
+    graph TD;
+        add --> 3;
+        add --> addd;
+        addd --> 1;
+        addd --> a;     
+```
+
+The ideal solution we want is a + 4, but in this format, it will first add `1 + a`, which isn't possibile since `a` is a variable, and then add `3` to `1 + a`. This will just result in `1 + a + 3` again.
 
 What we want instead is something like this:
 
-    add 
-  /    |    \
-1    a    3
+```mermaid
+    graph TD;
+        add --> 1;
+        add --> a;
+        add --> 3;
+```
 
-Now, all of them are on the same “level”. Since addition is commutative, we can just re-arrange the expression and add 1 and 3 like so:
+Now, all of them are on the same “level”. Since addition is commutative, we can just re-arrange the expression and add `1` and `3` like so:
 
-    add 
-  /    |    \
-1    a    3
+```mermaid
+    graph TD;
+        add --> 1;
+        add --> a;
+        add --> 3;
+```
 
-    add 
-  /    |    \
-a    1    3
+```mermaid
+    graph TD;
+        add --> a;
+        add --> 1;
+        add --> 3;
+```
 
-  add
- /      \
-a      4
+```mermaid
+    graph TD;
+        add --> a;
+        add --> 4;
+```
 
 And we’ve got `a + 4`! Perfect!
 
-So, the tree form and the not-tree form are both good for different scenarios, but I feel like the tree is more helpful to understand, and the not-tree form is better to actually use.
+So, the tree and the not-tree are both good for different scenarios, but I feel like the tree is more helpful to understand or visualize, and the not-tree form is better when solving.
 
-## Code
+# Code
 
-(Note: This section just shows small snippets of the code, if you want to see the full thing, it’s open-source [on github](https://github.com/pengvyn/kavpix-code))
-(Another note: All of this code is written in TypeScript (and using some other extentions/plugins))
+This section just shows small snippets of the code, if you want to see the full thing, it’s open-source [on github](https://github.com/pengvyn/kavpix-code). All of this code is written in TypeScript and a [few libraries](#libraries)
 
 There are 4 main functions I had to write for this:
 
@@ -111,13 +154,19 @@ There are 4 main functions I had to write for this:
 3. Evaluater. Takes a tree as input and evaluates/solves it as much as it can.
 4. Simplifier. Evaluates the expression even further (more on this later)
 
-### Parser
+## **Parser**
 
 As mentioned before, it transforms a `string` into a tree. Before we start with the function, let's see how the tree is supposed to look.
 
+### **Expression Types**
+
 First, we can start with a simple expression like `1 + 2`. This is how it looks like as a tree
 
-[tree](img)
+```mermaid
+    graph TD;
+        add --> 1;
+        add --> 2;
+```
 
 There are three main things here: `add`, `1`, and `2`. If we generalize this, we get `operation`, `number`, and `number` 
 
@@ -133,11 +182,17 @@ interface Expression {
 }
 ```
 
-Now we have a union type for the operation, and `Expression`, the tree.
+Now we have a union type for the operation, the left, and the right. With all of these together we have an `Expression`!
 
-This is good, but for a tree like this
+This is good, but for a tree like
 
-(tree for an expression like `1 + 2 + 3`)
+```mermaid
+    graph TD;
+        add --> addd;
+        addd --> 1;
+        addd --> 2;
+        add --> 3;
+```
 
 The left isn't a number. it's another `add`.
 
@@ -151,9 +206,45 @@ interface Expression {
 }
 ```
 
-That's better! Now we can have an even bigger tree. But, there's another problem. We also need something for Parantheses and Negation. These have only one value though, no left and right.
+That's better! Now we can have an even bigger tree. But, what about negation? It should be included in `Expression` as well, but it only has 1 value, and not left and right.
 
-What if we had a bunch of objects for each operation, and one for Parantheses and Negation each? We can make `Expression` a union type of all of those, then.
+#### **Negation**
+
+What if we had a bunch of objects, one for each operation, and one more for Negation? Then, we can make `Expression` a union type of all of those!
+
+```typescript
+interface Add {
+    left: Expression,
+    right: Expression,
+    operation: "add",
+}
+interface Sub {
+    left: Expression,
+    right: Expression,
+    operation: "sub",
+}
+interface Mul {
+    left: Expression,
+    right: Expression,
+    operation: "mul",
+}
+interface Div {
+    left: Expression,
+    right: Expression,
+    operation: "div",
+}
+interface Neg {
+    val: Expression, // val is short for value
+    operation: "neg",
+}
+
+type Expression = Add | Sub | Mul | Div | Neg;
+```
+
+#### **Parentheses**
+
+Now that negation is here as well, adding parentheses is simple
+
 
 ```typescript
 interface Add {
@@ -177,30 +268,24 @@ interface Div {
     _tag: "div",
 }
 interface Neg {
-    val: Expression, // val is short for value
+    val: Expression,
     _tag: "neg",
 }
-interface Paran { // short for parantheses
+interface Paran {
     val: Expression,
     _tag: "paran",
 }
-interface Leaf {
-    val: number,
-    _tag: "leaf"
-}
 
-type Expression = Add | Sub | Mul | Div | Neg | Paran | Leaf;
+type Expression = Add | Sub | Mul | Div | Neg | Paran;
 ```
 
-I've changed a few things in this, `operation` has become `_tag`, and I've added a `Leaf` object.
-
-I changed `operation` into `_tag` because I don't think parantheses counts as an operation, and `tag` fit better. The underscore is there to differenciate it between the other elements in the object: left, right, or val. 
+I've changed `operation` into `_tag` because parantheses isn't really an operation, and `tag` fit better. The underscore is there to differenciate it between the other elements in the object: left, right, or val. 
 
 The tag is needed to know which object is which. When a function takes in an expression, it might not know what expression it is. With the tag, we can tell exactly whether it's `Add`, or `Div`, or something else.
 
-And the `Leaf` basically just a "container" for the number. If the `_tag` is `leaf`, we know we've reached the end and that the number is ready to be evaluated.
+#### **Leaf**
 
-Everything is looking pretty good so far! But we just have one more thing to do. The leaf just has a number for now, but what about variables?
+We're almost done with the types, there's just one more `interface` needed. None of the `interface`s have numbers or variables. It's always an expression. This means that adding a number or variable to the tree would give a type error. Let's fix that!
 
 ```typescript
 ...
@@ -212,7 +297,7 @@ interface VarLeaf { // short for Variable Leaf
     val: Variable,
     _tag: "var",
 }
-interface ValLeaf {
+interface ValLeaf { // short for Value Leaf
     val: number,
     _tag: "val"
 }
@@ -220,19 +305,44 @@ interface Leaf {
     val: VarLeaf | ValLeaf,
     _tag: "leaf"
 }
+
+type Expression = Add | Sub | Mul | Div | Neg | Paran | Leaf  | VarLeaf | ValLeaf;
 ```
 
-`as const` is basically setting the type of `_variables` to `["a", "b", "c", ... "y", "z"]`. By default, `_variables` is a `string`, but now it is *only* a list of the lower-case letters. The second line translates to
+We've now made 3 new objects: `VarLeaf`, `ValLeaf`, and `Leaf`. With this structure, we have numbers, variables, expressions, and expressions inside of expression! Awesome
+
+`as const` sets the type of `_variables` to `["a", "b", "c", ... "y", "z"]`. By default, `_variables` is a `string`, but after using as const, `_variables` is *only* a list of the lower-case letters.
+
+```typescript
+type Variable = typeof _variables[number];
+```
+
+Translates to:
 
 ```typescript
 type Variable = "a" | "b" | "c" | ... "y" | "z";
 ```
 
-The names `ValLeaf` and `VarLeaf` are a little bit confusing, but I mananged to get the hang of it.
+The names `ValLeaf` and `VarLeaf` are a little bit confusing, but it isn't too hard to get the hang of it.
 
-You might be wondering why I didn't call `ValLeaf` `NumLeaf` or something like that. Even if you weren't, it's because all of the types will be generalized. Not only used for numbers and variables, but also for other things. Calling it `NumLeaf` means it only applies to numbers, which it doesn't.
+You might be wondering why `ValLeaf` wasn't named something like `NumLeaf`. Even if you weren't, it's because all of the types will be generalized. They don't have to be used only for numbers and variables, but also for other things. Calling it `NumLeaf` means it only applies to numbers, which it doesn't.
+
+#### **Generic Types**
 
 Speaking of generalization, we can use *generic types* for all the objects
+
+A generic type is similar to inputs for functions, but for types.
+
+```typescript
+interface ValLeaf<T> {
+    val: T,
+    _tag: "val"
+}
+```
+
+Here, `T` is the input type. If we want to use numbers, we would write `ValLeaf<number>`. Or maybe we want to use a list of numbers, then it would be `ValLeaf<number[]>`.
+
+Let's generalize all the previous types
 
 ```typescript
 interface Add<T> {
@@ -259,18 +369,98 @@ interface Leaf<T> {
 type Expression<T> = Add<T> | Sub<T> | ... ;
 ```
 
-A generic type is basically an input, but instead of functions it's for types.
+And we're finished with `Expression`! We can finally move on
+
+### **The 3 boxes**
+
+Okay, now that we've got the expression itself taken care of, we can go a bit deeper into the writing the function. Although, we aren't done with types just yet. For our parser, one method to use is to go character-by-character, which means we use the `.split()` function for the input string, and go from there.
+
+Let's look at an example for `a + b`:
+
+**1: `a`**
+
+`a` is a variable. Remember how we added `VarLeaf` to `Expression`? That means it's an expression on it's own. Let's keep it inside a box for now
 
 ```typescript
-interface ValLeaf<T> {
-    val: T,
-    _tag: "val"
+const parsed: Expression<number> = {
+    _tag: "leaf",
+    val: {
+        _tag: "var",
+        val: "a"
+    }
 }
 ```
 
-Here, `T` is the input type. If we want a number for the value, we can say `ValLeaf<number>`, if we want a list of numbers, maybe, `ValLeaf<number[]>` would work! It's a variable input for types
+```mermaid
+    graph TD;
+        a;
+```
 
-Okay, now that we've got the expression itself taken care of, we can go a bit more into the `parseInput` function. First, let's decide how we want to do it. I went character by character, and genreated the tree from there. 
+**2: `+`**
+
+`+` is an operator. We can't really do anything with this right now though, since we don't know whats on the right yet. We'll just store it in a different box and wait for the next part.
+
+```typescript
+let parsed: Expression<number> = {
+    ...
+}
+
+let waiting = "+";
+```
+
+**2: `b`**
+
+`b` is another variable. There's already a variable in `parsed` and an operator in `waiting`, let's combine these and make a new `Expression`. We have the left and right, `a` and `b`. In the waiting, the operator is `+`. So, we can create a new `Add`!
+
+```typescript
+parsed = {
+    _tag: "add",
+    left: {
+        _tag: "leaf",
+        val: {
+            _tag: "var",
+            val: "a",
+        }
+    },
+    right: {
+        _tag: "leaf",
+        val: {
+            _tag: "var",
+            val: "b",
+        }
+    }
+}
+
+waiting = null;
+```
+
+`parsed` now looks like this
+
+```mermaid
+    graph TD;
+        add --> a;
+        add --> b;
+```
+
+Nice, now we know what we need, one box for the parsed values, and another box for the elements that need more information before they can be parsed. 
+
+The `waiting` box is still a little incomplete. Imagine if the expression was `a + -b` instead. After we put `+` in the waiting, the `-` also needs to be stored somewhere. We could create another box for this, but since `-` is also waiting for more information, let's create a new object `Waiting` and replace the original waiting box to also include negatives:
+
+```typescript
+type Operator = "+" | "-" | "*" | "/";
+
+interface Waiting {
+    operator: Operator,
+    negate: boolean,
+}
+```
+
+`negate` is a boolean because there are only two options for it: negate or don't negate, so we might as well use a boolean for it.
+
+----------
+
+
+go a bit more into the `parseInput` function. First, let's decide how we want to do it. I went character by character, and genreated the tree from there. 
 
 My idea is that I have a `waiting` box, where I store things that need more information to be parsed. For example, when I get `+`, I have to wait for the next expression before I can add that to the tree. This can be the object for the waiting:
 
@@ -461,3 +651,8 @@ export function parseInput(input: string): Expression<number> | null {
 }
 ```
 
+## Summary
+
+### To-Do list
+
+### Libraries

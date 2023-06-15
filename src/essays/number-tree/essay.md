@@ -1,8 +1,52 @@
 # **Expression Tree**
 
+## **Table of Contents**
+- [**Expression Tree**](#expression-tree)
+  - [**Table of Contents**](#table-of-contents)
+  - [**Intro**](#intro)
+  - [**Order of Operations**](#order-of-operations)
+  - [**Properties**](#properties)
+    - [**Commutation**](#commutation)
+    - [**Association**](#association)
+    - [**Distribution**](#distribution)
+  - [**Levels/Branches**](#levelsbranches)
+  - [**Four modules**](#four-modules)
+    - [**Parser**](#parser)
+    - [**Orderer**](#orderer)
+      - [**Precedence 1**](#precedence-1)
+      - [**Precedence 2**](#precedence-2)
+      - [**Precedence 3**](#precedence-3)
+    - [**Evaluator**](#evaluator)
+      - [**Step 1**](#step-1)
+      - [**Step 2**](#step-2)
+      - [**Step 3**](#step-3)
+- [**Code**](#code)
+  - [**Parser**](#parser-1)
+    - [**Expression Types**](#expression-types)
+      - [**Negation**](#negation)
+      - [**Parentheses**](#parentheses)
+      - [**Leaf**](#leaf)
+      - [**Generic Types**](#generic-types)
+    - [**The 3 boxes**](#the-3-boxes)
+    - [**The parser function**](#the-parser-function)
+      - [**Preparing the input**](#preparing-the-input)
+      - [**Join Similarities**](#join-similarities)
+      - [**Using the boxes**](#using-the-boxes)
+      - [**The For Loop**](#the-for-loop)
+      - [**Value handlers**](#value-handlers)
+  - [**Orderer**](#orderer-1)
+    - [**Precedence 1**](#precedence-1-1)
+    - [**Precedence 2**](#precedence-2-1)
+    - [**Precedence 3**](#precedence-3-1)
+      - [**Precedence code**](#precedence-code)
+  - [**Summary**](#summary)
+  - [**To-Do list**](#to-do-list)
+  - [**Libraries Used**](#libraries-used)
 ## **Intro**
 
 The expression tree is a structural representation of an expression. Every expression can be shown as a tree. Why does this matter? The tree isn't only a different way of writing an expression, but it's also a *data structure*. Using the tree structure is helpful for computation.
+
+I've divided this article into 2 sections, the first one is about the tree and the visualization, the second one is about the code. All the code for this project is open-source [on github](sdfsdfsdaa)
 
 The next sections will be showing when and where the tree is useful.
 
@@ -12,8 +56,8 @@ When looking at an expression like `x + 10 * y`, we know that the first thing to
 
 ```mermaid
     graph TD;
-        add(add) --> x(x);
-        add --> mul(mul);
+        add(+) --> x(x);
+        add --> mul(*);
         mul --> 10(10);
         mul --> y(y);
 ```
@@ -22,18 +66,15 @@ With this tree, we can tell that we do the multiplication first, and the additio
 
 ```mermaid
     graph TD;
-        mul(mul) --> add(add);
+        mul(*) --> add(+);
         mul --> y(y);
         add --> x(x);
         add --> 10(10);
-```
 
-```mermaid
-    graph TD;
-        add(add) --> x(x);
-        add --> mul(mul);
-        mul --> 10(10);
-        mul --> y(y);
+        add2(+) --> x2(x);
+        add2 --> mul2(*);
+        mul2 --> 102(10);
+        mul2 --> y2(y);
 ```
 
 ## **Properties**
@@ -44,66 +85,55 @@ The properties of operations (commutation, association, distribution) are also e
 
 ```mermaid
     graph TD;
-        add(add) --> a(a);
+        add(+) --> a(a);
         add --> b(b);
 
-        add2(add) --> b2(b)
+        add2(+) --> b2(b)
         add2 --> a2(a)
 ```
-
-```mermaid
-    graph TD;
-        add(add) --> b(b);
-        add --> a(a);
-```
-
-
 
 ### **Association**
 
 ```mermaid
     graph TD;
-        add(add) --> a(a);
-        add(add) --> add2(add);
+        add(+) --> a(a);
+        add(+) --> add2(+);
         add2 --> b(b);
         add2 --> c(c);
-```
-```mermaid
-    graph TD;
-        add(add) --> add2(add);
-        add --> c(c);
-        add2 --> a(a);
-        add2 --> b(b);
+
+        add3(+) --> add4(+);
+        add3 --> c2(c);
+        add4 --> a2(a);
+        add4 --> b2(b);
 ```
 
 ### **Distribution**
 
 ```mermaid
     graph TD;
-        mul(mul) --> 2(2);
-        mul --> add(add);
+        mul(*) --> 2(2);
+        mul --> add(+);
         add --> x(x);
-        add --> y(y)
-```
+        add --> y(y);
 
-```mermaid
-    graph TD;
-        add(add) --> mul(mul);
-        add --> mul2(mul);
-        mul --> 2(2);
-        mul --> x(x);
+        add2(+) --> mul2(*);
+        add2 --> mul3(*);
         mul2 --> 2_2(2);
-        mul2 --> y(y);
+        mul2 --> x2(x);
+        mul3 --> 2_3(2);
+        mul3 --> y2(y);
 ```
 
 (note: distribution hasn't been implemented in my code [yet](#to-do-list))
+
+## **Levels/Branches**
 
 The one downside to the tree format is that there are always different levels. For example, when adding `1 + a + 3`, it doesn’t matter which 2 numbers you add first, but with the tree you *have* to have an order. So, the tree will look like this:
 
 ```mermaid
     graph TD;
-        add(add) --> 3(3);
-        add --> add2(add);
+        add(+) --> 3(3);
+        add --> add2(+);
         add2 --> 1(1);
         add2 --> a(a);     
 ```
@@ -114,7 +144,7 @@ What we want instead is something like this:
 
 ```mermaid
     graph TD;
-        add(add) --> 1(1);
+        add(+) --> 1(1);
         add --> a(a);
         add --> 3(3);
 ```
@@ -123,29 +153,356 @@ Now, all of them are on the same “level”. Since addition is commutative, we 
 
 ```mermaid
     graph TD;
-        add(add) --> 1(1);
+        add(+) --> 1(1);
         add --> a(a);
         add --> 3(3);
-```
 
-```mermaid
-    graph TD;
-        add(add) --> a(a);
-        add --> 1(1);
-        add --> 3(3);
-```
+        add2(+) --> a2(a);
+        add2 --> 1_2(1);
+        add2 --> 3_2(3);
 
-```mermaid
-    graph TD;
-        add(add) --> a(a);
-        add --> 4(4);
+        add3(+) --> a3(a);
+        add3 --> 4(4);
 ```
 
 And we’ve got `a + 4`! Perfect!
 
 So, the tree and the textual format are both good for different scenarios, but the tree is helpful when visualizing an expression, and the textual form is good for calculation.
 
-# Code
+## **Four modules**
+
+I had to write 4 main modules for my code:
+
+1. Parser. It takes the input you type and transforms it into a tree
+2. Orderer. Re-arranges the tree to follow the order of operations
+3. Evaluator. Takes a tree as input and evaluates/solves it as much as it can.
+4. Simplifier. Evaluates the expression even further (more on this later)
+
+Let's see how they work without getting into the actual code part of it. The following bits are very simplified, but if you want the details, make sure to check out the [code](#code-1) section.
+
+### **Parser**
+
+It takes and expression like `a + b * c` and has to convert it into:
+
+```mermaid
+    graph TD;
+        add(+) --> a(a);
+        add(+) --> mul(*);
+        mul --> b(b);
+        mul --> c(c);
+```
+
+We won't look at the code in this section, but when programming, the tree is needed so that it can understand the input you typed in in.
+
+Here's the process when going character-by-character:
+
+```mermaid
+    graph TD;
+        a1(a);
+
+        add1(+) --> a2(a);
+
+        add2(+) --> a3(a);
+        add2 --> b3(b);
+
+        mul(*) --> add3(+);
+        add3 --> a4(a);
+        add3 --> b4(b);
+
+        mul2(*) --> add4(+);
+        mul2 --> c(c);
+        add4 --> a5(a);
+        add4 --> b5(b);
+```
+
+Nice! It's pretty straightforward, it takes the first character, adds it to the tree, then the second, third, etc. 
+
+Although, you might notice that it doesn't follow the operation precedence. Let's take care of that now!
+
+### **Orderer**
+
+Let's use the same example:
+
+```mermaid
+    graph TD;
+        mul(*) --> add(+);
+        mul --> c(c);
+        add --> a(a);
+        add --> b(b);
+```
+
+If we add parentheses and translate it back to textual form, it would be `(a + b) * c`. But, what we want is
+
+```mermaid
+    graph TD;
+        add(+) --> a(a)
+        add --> mul(*)
+        mul --> b(b)
+        mul --> c(c)
+```
+
+Which translates to `a + (b * c)`. We need to write a function to do that ordering for us.
+
+With the same example as before, let's look at what exactly we need to do.
+
+There are 3 scenarios in which we need to re-arrange the tree: `a + b * c`, `a * b + c` (normally this one works fine, but we still need to re-arrange it if it ends up like `a * (b + c)`), and `a + b * c + d`. Let's go one by one, starting with `a + b * c`:
+
+#### **Precedence 1**
+
+**Step 1**
+
+```mermaid
+    graph TD;
+        mul(*) --> add(+);
+        mul --> c(c);
+        add --> a(a);
+        add --> b(b);
+```
+
+The initial tree which we need to change
+
+**Step 2**
+
+```mermaid
+    graph TD;
+        add(+) --> a(a);
+        add --> b(b);
+        mul(*) --> c(c);
+```
+
+We've now disconnected `mul` from `add`
+
+**Step 3**
+
+```mermaid
+    graph TD;
+        add(+) --> a(a);
+        mul(*) --> b(b);
+        mul --> c(c);
+```
+
+We've given `add`'s `b` to `mul`, and put it in `mul`'s left.
+
+**Step 4**
+
+```mermaid
+    graph TD;
+        add(+) --> a(a);
+        add --> mul(*);
+        mul --> b(b);
+        mul --> c(c);
+```
+
+And finally `add` and `mul` have been joined together again, but this time `mul` is in `add`'s right.
+
+Since multiplication has higher precedence than addition, `b` gets multiplied first.
+
+
+#### **Precedence 2**
+
+For `a * b + c` (this works if we go left to right, but in the tree it is formatted like `(a * b) + c`)
+
+**Step 1**
+
+```mermaid
+    graph TD;
+        mul(*) --> a(a)
+        add(+) --> b(b)
+        add --> c(c)
+        mul --> add
+```
+
+The starting tree
+
+**Step 2**
+
+```mermaid
+    graph TD;
+        mul(*) --> a(a)
+        add(+) --> b(b)
+        add --> c(c)
+```
+
+`add` has been split from `mul`
+
+**Step 3**
+
+```mermaid
+    graph TD;
+        mul(*) --> a(a)
+        mul(*) --> b(b)
+        add(+) --> c(c)
+```
+
+We've given `b` to `mul`'s right from `add`
+
+**Step 4**
+
+```mermaid
+    graph TD;
+        mul(*) --> a(a)
+        mul(*) --> b(b)
+        add(+) --> mul
+        add --> c(c)
+```
+
+`mul` and `add` have been rejoined. We put `mul` in `add`'s left.
+
+#### **Precedence 3**
+
+For `a + b * c + d`
+
+**Step 1**
+
+```mermaid
+    graph TD;
+        mul(*) --> add1(+)
+        mul(*) --> add2(+)
+        add1 --> a(a)
+        add1 --> b(b)
+        add2 --> c(c)
+        add2 --> d(d)
+```
+
+Initial tree
+
+**Step 2**
+
+```mermaid
+    graph TD;
+        mul(*) --> add1(+)
+        add1 --> a(a)
+        add1 --> b(b)
+        add2(+) --> c(c)
+        add2 --> d(d)
+```
+
+We've removed the `add` on the right side of `mul`
+
+**Step 3**
+
+```mermaid
+    graph TD;
+        add1(+) --> a(a)
+        add1 --> b(b)
+        mul(*)
+        add2(+) --> c(c)
+        add2 --> d(d)
+```
+
+We've split the other `add` and `mul`
+
+**Step 4**
+
+```mermaid
+    graph TD;
+        add1(+) --> a(a)
+        mul(*) --> b(b)
+        add2(+) --> c(c)
+        add2 --> d(d)
+```
+
+We've given the left `add`'s `b` to `mul`.
+
+**Step 5**
+
+```mermaid
+    graph TD;
+        add1(+) --> a(a)
+        mul(*) --> b(b)
+        mul --> c(c)
+        add2(+) --> d(d)
+```
+
+We've put `c` in `mul`'s right
+
+**Step 6**
+
+```mermaid
+    graph TD;
+        add1(+) --> a(a)
+        add1(+) --> mul
+        mul(*) --> b(b)
+        mul --> c(c)
+        add2(+) --> d(d)
+```
+
+And now we've attached `mul` to the left `add`
+
+**Step 7**
+
+```mermaid
+    graph TD;
+        add2(+) --> add1
+        add2 --> d(d)
+        add1(+) --> a(a)
+        add1(+) --> mul
+        mul(*) --> b(b)
+        mul --> c(c)
+        
+```
+
+For the final step we've attached the left `add` to right `add`.
+
+That's it! That's basically what the orderer does!
+
+### **Evaluator**
+
+The evaluator that *we* use when we're calculating expressions, even if we use it subconsciously. It just calculates as much of the the expression (or tree, in this case) as it can. 
+
+Let's look at the process of the evaluator with a simple example, `5 * 2 + a`. Here's how the tree looks after parsing it:
+
+```mermaid
+    graph TD;
+        add(+) --> mul(*);
+        add --> a(a);
+        mul --> 5(5);
+        mul --> 2(2);
+```
+
+We'll go step by step and see how the evaluator works:
+
+#### **Step 1**
+
+First, it starts with the root, `add`. It knows that there's `a` on the right, but what about the left? The left is an expression: `mul`. It can't evaluate an expression and a number, so it'll evaluate left first, and then use the result to evaluate the whole thing:
+
+#### **Step 2**
+
+It's focusing on *only* the left. So, what it sees is this:
+
+```mermaid
+    graph TD;
+        mul(*) --> 5(5)
+        mul --> 2(2)
+```
+
+Okay, this is the information it currently has:
+
+- The left is `5`
+- The right is `2`
+- The operation is multiplication
+
+That's sufficient information for it to realize that `5` and `2` need to be multiplied! So, it multiplies `5 * 2` and gets `10`! Now, remember how in step 1 it couldn't evaluate and expression and a number? If we give it `10`, it has a number and a number!
+
+#### **Step 3**
+
+It now has some new information: The `mul` on the evaluates to `10`.
+
+And combined with the old information, this is everything it knows:
+
+- The left is `10`
+- The right is `a`
+- The operation is addition
+
+It has all the information it needs to get the final result: `10 + a`. It can't be evaluated any further, so it's done!
+
+```mermaid
+    graph TD;
+        add(add) --> 10(10);
+        add(add) --> a(a);
+```
+
+# **Code**
 
 This section just shows some snippets of the code, if you want to see the full project (or more), it’s open-source [on github](https://github.com/pengvyn/kavpix-code). All of this code is written in TypeScript, with the help of a [few libraries](#libraries)
 
@@ -166,7 +523,7 @@ First, we can start with a simple expression like `1 + 2`. This is how it looks 
 
 ```mermaid
     graph TD;
-        add(add) --> 1(1);
+        add(+) --> 1(1);
         add --> 2(2);
 ```
 
@@ -190,8 +547,8 @@ This is good, but for a tree like
 
 ```mermaid
     graph TD;
-        add(add) --> 1(1)
-        add(add) --> add2(add)
+        add(+) --> 1(1)
+        add(+) --> add2(+)
         add2 --> 2(2)
         add2 --> 3(3)
 ```
@@ -442,7 +799,7 @@ waiting = null;
 
 ```mermaid
     graph TD;
-        add(add) --> a(a);
+        add(+) --> a(a);
         add --> b(b);
 ```
 
@@ -1286,85 +1643,50 @@ Awesome! We've finally finished our parser!!
 
 ## **Orderer**
 
-The tree that `parseInput()` makes is actually left-to-right. It doesn't follow the operation precedence. If we give it an expression like `a + b * c`, this is how it looks:
+We already went through this in a [previous section](#orderer), but, to recap, we went through 3 scenarios where we'll need to re-arrange the tree when it doesn't follow the order of operations. Let's quickly look at the process again:
 
-```mermaid
-    graph TD;
-        mul(mul) --> add(add);
-        mul --> c(c);
-        add --> a(a);
-        add --> b(b);
-```
+### **Precedence 1**
 
-If we add parentheses and translate it back to textual form, it would be `(a + b) * c`. But, what we want is
-
-```mermaid
-    graph TD;
-        add(add) --> a(a)
-        add --> mul(mul)
-        mul --> b(b)
-        mul --> c(c)
-```
-
-Which translates to `a + (b * c)`. We need to write a function to do that ordering for us.
-
-With the same example as before, let's look at what exactly we need to do.
-
-### **Re-arranging**
-
-There are 3 scenarios in which we need to re-arrange the tree: `a + b * c`, `a * b + c` (normally this one works fine, but we still need to re-arrange it if it ends up like `a * (b + c)`), and `a + b * c + d`. Let's go one by one, starting with `a + b * c`:
-
-#### **Precedence 1**
+For the `a + b * c`.
 
 **Step 1**
 
 ```mermaid
     graph TD;
-        mul(mul) --> add(add);
+        mul(*) --> add(+);
         mul --> c(c);
         add --> a(a);
         add --> b(b);
 ```
 
-The initial tree which we need to change
-
 **Step 2**
 
 ```mermaid
     graph TD;
-        add(add) --> a(a);
+        add(+) --> a(a);
         add --> b(b);
-        mul(mul) --> c(c);
+        mul(*) --> c(c);
 ```
-
-We've now disconnected `mul` from `add`
 
 **Step 3**
 
 ```mermaid
     graph TD;
-        add(add) --> a(a);
-        mul(mul) --> b(b);
+        add(+) --> a(a);
+        mul(*) --> b(b);
         mul --> c(c);
 ```
-
-We've given `add`'s `b` to `mul`, and put it in `mul`'s left.
-
 **Step 4**
 
 ```mermaid
     graph TD;
-        add(add) --> a(a);
-        add --> mul(mul);
+        add(+) --> a(a);
+        add --> mul(*);
         mul --> b(b);
         mul --> c(c);
 ```
 
-And finally `add` and `mul` have been joined together again, but this time `mul` is in `add`'s right.
-
-Since multiplication has higher precedence than addition, it uses `b`.
-
-Here's what we did in words:
+Let's translate this into words, it will help us a bunch when we're writing the code:
 
 1. Remove the `left` from the root.
 2. Take the `right` of the `left`, and attach it to the `left` of the root.
@@ -1372,63 +1694,56 @@ Here's what we did in words:
 
 (This is very hard to follow, but it's easier with the images as reference)
 
-#### **Precedence 2**
+### **Precedence 2**
 
-For `a * b + c` (this works if we go left to right, but in the tree it is formatted like `(a * b) + c`)
+For `a * b + c`.
 
 **Step 1**
 
 ```mermaid
     graph TD;
-        mul(mul) --> a(a)
-        add(add) --> b(b)
+        mul(*) --> a(a)
+        add(+) --> b(b)
         add --> c(c)
         mul --> add
 ```
-
-The starting tree
 
 **Step 2**
 
 ```mermaid
     graph TD;
-        mul(mul) --> a(a)
-        add(add) --> b(b)
+        mul(*) --> a(a)
+        add(+) --> b(b)
         add --> c(c)
 ```
-
-`add` has been split from `mul`
 
 **Step 3**
 
 ```mermaid
     graph TD;
-        mul(mul) --> a(a)
-        mul(mul) --> b(b)
-        add(add) --> c(c)
+        mul(*) --> a(a)
+        mul(*) --> b(b)
+        add(+) --> c(c)
 ```
-
-We've given `b` to `mul`'s right from `add`
 
 **Step 4**
 
 ```mermaid
     graph TD;
-        mul(mul) --> a(a)
-        mul(mul) --> b(b)
-        add(add) --> mul
+        mul(*) --> a(a)
+        mul(*) --> b(b)
+        add(+) --> mul
         add --> c(c)
 ```
 
-`mul` and `add` have been rejoined. We put `mul` in `add`'s left.
-
-And in words:
+Again, in words:
 
 1. Remove `right` from the root
 2. Take the `left` from `right` and attach it to the `right` of the `root`
 3. Attach the root to the `left` of `right`
 
-#### **Precedence 3**
+
+### **Precedence 3**
 
 For `a + b * c + d`
 
@@ -1436,95 +1751,80 @@ For `a + b * c + d`
 
 ```mermaid
     graph TD;
-        mul(mul) --> add1(add)
-        mul(mul) --> add2(add)
+        mul(*) --> add1(+)
+        mul(*) --> add2(+)
         add1 --> a(a)
         add1 --> b(b)
         add2 --> c(c)
         add2 --> d(d)
 ```
 
-Initial tree
-
 **Step 2**
 
 ```mermaid
     graph TD;
-        mul(mul) --> add1(add)
+        mul(*) --> add1(+)
         add1 --> a(a)
         add1 --> b(b)
-        add2(add) --> c(c)
+        add2(+) --> c(c)
         add2 --> d(d)
 ```
-
-We've removed the `add` on the right side of `mul`
 
 **Step 3**
 
 ```mermaid
     graph TD;
-        add1(add) --> a(a)
+        add1(+) --> a(a)
         add1 --> b(b)
-        mul(mul)
-        add2(add) --> c(c)
+        mul(*)
+        add2(+) --> c(c)
         add2 --> d(d)
 ```
-
-We've split the other `add` and `mul`
 
 **Step 4**
 
 ```mermaid
     graph TD;
-        add1(add) --> a(a)
-        mul(mul) --> b(b)
-        add2(add) --> c(c)
+        add1(+) --> a(a)
+        mul(*) --> b(b)
+        add2(+) --> c(c)
         add2 --> d(d)
 ```
-
-We've given the left `add`'s `b` to `mul`.
 
 **Step 5**
 
 ```mermaid
     graph TD;
-        add1(add) --> a(a)
-        mul(mul) --> b(b)
+        add1(+) --> a(a)
+        mul(*) --> b(b)
         mul --> c(c)
-        add2(add) --> d(d)
+        add2(+) --> d(d)
 ```
-
-We've put `c` in `mul`'s right
 
 **Step 6**
 
 ```mermaid
     graph TD;
-        add1(add) --> a(a)
-        add1(add) --> mul
-        mul(mul) --> b(b)
+        add1(+) --> a(a)
+        add1(+) --> mul
+        mul(*) --> b(b)
         mul --> c(c)
-        add2(add) --> d(d)
+        add2(+) --> d(d)
 ```
-
-And now we've attached `mul` to the left `add`
 
 **Step 7**
 
 ```mermaid
     graph TD;
-        add2(add) --> add1
+        add2(+) --> add1
         add2 --> d(d)
-        add1(add) --> a(a)
-        add1(add) --> mul
-        mul(mul) --> b(b)
-        mul --> c(c)
-        
+        add1(+) --> a(a)
+        add1(+) --> mul
+        mul(*) --> b(b)
+        mul --> c(c)     
 ```
 
-For the final step we've attached the left `add` to right `add`.
-
-In words:
+And the final one:
 
 1. Remove `left` from the root
 2. Remove `right` from the root
@@ -1533,12 +1833,14 @@ In words:
 5. Attach the root to the `left`'s `right`
 6. Attach `left` to `right`'s `left`
 
-#### Precedence code
+The text for this example is very hard to follow, but if you look at it and the trees together it's a little easier.
+
+#### **Precedence code**
 
 This is the kind of thing that's seems simple until you write it down. But, we've got the 3 precedences generalized with the words. We can apply this to our code now!
 
-## Summary
+## **Summary**
 
-### To-Do list
+## **To-Do list**
 
-### Libraries
+## **Libraries Used**

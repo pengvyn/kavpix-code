@@ -93,13 +93,19 @@ function expIsMulOrDiv<T>(exp: Mul<T> | Div<T>, order: OrderOfOp): Expression<T>
 
     const leftLower = isOperatorHigher(exp._tag, left._tag, order);
     const rightLower = isOperatorHigher(exp._tag, right._tag, order);
+    
+    const leftLeaf = isLeaf(left) || isVar(left) || isVal(left) || isParan(left) || isNeg(left);
+    const rightLeaf = isLeaf(right) || isVar(right) || isVal(right) || isParan(right) || isNeg(right);
+    
+    if(leftLeaf && rightLeaf) {
+        return exp;
+    }
+
+    if(!leftLower && !rightLower) {
+        return exp;
+    }
 
     if(leftLower && rightLower) {
-        const leftLeaf = isLeaf(left) || isVar(left) || isVal(left) || isParan(left) || isNeg(left);
-        const rightLeaf = isLeaf(right) || isVar(right) || isVal(right) || isParan(right) || isNeg(right);
-        if(leftLeaf && rightLeaf) {
-            return exp;
-        }
         if(!leftLeaf && rightLeaf) {
             const lr = left.right;
             const ll = left.left;
@@ -155,6 +161,36 @@ function expIsMulOrDiv<T>(exp: Mul<T> | Div<T>, order: OrderOfOp): Expression<T>
         // left or right is add/sub
         // left or right is 
         
+    }
+    if(leftLower && !leftLeaf) {
+        const ll = left.left;
+        const lr = left.right;
+
+        const attached: Expression<T> = {
+            _tag: exp._tag,
+            left: lr,
+            right: right,
+        }
+        return {
+            _tag: left._tag,
+            left: ll,
+            right: attached
+        }
+    }
+    if(rightLower && !rightLeaf) {
+        const rl = right.left;
+        const rr = right.right;
+
+        const attached: Expression<T> = {
+            _tag: exp._tag,
+            left: left,
+            right: rl,
+        }
+        return {
+            _tag: right._tag,
+            left: attached,
+            right: rr,
+        }
     }
     return exp;
 

@@ -105,6 +105,7 @@ function callback(ev: SubmitEvent) {
     if(tree === null) {
         return;
     }
+    console.log(tree);
 
     //---
     const orofop = orderOfOperations(tree, numOrder);

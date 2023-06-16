@@ -20,6 +20,7 @@
       - [**Step 1**](#step-1)
       - [**Step 2**](#step-2)
       - [**Step 3**](#step-3)
+    - [**Simplifier**](#simplifier)
 - [**Code**](#code)
   - [**Parser**](#parser-1)
     - [**Expression Types**](#expression-types)
@@ -38,7 +39,7 @@
     - [**Precedence 1**](#precedence-1-1)
     - [**Precedence 2**](#precedence-2-1)
     - [**Precedence 3**](#precedence-3-1)
-      - [**Precedence code**](#precedence-code)
+    - [**Precedence code**](#precedence-code)
   - [**Summary**](#summary)
   - [**To-Do list**](#to-do-list)
   - [**Libraries Used**](#libraries-used)
@@ -46,7 +47,7 @@
 
 The expression tree is a structural representation of an expression. Every expression can be shown as a tree. Why does this matter? The tree isn't only a different way of writing an expression, but it's also a *data structure*. Using the tree structure is helpful for computation.
 
-I've divided this article into 2 sections, the first one is about the tree and the visualization, the second one is about the code. All the code for this project is open-source [on github](sdfsdfsdaa)
+I've divided this article into 2 sections, the first one is about the visualization of the tree, and the second one is about the code. All the code for this project is open-source [on github](github.com/pengvyn/kavpix-code)
 
 The next sections will be showing when and where the tree is useful.
 
@@ -502,9 +503,79 @@ It has all the information it needs to get the final result: `10 + a`. It can't 
         add(add) --> a(a);
 ```
 
+### **Simplifier**
+
+And last but not least, the simplifier! The evaluator seems like it evaluates everything, *but* there are some instances when it doesn't. That's what the simplifier is for!
+
+Let me give you an example:
+
+```mermaid
+    graph TD;
+        add(+) --> 10(10);
+        add --> add2(+);
+        add2 --> a(a);
+        add2 --> 5(5);
+```
+
+This translates to `10 + a + 5`. The answer we want is `a + 15`, but the evaluator can't do that. Here's the step-by-step process of the evaluator so that we can see why that happens:
+
+1. It looks at the root
+    - The left is `10`
+    - The right is an `add`
+2. It can't evaluate it right now, so it checks if it can evaluate the right
+    - The left is `a`
+    - The right is `5`
+3. It can't add a variable and a number, so it doesn't do anything.
+4. Since the left of the root hasn't been updated, it also doesn't do anything
+
+This is the problem here. The evaluator only focuses on *one* branch. When the evaluator is trying to evaluate `a + 5`, it has completely forgotten about the `10`. We could change the evaluator so that it does this, but that might get too complicated so let's just make a simplifier!
+
+What we need to do is bring the branches to the same level. Right now, `add` always has only two branches. If we make it so that it can have more, we can move other branches down or up into one `add`, re-arrange the elements and add them all up. Let's try it out for `10 + a + 5`:
+
+```mermaid
+    graph LR;
+        subgraph s1[Step 1]
+
+        add(+) --> 10(10);
+        add --> add2(+);
+        add2 --> a(a);
+        add2 --> 5(5);
+
+        end
+
+        subgraph s2[Step 2]
+
+        add3(+) --> 10_2(10);
+        add3 --> a2(a);
+        add3 --> 5_2(5);
+
+        end
+
+        subgraph s3[Step 3]
+
+        add4(+) --> a3(a);
+        add4 --> 10_3(10);
+        add4 --> 5_3(5);
+
+        end
+
+        subgraph s4[Step 4]
+
+        add5(+) --> a4(a);
+        add5 --> 15(15);
+
+        end
+
+        s1 -.-> s2;
+        s2 -.-> s3;
+        s3 -.-> s4;
+```
+
+And that's all the simplifier does! The good thing about this is that it can bring any number of branches to the same level, not just three.
+
 # **Code**
 
-This section just shows some snippets of the code, if you want to see the full project (or more), it’s open-source [on github](https://github.com/pengvyn/kavpix-code). All of this code is written in TypeScript, with the help of a [few libraries](#libraries)
+This section just shows some snippets of the code I wrote, if you want to see the full project (or more), it’s open-source [on github](https://github.com/pengvyn/kavpix-code). All of this code is written in TypeScript, with the help of a [few libraries](#libraries).
 
 There are 4 main modules we need to write for this:
 
@@ -519,7 +590,7 @@ As mentioned before, it transforms a `string` into a tree. Before we start with 
 
 ### **Expression Types**
 
-First, we can start with a simple expression like `1 + 2`. This is how it looks like as a tree
+First, we can start with a simple expression like `1 + 2`. This is how it looks like as a tree:
 
 ```mermaid
     graph TD;
@@ -543,7 +614,7 @@ interface Expression {
 
 Now we have a union type for the operation, the left, and the right. With all of these together we have an `Expression`!
 
-This is good, but for a tree like
+This is good, but for a tree like this:
 
 ```mermaid
     graph TD;
@@ -602,8 +673,7 @@ type Expression = Add | Sub | Mul | Div | Neg;
 
 #### **Parentheses**
 
-Now that negation is here as well, adding parentheses is simple
-
+Now that negation is here as well, adding parentheses is simple.
 
 ```typescript
 interface Add {
@@ -630,7 +700,7 @@ interface Neg {
     val: Expression,
     _tag: "neg",
 }
-interface Group {
+interface Group { // (Parentheses)
     val: Expression,
     _tag: "group",
 }
@@ -638,7 +708,7 @@ interface Group {
 type Expression = Add | Sub | Mul | Div | Neg | Group;
 ```
 
-I've changed `operation` into `_tag` because `(` and `)` aren't really operations, and `tag` fit better. The underscore is there to differentiate it between the other elements in the object: left, right, or val. 
+Now that we've added the `Group` interface to `Expression`, `operation` doesn't really fit, because `(` and `)` aren't operations. So, I changed `operation` to `_tag`. The underscore is just there to easily differentiate it from the other elements in the objects like left, right, or val.
 
 The tag is needed to know which object is which. When a function takes in an expression, it might not know what expression it is. With the tag, we can tell exactly whether it's `Add`, or `Div`, or something else.
 
@@ -668,7 +738,7 @@ interface Leaf {
 type Expression = Add | Sub | Mul | Div | Neg | Group | Leaf  | VarLeaf | ValLeaf;
 ```
 
-We've now made 3 new objects: `VarLeaf`, `ValLeaf`, and `Leaf`. With this structure, we have numbers, variables, expressions, and expressions inside of expressions! Awesome
+We've now made 3 new objects: `VarLeaf`, `ValLeaf`, and `Leaf`. With this structure, we have numbers, variables, expressions, and expressions inside of expressions! Awesome!
 
 `as const` sets the type of `_variables` to `["a", "b", "c", ... "y", "z"]`. By default, `_variables` is a `string`, but after using `as const`, `_variables` is *only* a list of the lower-case letters.
 
@@ -688,9 +758,9 @@ You might be wondering why `ValLeaf` wasn't named something like `NumLeaf`. Even
 
 #### **Generic Types**
 
-Speaking of generalization, we can use *generic types* for all the objects
+Speaking of generalization, we can use *generic types* for all the objects.
 
-A generic type is similar to inputs for functions, but for types.
+A generic type is like an "input" to a type.
 
 ```typescript
 interface ValLeaf<T> {
@@ -701,7 +771,7 @@ interface ValLeaf<T> {
 
 Here, `T` is the input type. If we want to use numbers, we would write `ValLeaf<number>`. Or maybe we want to use a list of numbers, then it would be `ValLeaf<number[]>`.
 
-Let's generalize all the previous types
+Let's generalize all the previous types:
 
 ```typescript
 interface Add<T> {
@@ -734,14 +804,14 @@ And we're finished with `Expression`! We can finally move on
 
 Okay, now that we've got the expression itself taken care of, we can go a bit deeper into the writing the function. Although, we aren't done with types just yet. For our parser, one method to use is to go character-by-character, which means we use the `.split()` function for the input string, and go from there.
 
-Let's look at an example for `a + b`:
+Let's look at an example for `a + b`, and try to see what information we need to store in boxes (`let`s) in each cycle:
 
 **Character 1: `a`**
 
-`a` is a variable. Remember how we added `VarLeaf` to `Expression`? That means it's an expression on it's own. Let's keep it inside a box for now
+`a` is a variable. Remember how we added `VarLeaf` to `Expression`? That means it's an expression on it's own. We need somewhere to store `a`, so let's create our first box, `parsed`:
 
 ```typescript
-const parsed: Expression<number> = {
+let parsed: Expression<number> = {
     _tag: "leaf",
     val: {
         _tag: "var",
@@ -759,7 +829,7 @@ Here's how `parsed` looks so far:
 
 **Character 2: `+`**
 
-`+` is an operator. We can't really do anything with this right now though, since we don't know whats on the right yet. We'll just store it in a different box and wait for the next part.
+`+` is an operator. We can't really do anything with this right now though, since we don't know whats on the right yet. We'll just create our second box to store things like operators which need more information before it can be parsed. Let's call it `waiting`.
 
 ```typescript
 let parsed: Expression<number> = {
@@ -795,7 +865,7 @@ parsed = {
 waiting = null;
 ```
 
-`parsed` now looks like this
+`parsed` now looks like this:
 
 ```mermaid
     graph TD;
@@ -805,7 +875,7 @@ waiting = null;
 
 Nice, now we know what we need, one box for the parsed values, and another box for the elements that need more information before they can be parsed. 
 
-The `waiting` box is still a little incomplete. Imagine if the expression was `a + -b` instead. After we put `+` in the waiting, the `-` also needs to be stored somewhere. We could create another box for this, but since `-` is also waiting for more information, let's create a new object `Waiting` and replace the original waiting box to also include negatives:
+The `waiting` box is still a little incomplete. Imagine if the expression was `a + -b` instead. After we put `+` in the waiting, the `-` also needs to be stored somewhere. We could create another box for this, but since `-` is also waiting for more information, let's add a new element to our `Waiting` object:
 
 ```typescript
 interface Waiting<Operator> {
@@ -818,7 +888,7 @@ interface Waiting<Operator> {
 
 The example we used before is pretty simple, but what about something like `a + (b * c)`?
 
-The parentheses makes everything a lot more complicated, but one nice method is to just keep `b * c` stored in `waiting`, and then parse that bit separately by calling our parser again. Let's add another element to `Waiting`:
+The parentheses makes everything a lot more complicated, but one nice method is to just keep `b * c` stored in the `waiting` `let` as a `string`, and then parse that bit separately by calling our parser again. Let's add another element to the `Waiting` object:
 
 ```typescript
 interface Grouped {
@@ -838,12 +908,18 @@ interface Waiting {
 }
 ```
 
-Perfect! Onto our third and final box.
+Perfect!
 
-The `parsed` and `waiting` boxes seem like enough, but there's just one more we need. Imagine if someone makes a typo and types `a ++ b` instead of `a + b`. We can't parse that. After `+`, we're expecting either parentheses, a negative sign, or a variable/number next. We need to send an error for that. Let's create a box for what we expect, and if the character doesn't match out expectations, we throw an error.
+We have two boxes, but what about the third one? The `parsed` and `waiting` boxes seem like enough, but there's just one more box we need. Imagine if someone makes a typo and types `a ++ b` instead of `a + b`. We can't parse that. After `+`, we're *expecting* either parentheses, a negative sign, or a variable/number. We need to send an error for that. Let's create a box for what we expect, and if the character doesn't match out expectations, we throw an error.
 
 ```typescript
 type ExpectedNum = "number" | "variable" | "operator" | "neg" | "group";
+```
+
+The `ExpectedNum` has all the things we could expect. We can just make a list of `ExpectedNum`s for our third and final box, `nextExpected`!
+
+```typescript
+let nextExp: ExpectedNum[] = [...] // the expectations in each cycle
 ```
 
 Now that we officially have 3 boxes, let's make the parser!
@@ -857,7 +933,7 @@ function parseInput(input: string): Expression<number> | null {
 
 }
 ```
-The return type could be `null` if the input is `""` (empty string)
+The return type could be `null` if the input is `""` (empty string).
 
 #### **Preparing the input**
 
@@ -961,11 +1037,11 @@ function parseInput(input: string): Expression<number> | null {
 }
 ```
 
-Now that all of that is out of the way, let's start with the loop!
+Since all of that is out of the way, let's start with the loop!
 
 #### **The For Loop**
 
-Let's use a `for` loop to go through each character. The first thing we need to do in the `for` loop is to check if the value is expected, if it isn't then the whole loop has to stop immediately
+Let's use a `for` loop to go through each character. The first thing we need to do in the `for` loop is to check if the value is expected, if it isn't then the whole loop has to stop immediately.
 
 ```typescript
 ...
@@ -1037,7 +1113,7 @@ Instead of actually handling each one of those inside the `if` block, let's crea
 
 #### **Value handlers**
 
-Each of the functions will do some of these 3 things
+Each of the functions will do some of these 3 things:
 
 - Update `parsed`
 - Update `waiting`
@@ -1127,7 +1203,7 @@ const result = {
 
 `exp` and `result` are equal.
 
-And now, to pick up where we left off
+And now, to pick up where we left off:
 
 ```typescript
 function valueIsNumber(
@@ -1186,7 +1262,7 @@ The next expected from here is only `["operator", "group"]`. Other than an opera
 
 
 
-Now let's write a `valueIsVariable` function
+Now let's write a `valueIsVariable` function.
 
 ```typescript
 function valueIsVariable(
@@ -1243,7 +1319,7 @@ function valueIsNumOrVar(
     ...
 
 ```
-Awesome! Let's see how this looks when implemented in `parseInput`
+Awesome! Let's see how this looks when implemented in `parseInput`.
 
 ```typescript
 function valueIsNumOrVar(
@@ -1835,9 +1911,173 @@ And the final one:
 
 The text for this example is very hard to follow, but if you look at it and the trees together it's a little easier.
 
-#### **Precedence code**
+### **Precedence code**
 
 This is the kind of thing that's seems simple until you write it down. But, we've got the 3 precedences generalized with the words. We can apply this to our code now!
+
+Why don't we use recursion to re-arrange everything into order? We first re-arrange the left, then the right, and then we put the new left and right back together and re-arrange the whole thing!
+
+In each cycle of the recursion, we need to check if the left, right, or both are of lower precedence than the parent branch. If that's true, ordering is needed, otherwise it can just be left alone.
+
+```typescript
+type Tag = Expression<unknown>["_tag"]; // "add" | "sub" | "mul" | ...
+type OrderOfOp = Tag[][];
+
+function isOperatorHigher(operator: Tag, comparer: Tag, order: OrderOfOp): boolean  {
+    const operatorIdx: number = order.findIndex((tags: Tag[]) => tags.includes(operator));
+    const comparerIdx: number = order.findIndex((tags: Tag[]) => tags.includes(comparer));
+
+    return operator > comparer;
+}
+
+function orderOfOperations<T>(tree: Expression<T>, order: OrderOfOp): Expression<T> {
+    const left = orderOfOperations(left, order);
+    const right = orderOfOperations(right, order);
+
+    const leftLower: boolean = isOperatorHigher(tree.tag, left.tag, order);
+    const rightLower: boolean = isOperatorHigher(tree.tag, right.tag, order);
+
+    if(!leftLower && !rightLower) {
+        return tree;
+    }
+    if(leftLower && rightLower) {
+        // do what we did in precedence 3
+    }
+    if(leftLower) {
+        // do what we did in precedence 1
+    }
+    // (right lower)
+    // do what we did in precedence 2
+}
+```
+
+I've added a new type called `OrderOfOp`. In our case, the input to `orderOfOperations()` would be `["leaf", "val", "var"], ["neg"], ["add", sub"], ["mul", "div"], ["group"]`. What this says is that `mul` and `div` > `add` and `sub` > `neg` > ... This is the operation precedence. The reason `add` and `sub` are in the same list are because they are of the same precedence. So, if we have a tree like this:
+
+```mermaid
+    graph TD;
+        add(+) --> sub("-");
+        add --> 5(5);
+        sub --> 10(10);
+        sub --> 20(20);
+```
+
+We don't have to do any extra ordering. If the `+` was replaced with `*`, we would. We've made this as an input and not a constant so that we can change it up whenever we want to. For example, if we wanted it to go left to right and ignore all ordering, we could easily do it.
+
+There's just one more thing we need to check. If the left and right are both `Leaf`s, `Neg`s, or `Group`s, there's nothing to re-arrange.
+
+```typescript
+function orderOfOperations<T>(tree: Expression<T>, order: OrderOfOp): Expression<T> {
+    const left = orderOfOperations(left, order);
+    const right = orderOfOperations(right, order);
+
+    const leftTooLow: boolean = left._tag === "leaf" | "var" | "val" | "neg" | "group";
+    const rightTooLow: boolean = right._tag === "leaf" | "var" | "val" | "neg" | "group";
+
+    if(leftTooLow && rightTooLow) {
+        return tree;
+    }
+
+    const leftLower: boolean = isOperatorHigher(tree.tag, left.tag, order);
+    const rightLower: boolean = isOperatorHigher(tree.tag, right.tag, order);
+
+    if(!leftLower && !rightLower) {
+        return tree;
+    }
+    if(leftLower && rightLower) {
+        // do what we did in precedence 3
+    }
+    if(leftLower) {
+        // do what we did in precedence 1
+    }
+    // (right lower)
+    // do what we did in precedence 2
+}
+```
+
+```mermaid
+    graph TD;
+        mul(*) --> add(+);
+        mul --> div(/)
+        add --> a(a);
+        add --> b(b);
+        div --> c(c);
+        div --> d(d);
+```
+
+Okay! Now we need to actually order it up. Let's start with what we did in [Precedence 1](#precedence-1-1).
+
+Here are the words we wrote for re-arranging:
+
+1. Remove the `left` from the root.
+2. Take the `right` of the `left`, and attach it to the `left` of the root.
+3. Attach the root to the `right` of the `left`.
+
+Let's do that!
+
+```typescript
+...
+
+function orderOfOperations<T>(tree: Expression<T>, order: OrderOfOp): Expression<T> {
+    const left = orderOfOperations(left, order);
+    const right = orderOfOperations(right, order);
+
+    const leftLower: boolean = isOperatorHigher(tree.tag, left.tag, order);
+    const rightLower: boolean = isOperatorHigher(tree.tag, right.tag, order);
+
+    if(!leftLower && !rightLower) {
+        return tree;
+    }
+    if(leftLower && rightLower) {
+
+    }
+    if(leftLower) {
+        // step 1: remove left from root
+        // (left has already been "removed" in line 2)
+
+        // step 2: take the right of the left and attach it to the left of the root
+        const leftRight = left.right;
+        const attached = makeNumExp(leftRight, right, tree._tag);
+
+        // step 3: attach root to the right of the left
+        return makeNumExp(left.left, attached, left._tag);
+    }
+}
+```
+
+It's a little hard to follow, but I wasn't able to find a simpler way, so I went with this. 
+
+That code above is good, but here's a cleaner version:
+
+```typescript
+...
+
+if(leftLower) {
+    const ll = left.left;
+    const lr = left.right;
+
+    const attached = makeNumExp(lr, right, tree._tag);
+    
+    return makeNumExp(ll, attached, left._tag);
+}
+
+...
+
+```
+
+Perfect! If you want to, you can try it out with some examples to see if it really works. The re-arranging for if right is lower is pretty similar to what we just did:
+
+```typescript
+// right lower:
+
+const rl = right.left;
+const rr = right.right;
+
+const attached = makeNumExp(left, rl, tree._tag);
+
+return makeNumExp(attached, rr, right._tag);
+```
+
+Now, we just have to do it for when both are lower:
 
 ## **Summary**
 

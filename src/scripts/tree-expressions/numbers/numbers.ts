@@ -399,7 +399,7 @@ export function simplify(tree: Expression<number>): Expression<number> {
     return addListToExp(simplifyRecursed);
 }
 
-export function isFullyEvaluated(exp: Expression<number>): boolean {
+export function isFullyEvaluated<T>(exp: Expression<T>): boolean {
     if(exp._tag === "leaf" || exp._tag === "val" || exp._tag === "var") {
         return true;
     }
@@ -417,47 +417,14 @@ export function isFullyEvaluated(exp: Expression<number>): boolean {
         return false;
     }
     
-    const isVar = (e: Expression<number>) => e._tag === "leaf" && e.val._tag === "var";
+    const isVar = (e: Expression<T>) => e._tag === "leaf" && e.val._tag === "var";
 
     // one of it (left or right) is either a variable OR not a leaf
     return ((isVar(exp.left) || isVar(exp.right)) && !isEqual(exp.left, exp.right)) || exp.left._tag !== "leaf" || exp.right._tag !== "leaf";
 
 }
 
-export function evaluateRecurse(expWithParan: Expression<number>, evaluate: Function): Expression<number> {
-    const exp = removeParan(expWithParan);
-
-    if(
-        exp._tag === "leaf" 
-        || exp._tag === "val" 
-        || exp._tag === "var"
-    ) {
-        return exp;
-    }
-
-    if(exp._tag === "neg" || exp._tag === "paran") {
-        const evValled = evaluateRecurse(exp.val, evaluate);
-        const r = exp._tag === "neg" 
-            ? evaluate({_tag: exp._tag, val: evValled} as Neg<number>)
-            : {_tag: "paran", val: evValled};
-        return r
-    }
-    if(isFullyEvaluated(exp)) {
-        return exp;
-    }
-    const leftEvalled = evaluateRecurse(exp.left, evaluate);
-    const rightEvalled = evaluateRecurse(exp.right, evaluate);
-    const newExp: Expression<number> = {
-        _tag: exp._tag,
-        left: leftEvalled,
-        right: rightEvalled,
-    }
-    const evalled = evaluate(newExp);
-
-    return evalled;
-}
-
-export function removeParan(exp: Expression<number>): Expression<number> {
+export function removeParan<T>(exp: Expression<T>): Expression<T> {
     switch(exp._tag) {
         case "add":
         case "sub":
@@ -531,3 +498,68 @@ export function reverseParse(exp: Expression<number>): string {
 }
 
 export const numOrder: OrderOfOp = [["leaf", "val", "var"], ["neg"], ["add", "sub"], ["mul", "div"], ["paran"]];
+
+////NEW evaluateRecurse
+
+export function cantBeEvaluatedFurther<T>(tree: Expression<T>): boolean {
+    switch(tree._tag) {
+        case "add":
+        case "sub":
+        case "mul":
+        case "div":
+            // both left and right can't be evaluated further
+            // AND, left and right aren't BOTH values
+            return (cantBeEvaluatedFurther(tree.left) && cantBeEvaluatedFurther(tree.right)) 
+                && !(
+                    (tree.left._tag === "leaf" && tree.left.val._tag === "val")
+                    && (tree.right._tag === "leaf" && tree.right.val._tag === "val")
+                    );
+        case "paran":
+            return cantBeEvaluatedFurther(tree.val);
+        case "neg":
+            // [neg].val cant be evaluated further
+            // AND [neg].val isn't a Val(number)
+            return cantBeEvaluatedFurther(tree.val) 
+                && !(tree.val._tag === "leaf" && tree.val.val._tag === "val");
+        default:
+            return true;
+    }
+}
+
+export function isReadyForEvaluation<T>(tree: Expression<T>): boolean {
+    switch(tree._tag) {
+        case "neg":
+        case "paran":
+            return cantBeEvaluatedFurther(tree.val);
+        case "add":
+        case "sub":
+        case "mul":
+        case "div":
+            return cantBeEvaluatedFurther(tree.left) && cantBeEvaluatedFurther(tree.right);
+        default:
+            return true;
+    }
+}
+
+export function evaluateRecurse<T>(
+    expression: Expression<T>,
+    evaluate: (t: Expression<T>) => Expression<T>
+): Expression<T> {
+    const tree = removeParan(expression);
+    if(tree._tag === "leaf" || tree._tag === "var" || tree._tag === "val") {
+        return tree;
+    }
+    if(isReadyForEvaluation(tree)) {
+        return evaluate(tree);
+    }
+
+    if(tree._tag === "neg" || tree._tag === "paran") {
+        const valueEvaluated = evaluateRecurse(tree.val, evaluate);
+        return evaluate({_tag: tree._tag, val: valueEvaluated});
+    }
+    
+    const leftEvaluated = evaluateRecurse(tree.left, evaluate);
+    const rightEvaluated = evaluateRecurse(tree.right, evaluate);
+
+    return evaluate({left: leftEvaluated, right: rightEvaluated, _tag: tree._tag});
+}

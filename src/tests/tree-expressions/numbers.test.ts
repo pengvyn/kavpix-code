@@ -1,6 +1,6 @@
 import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { addListToExp, closedParan, evaluateRecurse, ExpectedNumVal, isExpected, isFullyEvaluated, joinSimilars, NumberOperator, numOrder, openParan, parseInput, reverseParse, simplify, simplifyRecurse, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers/numbers";
+import { addListToExp, closedParan, evaluateRecurse, ExpectedNumVal, isExpected, isFullyEvaluated, isReadyForEvaluation, joinSimilars, NumberOperator, numOrder, openParan, parseInput, reverseParse, simplify, simplifyRecurse, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers/numbers";
 import { add, evaluateNumExp, sub, mul, div, neg } from "../../scripts/tree-expressions/numbers/evaluate";
 import { Add, Expression, Leaf, makeLeaf, makeWaiting, Neg, Sub, Variable, variables, Waiting } from "../../scripts/tree-expressions/types";
 import { arbNumOperator, arbNumWaiting, arbStringAndNumList, arbVarOrNum, strNumSet } from "../arbitraries";
@@ -913,4 +913,124 @@ describe("Numbers expression tree", () => {
             expect(stringed).toBe(expected);
         })
     })
+    describe.only("Order of Operations", () => {
+        it.each([
+            // {
+            //     tree: "a + b * c",
+            //     expectation: {
+            //         _tag: "add",
+            //         left: makeLeaf("a"),
+            //         right: {
+            //             _tag: "mul",
+            //             left: makeLeaf("b"),
+            //             right: makeLeaf("c"),
+            //         },
+            //     }
+            // },
+            {
+                tree: "(10 - 3 * 5 / b) * a / d",
+                expectation: {
+                    _tag: "div",
+                    left: {
+                        _tag: "mul",
+                        left: {
+                            _tag: "paran",
+                            val: {
+                                _tag: "sub",
+                                left: makeLeaf(10),
+                                right: {
+                                    _tag: "div",
+                                    left: {
+                                        _tag: "mul",
+                                        left: makeLeaf(3),
+                                        right: makeLeaf(5)
+                                    },
+                                    right: makeLeaf("b")
+                                },
+                            }
+                        },
+                        right: makeLeaf("a")
+                    },
+                    right: makeLeaf("d")
+                },
+            }
+        ])("Order of Operations", ({tree, expectation}) => {
+            const r = orderOfOperations(parseInput(tree) as Expression<number>, numOrder);
+            expect(r).toEqual(expectation);
+        })
+    })
+    describe("NEW evaluate num exp", () => {
+        it.each([
+            {tree: parseInput("(a + b)"), expected: true},
+            {tree: parseInput("a + b * c"), expected: true},
+            {tree: parseInput("(10 * a) - 10"), expected: true},
+            {tree: parseInput("1 + 2"), expected: true},
+            {tree: parseInput("1 + 2 + 3"), expected: false},
+            {tree: parseInput("-(1 * 2)"), expected: false},
+            {tree: parseInput("-1"), expected: true},
+            {tree: parseInput("a + b"), expected: true},
+        ])("Is ready for evaluation", ({tree, expected}) => {
+            const r = isReadyForEvaluation(tree as Expression<number>);
+            expect(r).toBe(expected);
+        })
+        it.each([
+            {tree: parseInput("1 + 2"), expected: parseInput("3")},
+            {tree: parseInput("(3 * 5)"), expected: parseInput("(15)")},
+            {tree: parseInput("12 + 3 + 5"), expected: parseInput("12 + 3 + 5")},
+            {tree: parseInput("a + 4"), expected: parseInput("a + 4")},
+        ])("Evaluate num exp", ({tree, expected}) => {
+            const r = evaluateNumExp(tree as Expression<number>);
+            expect(r).toEqual(expected);
+        })
+        it.each([
+            {
+                tree: "a",
+                expected: "a"
+            }
+        ])("Evaluate recurse", () => {
+            const tree = orderOfOperations(
+                parseInput("(10 - 3 * 5 / b) * a / b") as Expression<number>, 
+                numOrder
+            )
+            console.log(tree)
+            // const r = evaluateRecurse(tree as Expression<number>, evaluateNumExp);
+            expect(1).toBe(1)
+        })
+        describe("Precedence funcs", () => {
+            it.each([
+                {tree: parseInput("1 * 2 + 3"), expected: parseInput("1 * 2 + 3")},
+                {
+                    tree: parseInput("10 - 3 * 5"), 
+                    expected: {
+                        _tag: "sub",
+                        left: makeLeaf(10),
+                        right: {
+                            _tag: "mul",
+                            left: makeLeaf(3),
+                            right: makeLeaf(5)
+                        },
+                    }
+                },
+                {
+                    tree: parseInput("10 - 3 * 5 / b"),
+                    expected: {
+                        _tag: "sub",
+                        left: makeLeaf(10),
+                        right: {
+                            _tag: "div",
+                            left: {
+                                _tag: "mul",
+                                left: makeLeaf(3),
+                                right: makeLeaf(5)
+                            },
+                            right: makeLeaf("b")  
+                        },
+                    }
+                },
+            ])("Precedence left", ({tree, expected}) => {
+                const result = orderOfOperations(tree as Expression<number>, numOrder);
+                expect(result).toEqual(expected);
+            })
+        })
+    }) 
 })

@@ -76,210 +76,146 @@ function isOperatorHigher(operator: Tag, comparer: Tag, order: OrderOfOp): boole
     return operatorIdx > comparerIdx;
 }
 
+type BiOperatorTag = "add" | "sub" | "mul" | "div";
+type BiOperator<T> = Add<T> | Sub<T> | Div<T> | Mul<T>;
+
+function precedenceLeft<T>(left: BiOperator<T>, right: Expression<T>, tag: BiOperatorTag): Expression<T> {
+    const ll = left.left;
+    const lr = left.right;
+
+    const attached: Expression<T> = {
+        _tag: tag,
+        left: lr,
+        right: right,
+    }
+    
+    const r =  {
+        _tag: left._tag,
+        left: ll,
+        right: attached,
+    }
+
+    return r
+}
+function precedenceRight<T>(left: Expression<T>, right: BiOperator<T>, tag: BiOperatorTag): Expression<T> {
+    const rl = right.left;
+    const rr = right.right;
+
+    const attached: Expression<T> = {
+        _tag: tag,
+        left: left,
+        right: rl,
+    }
+    
+    return {
+        _tag: right._tag,
+        left: attached,
+        right: rr,
+    }
+}
+function precedenceBoth<T>(left: BiOperator<T>, right: BiOperator<T>, tag: BiOperatorTag): Expression<T> {
+    const ll = left.left;
+    const lr = left.right;
+    const rl = right.left;
+    const rr = right.right;
+
+    const centerAttached = {
+        _tag: tag,
+        left: lr,
+        right: rl,
+    };
+
+    const attached2 = {
+        _tag: left._tag,
+        left: ll,
+        right: centerAttached,
+    }
+    return {
+        _tag: right._tag,
+        left: attached2,
+        right: rr,
+    }
+}
+
 function expIsMulOrDiv<T>(exp: Mul<T> | Div<T>, order: OrderOfOp): Expression<T> {
+    const left = orderOfOperations(exp.left, order)
+    const right = orderOfOperations(exp.right, order)
 
-    // checks the left and right
-    // if
-    // 1 + 3 * 2 + 3 should become (1 * 2) + 3
-
-    // check if left is lower than exp
-
-    // check if right is lower than exp
-
-    // if both, it needs to take the right of the left, and the left of the
-
-    const left = orderOfOperations(exp.left, order) //as Add<T> | Sub<T> | Div<T> | Mul<T> | Leaf<T>;
-    const right = orderOfOperations(exp.right, order) //as Add<T> | Sub<T> | Div<T> | Mul<T> | Leaf<T>;
-
+    const newExp: Expression<T> = {
+        _tag: exp._tag,
+        left: left,
+        right: right,
+    }
+    
+    const leftTooLow = isLeaf(left) || isVar(left) || isVal(left) || isParan(left) || isNeg(left);
+    const rightTooLow = isLeaf(right) || isVar(right) || isVal(right) || isParan(right) || isNeg(right);
+    
+    if(leftTooLow && rightTooLow) {
+        return newExp;
+    }
     const leftLower = isOperatorHigher(exp._tag, left._tag, order);
     const rightLower = isOperatorHigher(exp._tag, right._tag, order);
-    
-    const leftLeaf = isLeaf(left) || isVar(left) || isVal(left) || isParan(left) || isNeg(left);
-    const rightLeaf = isLeaf(right) || isVar(right) || isVal(right) || isParan(right) || isNeg(right);
-    
-    if(leftLeaf && rightLeaf) {
-        return exp;
-    }
 
     if(!leftLower && !rightLower) {
-        return exp;
+        return newExp;
     }
+
+    // left lower, right not lower.
+        // left leaf
+            // do nothing
+        // left not leaf
+            // precedence 1
+    // right lower, left not lower.
+        // right leaf
+            // do nothing
+        // right not leaf
+            // precedence 2
+    // both lower
+        // left leaf, right not leaf
+            // precedence 2
+        // right leaf, left not leaf
+            // precedence 1
+        // neither are leaves
+            // precedence 3
 
     if(leftLower && rightLower) {
-        if(!leftLeaf && rightLeaf) {
-            const lr = left.right;
-            const ll = left.left;
-
-            return {
-                _tag: left._tag,
-                left: ll,
-                right: {
-                    _tag: exp._tag,
-                    left: lr,
-                    right,
-                },
-            }
+        if(leftTooLow) {
+            return precedenceRight(left, right as BiOperator<T>, exp._tag);
         }
-        if(leftLeaf && !rightLeaf) {
-            const rr = right.right;
-            const rl = right.left;
-
-            return {
-                _tag: right._tag,
-                left: {
-                    _tag: exp._tag,
-                    left,
-                    right: rl,
-                },
-                right: rr,
-            }
+        if(rightTooLow) {
+            return precedenceLeft(left as BiOperator<T>, right, exp._tag);
         }
-        if(!leftLeaf && !rightLeaf) {
-            const ll = left.left;
-            const lr = left.right;
-            const rl = right.left;
-            const rr = right.right;
-
-            const newRL: Expression<T> = {
-                _tag: exp._tag,
-                left: lr,
-                right: rl,
-            }
-            const newRight = {
-                _tag: right._tag,
-                left: newRL,
-                right: rr,
-            }
-            return {
-                _tag: left._tag,
-                left: ll,
-                right: newRight,
-            }
-        }
-        
-        // left or right is neg
-        // left or right is add/sub
-        // left or right is 
-        
+        return precedenceBoth(left as BiOperator<T>, right as BiOperator<T>, exp._tag);
     }
-    if(leftLower && !leftLeaf) {
-        const ll = left.left;
-        const lr = left.right;
-
-        const attached: Expression<T> = {
-            _tag: exp._tag,
-            left: lr,
-            right: right,
+    if(leftLower) {
+        if(leftTooLow) {
+            return newExp;
         }
-        return {
-            _tag: left._tag,
-            left: ll,
-            right: attached
-        }
+        return precedenceLeft(left, right, exp._tag);
     }
-    if(rightLower && !rightLeaf) {
-        const rl = right.left;
-        const rr = right.right;
-
-        const attached: Expression<T> = {
-            _tag: exp._tag,
-            left: left,
-            right: rl,
+    if(rightLower) {
+        if(rightTooLow) {
+            return newExp;
         }
-        return {
-            _tag: right._tag,
-            left: attached,
-            right: rr,
-        }
+        return precedenceRight(left, right, exp._tag);
     }
-    return exp;
-
-}
-function expIsNeg<T>(exp: Neg<T>, order: OrderOfOp): Neg<T> {
-    return {
-        _tag: "neg",
-        val: orderOfOperations(exp.val, order)
-    }
-}
-function expIsAddOrSub<T>(exp: Add<T> | Sub<T>, order: OrderOfOp): Expression<T> {
-    const left = orderOfOperations(exp.left, order) as Add<T> | Sub<T> | Div<T> | Mul<T> | Leaf<T>;
-    const right = orderOfOperations(exp.right, order) as Add<T> | Sub<T> | Div<T> | Mul<T> | Leaf<T>;
-
-    const leftLower = isOperatorHigher(exp._tag, left._tag, order);
-    const rightLower = isOperatorHigher(exp._tag, right._tag, order);
-
-    if(leftLower && rightLower) {
-        const leftLeaf =  left._tag === "leaf";
-        const rightLeaf = right._tag === "leaf";
-        if(leftLeaf && rightLeaf) {
-            return exp;
-        }
-        if(!leftLeaf && rightLeaf) {
-            const lr = left.right;
-            const ll = left.left;
-
-            return {
-                _tag: left._tag,
-                left: ll,
-                right: {
-                    _tag: exp._tag,
-                    left: lr,
-                    right,
-                },
-            }
-        }
-        if(leftLeaf && !rightLeaf) {
-            const rr = right.right;
-            const rl = right.left;
-
-            return {
-                _tag: right._tag,
-                left: {
-                    _tag: exp._tag,
-                    left,
-                    right: rl,
-                },
-                right: rr,
-            }
-        }
-        if(!leftLeaf && !rightLeaf) {
-            const ll = left.left;
-            const lr = left.right;
-            const rl = right.left;
-            const rr = right.right;
-
-            const newRL: Expression<T> = {
-                _tag: exp._tag,
-                left: lr,
-                right: rl,
-            }
-            const newRight = {
-                _tag: right._tag,
-                left: newRL,
-                right: rr,
-            }
-            return {
-                _tag: left._tag,
-                left: ll,
-                right: newRight,
-            }
-        }
-        
-        // left or right is neg
-        // left or right is add/sub
-        // left or right is 
-        
-    }
-    return exp;
+    return newExp;
 }
 
 export function orderOfOperations<T>(exp: Expression<T>, order: OrderOfOp): Expression<T> {
     switch(exp._tag) {
         case "mul":
         case "div":
-            return expIsMulOrDiv(exp, order);
+            const r = expIsMulOrDiv(exp, order);
+            return r
         case "neg":
-            return expIsNeg(exp, order);
+        case "paran":
+            const newVal = orderOfOperations(exp.val, order);
+            const result = {
+                _tag: exp._tag,
+                val: newVal
+            }
+            return result;
         case "add":
         case "sub":
             return {

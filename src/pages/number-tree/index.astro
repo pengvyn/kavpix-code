@@ -47,7 +47,7 @@ import { SITE_TITLE } from "../../config";
                     </form>
 
                     <div class="result-cont">
-                        <div class="examples">
+                        <div class="examples" id="examples">
                             <div class="example">
                                 10 + a * 2
                             </div>
@@ -70,8 +70,9 @@ import { SITE_TITLE } from "../../config";
                         </div>
                     </div>
                     <script>
-                        import { startListening } from "../../scripts/tree-expressions/numbers/numbers-browser";
+                        import { startListening, exampleClickListener } from "../../scripts/tree-expressions/numbers/numbers-browser";
                         startListening();
+                        exampleClickListener(document.getElementById("examples"));
                     </script>
                 </div>
             </div>

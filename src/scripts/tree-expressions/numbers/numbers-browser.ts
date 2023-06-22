@@ -6,7 +6,7 @@ import dagre from "cytoscape-dagre"
 import { evaluateNumExp } from "./evaluate";
 
 function isNodeOperator(n: cytoscape.NodeSingular): boolean {
-    return ["()", "+", "-", "*", "/"].includes(n.data("label"));
+    return ["()", "+", "-", "\u00D7", "\u00F7"].includes(n.data("label"));
 }
 
 dagre(cytoscape);
@@ -32,9 +32,9 @@ function translateLabel(label: string): string {
         case "sub":
             return "-";
         case "mul":
-            return "*";
+            return "\u00D7";
         case "div":
-            return "÷" // U+00F7
+            return "\u00F7"
         case "paran":
             return "( )";
         case "neg":
@@ -48,7 +48,6 @@ const f = document.querySelector(".form") as HTMLFormElement;
 
 function animateError() {
     const inp = f.querySelector("input");
-    console.log(inp);
     
     const keyframes: Keyframe[] = [
         { 
@@ -84,10 +83,21 @@ function animateError() {
     inp?.animate(keyframes, 300);
 }
 
-function callback(ev: SubmitEvent) {
+function submitCallback(ev: SubmitEvent) {
     ev.preventDefault();
-    const val = (document.getElementById("num-exp-inp") as HTMLInputElement).value;
+    runExpressionFuncs((document.getElementById("num-exp-inp") as HTMLInputElement).value)
+}
 
+function exampleCallback(ev: MouseEvent) {
+    const target = ev.target as HTMLDivElement;
+    if(target.className === "examples") {
+        return;
+    }
+    runExpressionFuncs(target.innerText);
+    (document.getElementById("num-exp-inp") as HTMLInputElement).value = target.innerText;
+}
+
+function runExpressionFuncs(val: string) {
     let errored = false;
 
     try {
@@ -96,7 +106,6 @@ function callback(ev: SubmitEvent) {
         errored = true;
     } finally {
         if(errored) {
-            console.log("hiii")
             animateError();
             return;
         }
@@ -105,7 +114,6 @@ function callback(ev: SubmitEvent) {
     if(tree === null) {
         return;
     }
-    console.log(tree);
 
     //---
     const orofop = orderOfOperations(tree, numOrder);
@@ -114,7 +122,6 @@ function callback(ev: SubmitEvent) {
     const simplified = simplify(evalled);
 
     const listified = listify(simplified);
-    // console.log("treeeeeeeeee", simplified)
 
 
     
@@ -226,5 +233,9 @@ function callback(ev: SubmitEvent) {
 
 
 export function startListening() {
-    f.addEventListener("submit", (ev) => callback(ev));
+    f.addEventListener("submit", (ev) => submitCallback(ev));
+}
+
+export function exampleClickListener(exampleCont: HTMLDivElement) {
+    exampleCont.addEventListener("click", (ev) => exampleCallback(ev));
 }

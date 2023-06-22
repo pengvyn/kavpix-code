@@ -4,10 +4,16 @@
 
 ###### NUMBER TREE
 
-- TODO: (numtree) Aligning in the info for operations and variables
-- TODO: (numtree) Making the examples clickable
-- TODO: (numtree) Come up with an actual name + logo/icon
-- TODO: (numtree) Fix space between label and input box
+- TODO: Aligning in the info for operations and variables
+- DONE: Making the examples clickable
+- TODO: Come up with an actual name + logo/icon
+- TODO: Fix space between label and input box
+- TODO: Number tree doesn't have to be fully white.
+  - TODO: Number tree should blend in with the answer since they aren't two separate things
+- TODO: Text in input box should always be more prominent than the examples
+- TODO: Option to change the order
+- TODO: Option to set variable values
+- (^ maybe the above 2 can be the left and right of the page/input box?)
 
 ###### POWER SETS
 

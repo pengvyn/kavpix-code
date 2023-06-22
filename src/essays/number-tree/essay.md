@@ -40,6 +40,7 @@
     - [**Precedence 2**](#precedence-2-1)
     - [**Precedence 3**](#precedence-3-1)
     - [**Precedence code**](#precedence-code)
+  - [**Evaluator**](#evaluator-1)
   - [**Summary**](#summary)
   - [**To-Do list**](#to-do-list)
   - [**Libraries Used**](#libraries-used)
@@ -1909,49 +1910,52 @@ And the final one:
 5. Attach the root to the `left`'s `right`
 6. Attach `left` to `right`'s `left`
 
-The text for this example is very hard to follow, but if you look at it and the trees together it's a little easier.
+The text for this example is very hard to follow, but if you look at it and the trees together it's a little easier. It's the kind of thing that's seems simple until you write it down. But, we've got the 3 precedences generalized with the words. We can apply this to our code now!
 
 ### **Precedence code**
 
-This is the kind of thing that's seems simple until you write it down. But, we've got the 3 precedences generalized with the words. We can apply this to our code now!
-
 Why don't we use recursion to re-arrange everything into order? We first re-arrange the left, then the right, and then we put the new left and right back together and re-arrange the whole thing!
 
-In each cycle of the recursion, we need to check if the left, right, or both are of lower precedence than the parent branch. If that's true, ordering is needed, otherwise it can just be left alone.
+But before that, we don't want to re-arrange anything that isn't `mul` or `div`, since they are the highest in precedence. There's `group`, too, but we don't re-arrange it, only the contents inside of it. So first, let's define the main function:
 
 ```typescript
 type Tag = Expression<unknown>["_tag"]; // "add" | "sub" | "mul" | ...
 type OrderOfOp = Tag[][];
 
-function isOperatorHigher(operator: Tag, comparer: Tag, order: OrderOfOp): boolean  {
-    const operatorIdx: number = order.findIndex((tags: Tag[]) => tags.includes(operator));
-    const comparerIdx: number = order.findIndex((tags: Tag[]) => tags.includes(comparer));
-
-    return operator > comparer;
+function reArrangeMulOrDiv<T>(tree: Mul<T> | Div<T>, order: OrderOfOp): Expression<T> {
+    // does the ordering for the tree
 }
 
 function orderOfOperations<T>(tree: Expression<T>, order: OrderOfOp): Expression<T> {
-    const left = orderOfOperations(left, order);
-    const right = orderOfOperations(right, order);
+    switch(tree._tag) {
+        case "add":
+        case "sub":
+            const newLeft = orderOfOperations(tree.left);
+            const newRight = orderOfOperations(tree.right);
+        
+            return {
+                _tag: tree._tag,
+                left: newLeft,
+                right: newRight,
+            }
+        case "neg":
+        case "group":
+            const newVal = orderOfOperations(tree.val);
 
-    const leftLower: boolean = isOperatorHigher(tree.tag, left.tag, order);
-    const rightLower: boolean = isOperatorHigher(tree.tag, right.tag, order);
-
-    if(!leftLower && !rightLower) {
-        return tree;
+            return {
+                _tag: tree._tag,
+                val: newVal
+            }
+        case "mul":
+        case "div":
+            return reArrangeMulOrDiv(tree, order);
+        default:
+            return exp;
     }
-    if(leftLower && rightLower) {
-        // do what we did in precedence 3
-    }
-    if(leftLower) {
-        // do what we did in precedence 1
-    }
-    // (right lower)
-    // do what we did in precedence 2
 }
 ```
 
-I've added a new type called `OrderOfOp`. In our case, the input to `orderOfOperations()` would be `["leaf", "val", "var"], ["neg"], ["add", sub"], ["mul", "div"], ["group"]`. What this says is that `mul` and `div` > `add` and `sub` > `neg` > ... This is the operation precedence. The reason `add` and `sub` are in the same list are because they are of the same precedence. So, if we have a tree like this:
+I've added a new type called `OrderOfOp`. In our case, the input to `orderOfOperations()` would be `["leaf", "val", "var"], ["neg"], ["add", sub"], ["mul", "div"], ["group"]`. What this says is that `group` > `mul` and `div` > `add` and `sub` > `neg` > ... This is the operation precedence. The reason `add` and `sub` are in the same list are because they are of the same precedence. So, if we have a tree like this:
 
 ```mermaid
     graph TD;
@@ -1963,121 +1967,306 @@ I've added a new type called `OrderOfOp`. In our case, the input to `orderOfOper
 
 We don't have to do any extra ordering. If the `+` was replaced with `*`, we would. We've made this as an input and not a constant so that we can change it up whenever we want to. For example, if we wanted it to go left to right and ignore all ordering, we could easily do it.
 
-There's just one more thing we need to check. If the left and right are both `Leaf`s, `Neg`s, or `Group`s, there's nothing to re-arrange.
+Now, let's work on our `reArrangeMulOrDiv` function. In each cycle of the recursion, we need to check if the left, right, or both are of lower precedence than the parent branch. If that's true, ordering is needed, otherwise it can just be left alone. Let's start with the conditions so we know when we need to use which of the three precedences.
+
+1. Left and right are lower than the root
+    - 3rd precedence
+2. Left is lower than the root, right is not
+    - 1st precedence
+3. Right is lower than the root, left is not
+    - 2nd precedence
+4. Neither of them are lower than the root
+    - No re-arranging needed
+  
+Nice! We can use this for our `if` blocks inside of `reArrangeMulOrDiv`.
+
+But, there's just one more thing. What if the left or the right are `leaf`s? Then the left of the left doesn't exist. We need to check that too, to decide exactly what we want to do. `leaf` is lower than `add`, but we can't apply the first precedence on a `leaf`. We need to make sure we apply it in the correct place, and do something else if we can't apply it.
 
 ```typescript
-function orderOfOperations<T>(tree: Expression<T>, order: OrderOfOp): Expression<T> {
-    const left = orderOfOperations(left, order);
-    const right = orderOfOperations(right, order);
+export function isLeaf<T>(exp: Expression<T>): exp is Leaf<T> {
+    return exp._tag === "leaf";
+}
+export function isVar<T>(exp: Expression<T>): exp is VarLeaf {
+    return exp._tag === "var";
+}
+export function isVal<T>(exp: Expression<T>): exp is ValLeaf<T> {
+    return exp._tag === "val";
+}
+export function isGroup<T>(exp: Expression<T>): exp is Group<T> {
+    return exp._tag === "group";
+}
+export function isNeg<T>(exp: Expression<T>): exp is Neg<T> {
+    return exp._tag === "neg";
+}
 
-    const leftTooLow: boolean = left._tag === "leaf" | "var" | "val" | "neg" | "group";
-    const rightTooLow: boolean = right._tag === "leaf" | "var" | "val" | "neg" | "group";
+function reArrangeMulOrDiv<T>(tree: Mul<T> | Div<T>, order: OrderOfOp): Expression<T> {
+    const left = orderOfOperations(tree.left);
+    const right = orderOfOperations(tree.right);
 
-    if(leftTooLow && rightTooLow) {
-        return tree;
-    }
+    const leftNotBinary: boolean = isLeaf(left) | isVar(left) | isVal(left) | isGroup(left) | isNeg(left);
+    const rightNotBinary: boolean = isLeaf(right) | isVar(right) | isVal(right) | isGroup(right) | isNeg(right);
 
-    const leftLower: boolean = isOperatorHigher(tree.tag, left.tag, order);
-    const rightLower: boolean = isOperatorHigher(tree.tag, right.tag, order);
-
-    if(!leftLower && !rightLower) {
-        return tree;
+    if(leftNotBinary && rightNotBinary) {
+        return {
+            ...tree,
+            left,
+            right
+        };
     }
-    if(leftLower && rightLower) {
-        // do what we did in precedence 3
-    }
-    if(leftLower) {
-        // do what we did in precedence 1
-    }
-    // (right lower)
-    // do what we did in precedence 2
+    // re-arranging happens here
 }
 ```
 
-```mermaid
-    graph TD;
-        mul(*) --> add(+);
-        mul --> div(/)
-        add --> a(a);
-        add --> b(b);
-        div --> c(c);
-        div --> d(d);
-```
+If both the left and right are not binary operators, no re-arranging is needed, so it just returns a tree with the new left and right.
 
-Okay! Now we need to actually order it up. Let's start with what we did in [Precedence 1](#precedence-1-1).
+Okay, now we need to adjust the conditions we had:
 
-Here are the words we wrote for re-arranging:
+1. Left and right are lower than the root
+    - 3rd precedence
+2. Left is lower than the root, right is not
+    - 1st precedence
+3. Right is lower than the root, left is not
+    - 2nd precedence
+4. Neither of them are lower than the root
+    - No re-arranging needed
 
-1. Remove the `left` from the root.
-2. Take the `right` of the `left`, and attach it to the `left` of the root.
-3. Attach the root to the `right` of the `left`.
+All of these assume that the left or right are binary operators, but they could be `Leaf`s or `Group`s. In our `if` block above, we don't want to re-arrange when *both* of them are not binary operators. We need to account for the unary (single input) operators as well. With `2` ("Left is lower than the root, right is not"), left could be a `leaf`. We need to make sure that left is a binary operator, and only then apply the first precedence:
 
-Let's do that!
+1. Left and right are lower than the root
+    - Left is a unary operator
+        - 2nd precedence
+
+    - Right is a unary operator
+        - 1st precedence
+
+    - Neither are leaves
+        - 3rd precedence
+
+2. Left is lower than the root, and left is a binary operator
+    - 1st precedence
+  
+3. Right is lower than the root, and right is a binary operator
+    - 2nd precedence
+
+4. Neither of them are lower than the root
+    - No re-arranging
+
+That's better!
+
+I've removed the "right is not" and "left is not" part for `2.` and `3.` respectively because if any of them were true, `1.` would take care of it.
+
+We're checking the comparing the precedences of left, right, and the root a lot, so let's write a function for it:
 
 ```typescript
-...
+function isOperatorHigher(operator: Tag, comparer: Tag, order: OrderOfOp): boolean {
+    const operatorIdx = order.findIndex((l) => l.includes(operator));
+    const comparerIdx = order.findIndex((l) => l.includes(comparer));
+    return operatorIdx > comparerIdx;
+}
+```
 
-function orderOfOperations<T>(tree: Expression<T>, order: OrderOfOp): Expression<T> {
-    const left = orderOfOperations(left, order);
-    const right = orderOfOperations(right, order);
+Let's now use this for our `if` blocks:
 
-    const leftLower: boolean = isOperatorHigher(tree.tag, left.tag, order);
-    const rightLower: boolean = isOperatorHigher(tree.tag, right.tag, order);
+```typescript
+function isOperatorHigher(operator: Tag, comparer: Tag, order: OrderOfOp): boolean {
+    const operatorIdx = order.findIndex((l) => l.includes(operator));
+    const comparerIdx = order.findIndex((l) => l.includes(comparer));
+    return operatorIdx > comparerIdx;
+}
 
-    if(!leftLower && !rightLower) {
-        return tree;
+function reArrangeMulOrDiv<T>(tree: Mul<T> | Div<T>, order: OrderOfOp): Expression<T> {
+    const left = orderOfOperations(tree.left);
+    const right = orderOfOperations(tree.right);
+
+    const leftNotBinary: boolean = isLeaf(left) | isVar(left) | isVal(left) | isGroup(left) | isNeg(left);
+    const rightNotBinary: boolean = isLeaf(right) | isVar(right) | isVal(right) | isGroup(right) | isNeg(right);
+
+    if(leftNotBinary && rightNotBinary) {
+        return {
+            ...tree,
+            left,
+            right
+        };
     }
+
+    const leftLower = isOperatorHigher(tree._tag, left._tag, order);
+    const rightLower = isOperatorHigher(tree._tag, right._tag, order);
+
     if(leftLower && rightLower) {
-
+        if(leftNotBinary) {
+            // precedence 2
+        }
+        if(rightNotBinary) {
+            // precedence 1
+        }
+        // precedence 3
     }
-    if(leftLower) {
-        // step 1: remove left from root
-        // (left has already been "removed" in line 2)
+    if(leftLower && !leftNotBinary) {
+        // precedence 1
+    }
+    if(rightLower && !rightNotBinary) {
+        // precedence 2
+    }
 
-        // step 2: take the right of the left and attach it to the left of the root
-        const leftRight = left.right;
-        const attached = makeNumExp(leftRight, right, tree._tag);
-
-        // step 3: attach root to the right of the left
-        return makeNumExp(left.left, attached, left._tag);
+    return {
+        ...tree,
+        left,
+        right
     }
 }
 ```
 
-It's a little hard to follow, but I wasn't able to find a simpler way, so I went with this. 
+Perfect! Now we just have to actually apply it. 
 
-That code above is good, but here's a cleaner version:
+We're using precedence 1 and 2 twice, so let's make functions for them as well:
 
 ```typescript
-...
 
-if(leftLower) {
+type BinaryOperator<T> = Add<T> | Sub<T> | Mul<T> | Div<T>
+type BinaryTag = "add" | "sub" | "mul" | "div";
+
+function precedenceLeft<T>(left: BinaryOperator<T>, right: Expression<T>, tag: BinaryTag): Expression<T> { // precedence 1
     const ll = left.left;
     const lr = left.right;
 
-    const attached = makeNumExp(lr, right, tree._tag);
-    
-    return makeNumExp(ll, attached, left._tag);
+    const attached: Expression<T> = {
+        _tag: tag,
+        left: lr,
+        right
+    }
+    return {
+        _tag: left._tag,
+        left: ll,
+        right: attached
+    };
 }
 
-...
+function precedenceRight<T>(left: Expression<T>, right: BinaryOperator<T>, tag: BinaryTag): Expression<T> { // precedence 2
+    const rl = right.left;
+    const rr = right.right;
 
+    const attached: Expression<T> = {
+        _tag: tag,
+        left,
+        right: rl
+    }
+    return {
+        _tag: right._tag,
+        left: attached,
+        right: rr
+    }
+}
+
+function precedenceBoth<T>(left: BinaryOperator<T>, right: BinaryOperator<T>, tag: BinaryTag): Expression<T> { // precedence 3
+    const ll = left.left;
+    const lr = left.right;
+    const rl = right.left;
+    const rr = right.right;
+
+    const centerAttached: Expression<T> = {
+        _tag: tag,
+        left: lr,
+        right: rl
+    }
+
+    const leftAttached: Expression<T> = {
+        _tag: left._tag,
+        left: ll,
+        right: centerAttached
+    }
+
+    return {
+        _tag: right._tag,
+        left: leftAttached,
+        right: rr
+    }
+}
 ```
 
-Perfect! If you want to, you can try it out with some examples to see if it really works. The re-arranging for if right is lower is pretty similar to what we just did:
+There we go! Now, we can just call these functions inside of the `reArrangeMulOrDiv` function and we're finished!
 
 ```typescript
-// right lower:
+function reArrangeMulOrDiv<T>(tree: Mul<T> | Div<T>, order: OrderOfOp): Expression<T> {
+    const left = orderOfOperations(tree.left);
+    const right = orderOfOperations(tree.right);
 
-const rl = right.left;
-const rr = right.right;
+    const leftNotBinary: boolean = isLeaf(left) | isVar(left) | isVal(left) | isGroup(left) | isNeg(left);
+    const rightNotBinary: boolean = isLeaf(right) | isVar(right) | isVal(right) | isGroup(right) | isNeg(right);
 
-const attached = makeNumExp(left, rl, tree._tag);
+    if(leftNotBinary && rightNotBinary) {
+        return {
+            ...tree,
+            left,
+            right
+        };
+    }
 
-return makeNumExp(attached, rr, right._tag);
+    const leftLower = isOperatorHigher(tree._tag, left._tag, order);
+    const rightLower = isOperatorHigher(tree._tag, right._tag, order);
+
+    if(leftLower && rightLower) {
+        if(leftNotBinary) {
+            return precedenceRight(left, right, tree._tag);
+        }
+        if(rightNotBinary) {
+            return precedenceLeft(left, right, tree._tag);
+        }
+        return precedenceBoth(left, right, tree._tag);
+    }
+    if(leftLower && !leftNotBinary) {
+        return precedenceLeft(left, right, tree._tag);
+    }
+    if(rightLower && !rightNotBinary) {
+        return precedenceRight(left, right, tree._tag);
+    }
+
+    return {
+        ...tree,
+        left,
+        right
+    }
+}
 ```
 
-Now, we just have to do it for when both are lower:
+There we go! Thats our orderer!
+
+## **Evaluator**
+
+The evaluator is pretty straightforward. We looked at the process [here](#evaluator), and that's all it does. It starts at the root, checks if it can be immediately evaluated, if it can't then in evaluates the left and the right, using recursion again, and then finally evaluates the new root.
+
+We can use [generic types](#generic-types) for our evaluator again. It can take in the tree, and an `evaluate()` function. The `evaluate()` function will actually evaluate the expressions, and the evaluator just goes through the entire tree and calls the `evaluate` function it has as an input in each cycle.
+
+Since we're using recursion, we don't want to do too much unnecessary stuff, so let's write a function that checks if the tree has been evaluated enough for `evaluate` to be called. These are the cases in which an expression is fully evaluated:
+
+- The tree is just a number
+- The tree is just a variable
+- At least one of the left and right are variables
+- The value (in `Neg` and `Group`) is fully evaluated
+
+Note that this is recursion, so the `left` and `right`, or the `val` would have already been evaluated. Let's write the basic structure of our `evaluateRecurse` function:
+
+```typescript
+function evaluateRecurse<T>(
+    tree: Expression<T>, 
+    evaluate: (t: Expression<T>) => Expression<T>
+): Expression<T> {
+
+}
+```
+
+If the isFullyEvaluated is true, it should call evaluate() with the inputs and return.
+
+otherwise, it should evaluate the left and right. or evaluate the val
+
+and then it should call evaluate() with the new left and right or val. 
+
+since each evaluate() has different things it can and can't evaluate (like with the evaluateNumExp it can't evaluate things with variables, but maybe something else can for a different thing like logical expressions), each evaluate() func can have a canBeEvaluated() function to check if the tree is evaluate-able. 
+
+it isn't the evaluateRecurse() function's job to check if the tree can be evaluated. if evaluate() can't evaluate it, it should just return.
+
+isFullyEvaluated checks if the expression is ready to be evaluated
+
+maybe it should be renamed to "isReadyForEvaluation" ?
 
 ## **Summary**
 

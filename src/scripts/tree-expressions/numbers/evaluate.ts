@@ -66,8 +66,43 @@ export function neg(val: Leaf<number>): NegLeaf | Leaf<number> {
     };
 }
 
+function treeIsValueLeaf(tree: Expression<number>): tree is {_tag: "leaf", val: {_tag: "val", val: number}} {
+    return tree._tag === "leaf" && tree.val._tag === "val";
+};
 
-export function evaluateNumExp(exp: Expression<number>): Expression<number> | Leaf<number> {
+export function evaluateNumExp(tree: Expression<number>): Expression<number> {
+    switch(tree._tag) {
+        case "neg":
+            return treeIsValueLeaf(tree.val)
+                ? neg(tree.val)
+                : tree;
+        case "add":
+            return treeIsValueLeaf(tree.left) && treeIsValueLeaf(tree.right)
+                ? add(tree.left, tree.right)
+                : tree
+        case "sub":
+            return treeIsValueLeaf(tree.left) && treeIsValueLeaf(tree.right)
+                ? sub(tree.left, tree.right)
+                : tree
+        case "div":
+            return treeIsValueLeaf(tree.left) && treeIsValueLeaf(tree.right)
+                ? div(tree.left, tree.right)
+                : tree
+        case "mul":
+            return treeIsValueLeaf(tree.left) && treeIsValueLeaf(tree.right)
+                ? mul(tree.left, tree.right)
+                : tree
+        case "paran":
+            return {
+                _tag: "paran",
+                val: evaluateNumExp(tree.val)
+            }
+        default:
+            return tree;
+    }
+}
+
+export function evaluateNumExp2(exp: Expression<number>): Expression<number> | Leaf<number> {
     // if(exp._tag === "neg" || exp._tag === "paran") {
     //     return exp.val._tag === "leaf" ? exp.val : exp;
     // } else if(exp._tag === "leaf" || exp._tag === "var" || exp._tag === "val") {

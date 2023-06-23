@@ -283,8 +283,6 @@ export interface NegLeaf {
     _tag: "neg"
 }
 
-type LeafExp = AddLeaf | SubLeaf | MulLeaf | DivLeaf | NegLeaf | Leaf<number>;
-
 function makeNewVal(e: Expression<number>): Expression<number>[] {
     if(e._tag === "add" || e._tag === "sub") {
         return simplifyRecurse(removeParan(e));
@@ -399,32 +397,7 @@ export function simplify(tree: Expression<number>): Expression<number> {
     return addListToExp(simplifyRecursed);
 }
 
-export function isFullyEvaluated<T>(exp: Expression<T>): boolean {
-    if(exp._tag === "leaf" || exp._tag === "val" || exp._tag === "var") {
-        return true;
-    }
-    if(exp._tag === "neg" && exp.val._tag === "leaf" && exp.val.val._tag === "val") {
-        // ^ checking if the neg is for a number and not a var or exp
-        return false;
-    }
-    if(exp._tag === "neg" || exp._tag === "paran") {
-        const r = isFullyEvaluated(exp.val);
-        return r;
-    }
-    const leftEvalled = isFullyEvaluated(exp.left);
-    const rightEvalled = isFullyEvaluated(exp.right);
-    if(!leftEvalled || !rightEvalled) {
-        return false;
-    }
-    
-    const isVar = (e: Expression<T>) => e._tag === "leaf" && e.val._tag === "var";
-
-    // one of it (left or right) is either a variable OR not a leaf
-    return ((isVar(exp.left) || isVar(exp.right)) && !isEqual(exp.left, exp.right)) || exp.left._tag !== "leaf" || exp.right._tag !== "leaf";
-
-}
-
-export function removeParan<T>(exp: Expression<T>): Expression<T> {
+export function removeParan(exp: Expression<number>): Expression<number> {
     switch(exp._tag) {
         case "add":
         case "sub":
@@ -501,7 +474,7 @@ export const numOrder: OrderOfOp = [["leaf", "val", "var"], ["neg"], ["add", "su
 
 ////NEW evaluateRecurse
 
-export function cantBeEvaluatedFurther<T>(tree: Expression<T>): boolean {
+export function cantBeEvaluatedFurther(tree: Expression<number>): boolean {
     switch(tree._tag) {
         case "add":
         case "sub":
@@ -526,7 +499,7 @@ export function cantBeEvaluatedFurther<T>(tree: Expression<T>): boolean {
     }
 }
 
-export function isReadyForEvaluation<T>(tree: Expression<T>): boolean {
+export function isReadyForEvaluation(tree: Expression<number>): boolean {
     switch(tree._tag) {
         case "neg":
         case "paran":
@@ -539,27 +512,4 @@ export function isReadyForEvaluation<T>(tree: Expression<T>): boolean {
         default:
             return true;
     }
-}
-
-export function evaluateRecurse<T>(
-    expression: Expression<T>,
-    evaluate: (t: Expression<T>) => Expression<T>
-): Expression<T> {
-    const tree = removeParan(expression);
-    if(tree._tag === "leaf" || tree._tag === "var" || tree._tag === "val") {
-        return tree;
-    }
-    if(isReadyForEvaluation(tree)) {
-        return evaluate(tree);
-    }
-
-    if(tree._tag === "neg" || tree._tag === "paran") {
-        const valueEvaluated = evaluateRecurse(tree.val, evaluate);
-        return evaluate({_tag: tree._tag, val: valueEvaluated});
-    }
-    
-    const leftEvaluated = evaluateRecurse(tree.left, evaluate);
-    const rightEvaluated = evaluateRecurse(tree.right, evaluate);
-
-    return evaluate({left: leftEvaluated, right: rightEvaluated, _tag: tree._tag});
 }

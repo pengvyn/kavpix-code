@@ -227,3 +227,32 @@ export function orderOfOperations<T>(exp: Expression<T>, order: OrderOfOp): Expr
             return exp;
     }
 }
+
+export function evaluateRecurse<T>(
+    expression: Expression<T>,
+    funcs: {
+        evaluate: (t: Expression<T>) => Expression<T>,
+        isReadyForEvaluation: (t: Expression<T>) => boolean,
+        removeGroup: (t: Expression<T>) => Expression<T>
+    }
+): Expression<T> {
+    const {evaluate, isReadyForEvaluation, removeGroup} = funcs;
+
+    const tree = removeGroup(expression);
+    if(tree._tag === "leaf" || tree._tag === "var" || tree._tag === "val") {
+        return tree;
+    }
+    if(isReadyForEvaluation(tree)) {
+        return evaluate(tree);
+    }
+
+    if(tree._tag === "neg" || tree._tag === "paran") {
+        const valueEvaluated = evaluateRecurse(tree.val, funcs);
+        return evaluate({_tag: tree._tag, val: valueEvaluated});
+    }
+    
+    const leftEvaluated = evaluateRecurse(tree.left, funcs);
+    const rightEvaluated = evaluateRecurse(tree.right, funcs);
+
+    return evaluate({left: leftEvaluated, right: rightEvaluated, _tag: tree._tag});
+}

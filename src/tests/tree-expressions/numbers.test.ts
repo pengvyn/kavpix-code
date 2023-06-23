@@ -1,11 +1,11 @@
 import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { addListToExp, closedParan, evaluateRecurse, ExpectedNumVal, isExpected, isFullyEvaluated, isReadyForEvaluation, joinSimilars, NumberOperator, numOrder, openParan, parseInput, reverseParse, simplify, simplifyRecurse, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers/numbers";
+import { addListToExp, closedParan, ExpectedNumVal, isExpected, isReadyForEvaluation, joinSimilars, NumberOperator, numOrder, openParan, parseInput, removeParan, reverseParse, simplify, simplifyRecurse, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers/numbers";
 import { add, evaluateNumExp, sub, mul, div, neg } from "../../scripts/tree-expressions/numbers/evaluate";
 import { Add, Expression, Leaf, makeLeaf, makeWaiting, Neg, Sub, Variable, variables, Waiting } from "../../scripts/tree-expressions/types";
 import { arbNumOperator, arbNumWaiting, arbStringAndNumList, arbVarOrNum, strNumSet } from "../arbitraries";
 import { isEqual, negate, reverse } from "lodash";
-import { evaluateTreeVar, orderOfOperations } from "../../scripts/tree-expressions/tree-funcs";
+import { evaluateTreeVar, orderOfOperations, evaluateRecurse } from "../../scripts/tree-expressions/tree-funcs";
 
 describe("Numbers expression tree", () => {
     describe("Join similars", () => {
@@ -767,7 +767,10 @@ describe("Numbers expression tree", () => {
     })
     it("simplify add", () => {
         const exp = parseInput("10 / 3 + x") as Add<number>;
-        const evalled = evaluateRecurse(exp, evaluateNumExp);
+        const evalled = evaluateRecurse(
+            exp, 
+            {evaluate: evaluateNumExp, removeGroup: removeParan, isReadyForEvaluation: isReadyForEvaluation}
+        );
         const r = simplifyRecurse(evalled as Add<number> | Sub<number>);
     })
     describe("Evaluate functions", () => {
@@ -864,14 +867,20 @@ describe("Numbers expression tree", () => {
     })
     it("thing", () => {
         const parsed = parseInput("a - (a + a)");
-        const evalled = evaluateRecurse(parsed as Expression<number>, evaluateNumExp);
+        const evalled = evaluateRecurse(
+            parsed as Expression<number>, 
+            {evaluate: evaluateNumExp, removeGroup: removeParan, isReadyForEvaluation: isReadyForEvaluation}
+        );
         const simplified = simplify(evalled);
         const revParred = reverseParse(simplified);
     })
     it("simplify", () => {
         const exp = parseInput("a + (1 + b - 2) + (3 - a + 4) + 2 * a - 3 * a / a") as Expression<number>;
 
-        const evalled = evaluateRecurse(exp, evaluateNumExp);
+        const evalled = evaluateRecurse(
+            exp,
+            {evaluate: evaluateNumExp, removeGroup: removeParan, isReadyForEvaluation: isReadyForEvaluation}
+        );
         const r = simplify(evalled);
         console.log("--------------- RESULT ------------------");
         console.log(r);

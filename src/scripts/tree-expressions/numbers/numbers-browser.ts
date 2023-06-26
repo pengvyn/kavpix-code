@@ -1,12 +1,15 @@
 import {isReadyForEvaluation, numOrder, parseInput, removeParan, reverseParse, simplify, simplifyRecurse } from "./numbers";
-import type { Expression } from "../types";
+import { variables, type Expression } from "../types";
 import { evaluateTreeVar, listify, orderOfOperations, evaluateRecurse } from "../tree-funcs";
 import cytoscape, { BaseLayoutOptions } from "cytoscape";
 import dagre from "cytoscape-dagre"
 import { evaluateNumExp } from "./evaluate";
 
 function isNodeOperator(n: cytoscape.NodeSingular): boolean {
-    return ["()", "+", "-", "\u00D7", "\u00F7"].includes(n.data("label"));
+    return ["( )", "+", "-", "\u00D7", "\u00F7"].includes(n.data("label"));
+}
+function isNodeVariable(n: cytoscape.NodeSingular): boolean {
+    return variables.includes(n.data("label"));
 }
 
 dagre(cytoscape);
@@ -44,10 +47,11 @@ function translateLabel(label: string): string {
     }
 }
 
-const f = document.querySelector(".form") as HTMLFormElement;
+const f = document.querySelector("form") as HTMLFormElement;
 
 function animateError() {
     const inp = f.querySelector("input");
+    console.log(inp);
     
     const keyframes: Keyframe[] = [
         { 
@@ -136,6 +140,8 @@ function runExpressionFuncs(val: string) {
     const dgdiv = document.getElementById("myDiagramDiv") as HTMLElement;
     const parent = dgdiv.parentElement;
 
+    console.log(parent);
+
     const fragment = new DocumentFragment();
 
     const newDiv = document.createElement("div");
@@ -144,6 +150,7 @@ function runExpressionFuncs(val: string) {
     dgdiv.remove();
     parent?.append(fragment);
 
+    console.log(fragment)
 
     // ----------- MAKE INPUT FOR CYTOSCAPE ----------
 
@@ -187,14 +194,16 @@ function runExpressionFuncs(val: string) {
                     //         ? "#1101dd"
                     //         : "#ffb2a1"
                     // },
-                    // "border-opacity": 0.5,
-                    "border-width": "2px",
-                    "border-color": "white",
+                    "border-opacity": 0.5,
+                    "border-width": "1px",
+                    "border-color": "#220011",
 
                     "background-color": function(n) {
                         return isNodeOperator(n)
-                            ? "orange"
-                            : "#F5D60F"
+                            ? "#FFCEBE"
+                            : isNodeVariable(n)
+                                ? "#99FCFF"
+                                : "#9EFFDF"
                     },
                     "shape": function(n) {
                         return isNodeOperator(n)
@@ -209,7 +218,7 @@ function runExpressionFuncs(val: string) {
                     // "line-color": "blue",
                     "opacity": 0.9,
                     "line-fill": "linear-gradient",
-                    "line-gradient-stop-colors": ["white", "orange", "white"],
+                    "line-gradient-stop-colors": ["#c8dce0", "orange", "#c8dce0"],
                     "line-gradient-stop-positions": [5, 100, 10]
                 }
             }

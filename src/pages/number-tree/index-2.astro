@@ -1,0 +1,102 @@
+---
+import BaseHead from "../../components/BaseHead.astro";
+import Footer from "../../components/Footer.astro";
+import Header from "../../components/Header.astro";
+import { SITE_TITLE } from "../../config";
+
+---
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <BaseHead title={`${SITE_TITLE} | Number Tree`} />
+    </head>
+    <body>
+        <div class="page-cont">
+            <Header back={"../"} />
+
+            <div class="code-example-cont">
+                <div class="code-example">
+                    <div class="input-cont">
+                        <form class="form">
+                            <label>
+                                <div>
+                                    Type an expression with integers,
+                                    <div class="label-hover-info">
+                                        <div class="text"> variables</div>
+                                        <div class="info">
+                                            <div class="info-left">
+                                                Any lower-case <br>english letters
+                                            </div>
+                                            <div></div>
+                                        </div>
+                                    </div> and 
+                                    <div class="label-hover-info">
+                                        <div class="text"> operations</div>
+                                        <div class="info">
+                                            <div class="info-left">
+                                                +<br>
+                                                -<br>
+                                                &#xD7;<br>
+                                                &#xF7;<br>
+                                                -<br>
+                                                ()
+                                            </div>
+                                            <div class="info-right">
+                                                addition<br>
+                                                subtraction<br>
+                                                multiplication<br>
+                                                division<br>
+                                                negation<br>
+                                                parentheses
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+                            <input 
+                                type = "text"
+                                id = "num-exp-inp"
+                                name = "num-exp-inp"
+                                required
+                            />
+                        </form>
+
+                        <div class="examples" id="examples">
+                            <div class="example">
+                                10 + a * 2
+                            </div>
+                            <div class="example">
+                                x * -(1 - y)
+                            </div>
+                            <div class="example">
+                                7 * 3 + 100
+                            </div>
+                            <div class="example">
+                                12 / -10 * a
+                            </div>
+                            <div class="example">
+                                x + x * (x) - x - x + x / x * x
+                            </div>
+                        </div>
+                    </div>
+
+                    <div></div> <!-- just for padding/spacing -->
+
+                    <div class="result-cont">
+                        <div id="result" />
+                        <div class="diagram-cont">
+                            <div id="myDiagramDiv"/>
+                        </div>
+                    </div>
+                    <script>
+                        import { startListening, exampleClickListener } from "../../scripts/tree-expressions/numbers/numbers-browser";
+                        startListening();
+                        exampleClickListener(document.getElementById("examples"));
+                    </script>
+                </div>
+            </div>
+            <Footer />
+        </div>
+    </body>
+</html>

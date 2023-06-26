@@ -7,14 +7,14 @@
     height: 100%;
 
     display: grid;
-    grid-template-rows: 30% 1fr;
+    grid-template-rows: 40% 1rem 1fr;
     font-size: 20px;
 }
 
 .result-cont {
     display: grid;
-    grid-template-rows: 2rem 2rem 1fr;
-    font-size: 1rem;
+    grid-template-rows: max-content 1fr;
+    font-size: 2rem;
 }
 #result {
     /* margin: 1rem 0rem; */
@@ -41,6 +41,11 @@
 
 /* ------ NUMBER TREE ------- */
 
+.input-cont {
+    display: grid;
+    grid-template-rows: 1fr 1rem;
+}
+
 .form {
     display: flex;
     flex-direction: column;
@@ -50,7 +55,7 @@
 .form input {
     width: 50%;
     height: 20%;
-    font-size: 80%;
+    font-size: 90%;
     text-align: center;
     border-radius: 7px;
     border: none;
@@ -95,11 +100,19 @@ label div {
     align-items: center;
     justify-content: center;
 
-    width: max-content;
+    width: calc(max-content + 0.5rem);
 
     padding: 0.5rem 1rem;
     border-radius: 1rem 1rem 2rem 2rem;
     border: 2px solid #5054a155;
+}
+.info-left {
+    width: max-content;
+}
+
+.info .info-right {
+    text-align: left;
+    margin-left: 2rem;
 }
 
 /* ----- examples --------- */
@@ -110,14 +123,13 @@ label div {
 }
 .example { 
     /* SAME STYLES FROM .filter-tag IN KAVPIX.COM */
-    margin: 0.3rem;
     padding: 0.4rem 0.6rem;
     background-color: #c3b6e0;
     border: 2px solid #c8dce0;
     border-radius: 1rem;
     cursor: pointer;
     user-select: none;
-    font-size: 0.8rem;
+    font-size: 0.5rem;
     
     display: flex;
     justify-content: center;
@@ -138,7 +150,7 @@ label div {
     width: calc(100vw - 10%); 
     height: 100%;
     margin: 0 auto;
-    background-color: #FFFFFF;
+    background-color: #c8dce0;
     text-align: left;
     border-radius: 10px;
 }

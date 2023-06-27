@@ -1,9 +1,10 @@
 import {isReadyForEvaluation, numOrder, parseInput, removeParan, reverseParse, simplify, simplifyRecurse } from "./numbers";
-import { variables, type Expression } from "../types";
-import { evaluateTreeVar, listify, orderOfOperations, evaluateRecurse } from "../tree-funcs";
+import { variables, type Expression, Tag } from "../types";
+import { evaluateTreeVar, listify, orderOfOperations, evaluateRecurse, OrderOfOp, OpAndPrecedence } from "../tree-funcs";
 import cytoscape, { BaseLayoutOptions } from "cytoscape";
 import dagre from "cytoscape-dagre"
 import { evaluateNumExp } from "./evaluate";
+import type { ChangeEvent } from "react";
 
 function isNodeOperator(n: cytoscape.NodeSingular): boolean {
     return ["( )", "+", "-", "\u00D7", "\u00F7"].includes(n.data("label"));
@@ -51,7 +52,6 @@ const f = document.querySelector("form") as HTMLFormElement;
 
 function animateError() {
     const inp = f.querySelector("input");
-    console.log(inp);
     
     const keyframes: Keyframe[] = [
         { 
@@ -101,6 +101,61 @@ function exampleCallback(ev: MouseEvent) {
     (document.getElementById("num-exp-inp") as HTMLInputElement).value = target.innerText;
 }
 
+let order = numOrder;
+
+const getInpVal = (
+    inp: HTMLElement | null, 
+    num: number
+) => {
+    if(inp === null) {
+        return num;
+    }
+
+    const inpVal = (inp as HTMLInputElement).value;
+
+    return inpVal === "" ? num : JSON.parse(inpVal);
+}
+
+function reOrderer(ev: Event, ids: {add: string, sub: string, div: string, mul: string}) {
+    // !!! SIDE EFFECT FUNCTION
+    // resets `order` based on `ids`
+    ev.preventDefault();
+
+    const addInp = document.getElementById(ids.add);
+    const subInp = document.getElementById(ids.sub);
+    const mulInp = document.getElementById(ids.mul);
+    const divInp = document.getElementById(ids.div);
+
+    const add: OpAndPrecedence = {op: "add", precedence: getInpVal(addInp, 1) as number};
+    const sub: OpAndPrecedence = {op: "sub", precedence: getInpVal(subInp, 1) as number};
+    const mul: OpAndPrecedence = {op: "mul", precedence: getInpVal(mulInp, 2) as number};
+    const div: OpAndPrecedence = {op: "div", precedence: getInpVal(divInp, 2) as number};
+
+    const highestAndLowestPrecedence: {high: number, low: number} = [add, sub, mul, div].reduce(
+        (p, c) => c.precedence > p.high 
+            ? {high: c.precedence, low: p.low}
+            : c.precedence < p.low
+                ? {high: p.high, low: c.precedence}
+                : p,
+        {high: 0, low: 0}
+    )
+    const {high, low} = highestAndLowestPrecedence;
+    const r: OrderOfOp = [
+        {op: "leaf", precedence: low - 2},
+        {op: "val", precedence: low - 2},
+        {op: "var", precedence: low - 2},
+        {op: "neg", precedence: low - 1},
+        add, sub, mul, div,
+        {op: "paran", precedence: high + 1}
+    ]
+
+    order = r;
+
+    runExpressionFuncs((document.getElementById("num-exp-inp") as HTMLInputElement).value)
+}
+
+let curCy: cytoscape.Core | null = null;
+
 function runExpressionFuncs(val: string) {
     let errored = false;
 
@@ -120,7 +175,7 @@ function runExpressionFuncs(val: string) {
     }
 
     //---
-    const orofop = orderOfOperations(tree, numOrder);
+    const orofop = orderOfOperations(tree, order);
     const evalled = evaluateRecurse(
         orofop as Expression<number>, 
         {evaluate: evaluateNumExp, removeGroup: removeParan, isReadyForEvaluation: isReadyForEvaluation}
@@ -140,8 +195,6 @@ function runExpressionFuncs(val: string) {
     const dgdiv = document.getElementById("myDiagramDiv") as HTMLElement;
     const parent = dgdiv.parentElement;
 
-    console.log(parent);
-
     const fragment = new DocumentFragment();
 
     const newDiv = document.createElement("div");
@@ -150,7 +203,8 @@ function runExpressionFuncs(val: string) {
     dgdiv.remove();
     parent?.append(fragment);
 
-    console.log(fragment)
+    curCy?.destroy();
+    curCy = null;
 
     // ----------- MAKE INPUT FOR CYTOSCAPE ----------
 
@@ -241,6 +295,8 @@ function runExpressionFuncs(val: string) {
 
     c.resize()
     c.center()
+
+    curCy = c;
 }
 
 
@@ -250,4 +306,8 @@ export function startListening() {
 
 export function exampleClickListener(exampleCont: HTMLDivElement) {
     exampleCont.addEventListener("click", (ev) => exampleCallback(ev));
+}
+
+export function orderListener(form: HTMLFormElement, ids: {add: string, sub: string, div: string, mul: string}) {
+    form.addEventListener("change", (ev) => reOrderer(ev, ids));
 }

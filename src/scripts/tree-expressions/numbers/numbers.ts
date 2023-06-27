@@ -1,6 +1,6 @@
 import { isEqual } from "lodash";
 import { Add, Div, Evaluate, Expression, Leaf, makeLeaf, makeWaiting, Mul, Neg, Paran, ParanWait, ParsedWaitNext, ParseInp, Sub, Tag, ValLeaf, Variable, variables, VarLeaf, Waiting } from "../types";
-import type { OrderOfOp } from "../tree-funcs";
+import type { OpAndPrecedence, OrderOfOp } from "../tree-funcs";
 
 export type NumberOperator = "+" | "*" | "-" | "/";
 export const numberOperators: NumberOperator[] = ["+", "*", "-", "/"];
@@ -470,7 +470,22 @@ export function reverseParse(exp: Expression<number>): string {
     // }
 }
 
-export const numOrder: OrderOfOp = [["leaf", "val", "var"], ["neg"], ["add", "sub"], ["mul", "div"], ["paran"]];
+function makeOap(op: Tag, precedence: number): OpAndPrecedence {
+    return {op, precedence}
+}
+
+// export const numOrder: OrderOfOp = [["leaf", "val", "var"], ["neg"], ["add", "sub"], ["mul", "div"], ["paran"]];
+export const numOrder: OrderOfOp = [
+    makeOap("leaf", 1),
+    makeOap("var", 1),
+    makeOap("val", 1),
+    makeOap("neg", 2),
+    makeOap("add", 3),
+    makeOap("sub", 3),
+    makeOap("mul", 4),
+    makeOap("div", 4),
+    makeOap("paran", 5)
+];
 
 ////NEW evaluateRecurse
 

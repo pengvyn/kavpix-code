@@ -3,12 +3,20 @@
     width: 100%;
 
     display: grid;
-    grid-template-rows: 5rem 1.5rem 1fr;
+    grid-template-rows: 6.5rem 5rem 1fr;
 }
 
 /* ---INPUT--- */
 
 .input-cont {
+    height: 100%;
+    width: 100%;
+
+    display: grid;
+    grid-template-rows: 5rem 1.5rem;
+}
+
+.form-cont {
     height: 100%;
     width: 100%;
     margin: 0 auto;
@@ -118,13 +126,45 @@ label {
     display: flex;
     justify-content: center;
     align-items: center;
+
+    cursor: pointer;
+}
+
+/* ---ORDERING--- */
+
+.change-order form label {
+    font-size: 0.7rem;
+}
+
+.operations {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 1000;
+}
+
+.operation {
+    height: 100%;
+}
+.operation input {
+    height: 1rem;
+    width: 2rem;
+    margin: 0rem 1rem;
+
+    font-size: 0.6rem;
+}
+.operation .symbol {
+    font-size: 0.8rem;
+
+    text-align: center;
 }
 
 /* ---RESULT--- */
 
 .result-cont {
     display: grid;
-    grid-template-rows: /*5rem*/ 5.2rem 1fr;
+    grid-template-rows: /*5rem*/ 3rem 1fr;
     
     background-image: linear-gradient(to bottom, #c8dce0, #c9f4fb);
 }
@@ -134,9 +174,9 @@ label {
     justify-content: center;
     align-items: center;
 
-    margin: 1.2rem 0rem;
+    /* margin-bottom: 1.2rem; */
 
-    font-size: 2.3rem;
+    font-size: 1.8rem;
     font-weight: lighter;
 
     color: #5054a1;
@@ -149,6 +189,7 @@ label {
     height: 100%;
 
     /* background-image: linear-gradient(to right, #c8dce0, #c9f4fb, #c8dce0) */
+    cursor: grab;
 }
 
 @media (max-width: 500px) {
@@ -174,7 +215,7 @@ label {
         flex-wrap: wrap;
     }
     .code-example-cont {
-        grid-template-rows: 5rem 3rem 1fr;
+        grid-template-rows: 8rem 3rem 1fr;
     }
     form {
         height: max-content;
@@ -197,7 +238,10 @@ label {
         width: max-content;
     }
     .code-example-cont {
-        grid-template-rows: 4rem 1rem 1fr;
+        grid-template-rows: 5rem 3rem 1fr;
+    }
+    .input-cont {
+        grid-template-rows: 4rem 1rem;
     }
 
     .result-cont {
@@ -212,5 +256,46 @@ label {
     }
     footer {
         height: 1rem
+    }
+}
+@media (max-width: 1500px) and (min-width: 1000px) {
+    html {
+        font-size: 25px;
+    }
+    .page-cont {
+        grid-template-rows: 3rem 1fr 1rem;
+    }
+    .code-example-cont {
+        grid-template-rows: 6rem 3.7rem 1fr;
+    }
+    .input-cont {
+        grid-template-rows: 4.5rem 1.5rem;
+    }
+    input {
+        font-size: 1.3rem;
+    }
+
+    .change-order form label {
+        font-size: 0.6rem;
+    }
+    .operation input {
+        font-size: 0.6rem;
+        height: 0.8rem;
+    }
+    #re-orderer-form {
+        grid-template-rows: 1.3rem 1fr;
+    }
+    .symbol {
+        font-size: 0.7rem;
+    }
+
+    .result-cont {
+        grid-template-rows: 2rem 1fr;
+    }
+    .result {
+        font-size: 1rem;
+    }
+    footer {
+        height: 1rem;
     }
 }

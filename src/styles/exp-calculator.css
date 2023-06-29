@@ -3,14 +3,47 @@
     width: 100%;
 
     display: grid;
-    grid-template-columns: 50% 50%;
+    grid-template-columns: 1fr 1fr;
 }
 
 .left {
     height: 100%;
     width: 100%;
-    display: grid;
-    grid-template-rows: 50% 50%;
+    display: grid;  
+    grid-template-rows: 1fr 1fr 2fr;
+    /* grid-gap: 1rem; */
+    max-height: calc(100vh - 7rem);
+
+    background-image: linear-gradient(to bottom right, transparent, #c9f4fb);
+
+    gap: 0.5rem;
+}
+/* 
+.input-cont {
+    background-image: linear-gradient(to bottom right, transparent, #9effdf54);
+}
+.change-order {
+    background-image: linear-gradient(to right, transparent, #8ffff446);
+}
+.variables-cont {
+    background-image: linear-gradient(to right, transparent, #bcc7f935);
+} */
+
+.title {
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 1.5rem;
+    
+    width: 100%;
+
+    font-weight: bold;
+
+    padding: 0.2rem;
+
+    font-size: 0.8rem;
 }
 
 /* ---INPUT--- */
@@ -18,12 +51,13 @@
 .input-cont {
     height: 100%;
 
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: 2rem max-content max-content;
+    gap: 0.5rem;
 }
 
 .form-cont {
-    height: 100%;
+    height: max-content;
     width: 100%;
     margin: 0 auto;
 
@@ -38,6 +72,7 @@ form {
 
     display: grid;
     grid-template-rows: 2rem 1fr;
+    
 }
 
 input {
@@ -65,7 +100,7 @@ label {
     justify-content: center;
 }
 .input-label {
-    font-size: 0.8rem;
+    font-size: 0.6rem;
 
     display: inline;
     text-align: center;
@@ -114,16 +149,20 @@ label {
 
 .examples {
     height: 100%;
+    max-width: 90%;
     display: flex;
     justify-content: center;
-    align-items: flex-end;
+    align-items: flex-start;
     flex-wrap: wrap;
+
+    align-content: flex-start;
+    gap: 0.5rem;
 }
 .example {
     height: 1rem;
     width: fit-content;
 
-    margin: 0rem 0.5rem;  
+    /* margin: 0rem 0.5rem;   */
     padding: 0rem 0.5rem;  
 
     background-color: #c3b6e0;
@@ -141,18 +180,23 @@ label {
 /* ---ORDERING--- */
 
 .change-order {
-    height: 100%;
+    height: max-content;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+
+    gap: 0.2rem;
 }
 
 .change-order form {
+    grid-template-rows: max-content max-content !important;
     height: 100%;
+    gap: 0.2rem;
 }
 
 .change-order form label {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
 }
 
 .operations {
@@ -177,6 +221,73 @@ label {
     font-size: 0.8rem;
 
     text-align: center;
+}
+
+/* ---VARIABLES--- */
+
+.variables-cont.hidden {
+    opacity: 0;
+}
+
+.variables-cont {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* justify-content: center; */
+
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 100%;
+}
+
+.variables-cont .title {
+    position: sticky;
+    top: 0; 
+    z-index: 1000;
+}
+
+.variables-text {
+    padding-top: 0.4rem;
+    font-size: 0.6rem;
+}
+
+/* .variables-text {
+    font-size: 1rem;
+    text-align: center;
+
+    position: sticky;
+    top: 0;
+
+    background-color: #c8dce0;
+
+    z-index: 1000;
+
+    border-radius: 0rem 0rem 1rem 1rem;
+    border: 1px solid #00000033;
+    border-top-color: #c8dce0; */
+/* } */
+
+
+.variables {
+    height: fit-content;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.variable {
+    margin: 0.8rem 0.5rem 0rem 0.5rem;
+    display: grid;
+    grid-template-rows: 1.5rem 1fr;
+}
+.variable input {
+    width: 3rem;
+    height: 1.8rem;
+    font-size: 0.8rem;
+}
+.variable label {
+    font-size: 0.8rem;
 }
 
 /* ---RESULT--- */
@@ -217,6 +328,8 @@ label {
     cursor: grab;
 }
 
+/* Media queries */
+
 @media (max-width: 500px) {
     input {
         width: 80%;
@@ -236,9 +349,6 @@ label {
         width: max-content;
         height: max-content;
     }
-    .examples {
-        flex-wrap: wrap;
-    }
     form {
         height: max-content;
     }
@@ -251,16 +361,10 @@ label {
     .input-label {
         font-size: 0.6rem;
     }
-    .examples {
-        flex-wrap: wrap;
-    }
     .example {
         font-size: 0.5rem;
         height: max-content;
         width: max-content;
-    }
-    .input-cont {
-        grid-template-rows: 4rem 1rem;
     }
 
     .result-cont {
@@ -273,9 +377,22 @@ label {
     .page-cont {
         grid-template-rows: 4rem 1fr 1rem;
     }
+    .left {
+        max-height: calc(100vh - 5rem);
+    }
     footer {
         height: 1rem
     }
+    .change-order form label {
+        font-size: 0.5rem;
+    }
+    .change-order form {
+        /* grid-template-rows: 1.3rem 1fr; */
+    }
+    .symbol {
+        font-size: 0.6rem;
+    }
+
 }
 @media (max-width: 1500px) and (min-width: 1000px) {
     html {
@@ -284,11 +401,16 @@ label {
     .page-cont {
         grid-template-rows: 3rem 1fr 1rem;
     }
-    .input-cont {
-        grid-template-rows: 4.5rem 1.5rem;
+    .left {
+        max-height: calc(100vh - 4rem);
+        grid-template-rows: 1fr 1fr 2fr;
     }
     input {
         font-size: 1.3rem;
+        height: 1.8rem;
+    }
+    .example {
+        font-size: 0.7rem;
     }
 
     .change-order form label {
@@ -323,6 +445,12 @@ label {
         overflow-y:scroll;
         grid-template-rows: 1.5rem 1fr 0.6rem;
     }
+    /* .left {
+        max-height: calc(100vh - 2.1rem);
+    } */
+    .left {
+        grid-template-rows: 1fr 1fr 1fr;
+    }
     .header {
         position: relative;
         height: 1.5rem;
@@ -346,7 +474,7 @@ label {
         height: 0.7rem;
     }
     .code-example-cont {
-        grid-template-rows: 7rem 1fr;
+        grid-template-rows: 15rem 1fr;
         grid-template-columns: none;
     }
     .input-cont input {
@@ -360,14 +488,13 @@ label {
         word-wrap: normal;
     }
     .input-cont {
-        max-width: 100vw;;
-        grid-template-rows: 4.5rem 2.3rem;
+        max-width: 100vw;
     }
     .left {
-        grid-template-rows: 60% 40%;
+        grid-template-rows: 40% 30% 30%;
     }
     .change-order form label {
-        font-size: 0.4rem;
+        font-size: 0.5rem;
     }
     .symbol {
         font-size: 0.6rem !important;
@@ -405,9 +532,30 @@ label {
         height: 2rem;
     }
     .tree {
-        min-height: 10rem;
+        min-height: 18rem;
         max-width: 80%;
         margin: 0 auto;
+    }
+
+    .variables-cont {
+        margin-top: 0rem;
+        display: flex;
+        align-items: center;
+    }
+    .variable {
+        grid-template-rows: 1rem 1fr;
+    }
+    .variables-text {
+        padding-top: 1rem;
+        font-size: 0.5rem;
+    }
+    .variable input {
+        font-size: 0.6rem;
+        height: 1rem;
+        width: 2rem;
+    }
+    .variable label {
+        font-size: 0.6rem;
     }
 }
 

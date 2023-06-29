@@ -20,8 +20,9 @@ import ExpCalc from "../../components/stylesheets/ExpCalc.astro"
             <div class="code-example-cont">
                 <div class="left">
                     <div class="input-cont">
+                        <div class="title">Number Tree</div>
                         <div class="form-cont">
-                            <form>
+                            <form id="input-form">
                                 <label>
                                     <div class="input-label">
                                         Type an expression with integers,
@@ -47,7 +48,7 @@ import ExpCalc from "../../components/stylesheets/ExpCalc.astro"
                                                     addition<br>
                                                     subtraction<br>
                                                     multiplication<br>
-                                                    spanision<br>
+                                                    division<br>
                                                     negation<br>
                                                     parentheses
                                                 </span>
@@ -85,6 +86,7 @@ import ExpCalc from "../../components/stylesheets/ExpCalc.astro"
                     </div>
 
                     <div class="change-order">
+                        <div class="title">Operator Precedence</div>
                         <form id="re-orderer-form">
                             <label>Change operator precedence</label>
                             <div class="operations">
@@ -150,6 +152,22 @@ import ExpCalc from "../../components/stylesheets/ExpCalc.astro"
                             orderListener(document.getElementById("re-orderer-form"), ids);
                         </script>
                     </div>
+                    <div class="variables-cont hidden">
+                        <div class="title">Variables</div>
+                        <div class="variables-text">Assign values to the variables</div>
+                        <div class="variables" id="variables">
+                            <!-- EXAMPLE:
+                            <div class="variable">
+                                <label>a</label>
+                                <input type="number">
+                            </div>
+                            -->
+                        </div>
+                    </div>
+                    <script>
+                        import { variablesListener } from "../../scripts/tree-expressions/numbers/numbers-browser";
+                        variablesListener();
+                    </script>
                 </div>
 
                 <div class="right">
@@ -162,9 +180,10 @@ import ExpCalc from "../../components/stylesheets/ExpCalc.astro"
                 </div>
                 
                 <script>
-                    import { startListening, exampleClickListener } from "../../scripts/tree-expressions/numbers/numbers-browser";
+                    import { startListening, exampleClickListener, updateVariablesListener } from "../../scripts/tree-expressions/numbers/numbers-browser";
                     startListening();
                     exampleClickListener(document.getElementById("examples"));
+                    updateVariablesListener();
                 </script>
             </div>
             <Footer />

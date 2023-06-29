@@ -253,6 +253,7 @@ export function evaluateRecurse<T>(
     const {evaluate, isReadyForEvaluation, removeGroup} = funcs;
 
     const tree = removeGroup(expression);
+
     if(tree._tag === "leaf" || tree._tag === "var" || tree._tag === "val") {
         return tree;
     }

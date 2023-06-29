@@ -1,5 +1,6 @@
 import {isReadyForEvaluation, numOrder, parseInput, removeParan, reverseParse, simplify, simplifyRecurse } from "./numbers";
-import { variables, type Expression, Tag } from "../types";
+import type { Expression, Variable } from "../types";
+import { _variables } from "../types";
 import { evaluateTreeVar, listify, orderOfOperations, evaluateRecurse, OrderOfOp, OpAndPrecedence } from "../tree-funcs";
 import cytoscape, { BaseLayoutOptions } from "cytoscape";
 import dagre from "cytoscape-dagre"
@@ -10,7 +11,7 @@ function isNodeOperator(n: cytoscape.NodeSingular): boolean {
     return ["( )", "+", "-", "\u00D7", "\u00F7"].includes(n.data("label"));
 }
 function isNodeVariable(n: cytoscape.NodeSingular): boolean {
-    return variables.includes(n.data("label"));
+    return _variables.includes(n.data("label"));
 }
 
 dagre(cytoscape);
@@ -48,7 +49,7 @@ function translateLabel(label: string): string {
     }
 }
 
-const f = document.querySelector("form") as HTMLFormElement;
+const f = document.querySelector("#input-form") as HTMLFormElement;
 
 function animateError() {
     const inp = f.querySelector("input");
@@ -97,8 +98,109 @@ function exampleCallback(ev: MouseEvent) {
     if(target.className === "examples") {
         return;
     }
+    updateVariables(target.innerText);
+
     runExpressionFuncs(target.innerText);
     (document.getElementById("num-exp-inp") as HTMLInputElement).value = target.innerText;
+}
+
+function variablesCallback(ev: Event) {
+    ev.preventDefault();
+
+    const val = (f.querySelector("input") as HTMLInputElement).value;
+    runExpressionFuncs(val);
+}
+
+function updateVariables(input: string) {
+    const exp = input.split("");
+
+    const cont = document.getElementById("variables") as HTMLDivElement;
+    const children = Array.from(cont.children);
+    const vars: Variable[] = children.map(
+        (c) => (c.querySelector("label") as HTMLLabelElement).textContent as Variable
+    );
+    const newVars = exp.filter(
+        (c) => ([..._variables] as string[]).includes(c) && !([...vars] as string[]).includes(c)
+    )
+    const singleInstanceVars = newVars.reduce((p, c) => p.includes(c) ? p : [...p, c], [] as string[]);
+
+    const varsToBeRemoved: Variable[] = vars.filter((v) => !exp.includes(v));
+
+    varsToBeRemoved.map((v) => {
+        const inp = document.getElementById(`variable-${v}`);
+        if(inp === null) {
+            return;
+        }
+        inp.parentElement?.remove();
+    })
+
+    singleInstanceVars.map((v) => {
+        const fragment = new DocumentFragment();
+        const div = document.createElement("div");
+        div.className = "variable";
+
+        const label = document.createElement("label");
+        label.textContent = v;
+        div.appendChild(label);
+
+        const inp = document.createElement("input");
+        inp.type = "number";
+        inp.id = `variable-${v}`;
+
+        div.appendChild(inp);
+
+        fragment.append(div);
+
+        cont.appendChild(fragment);
+    })
+    
+    if(newVars.length !== 0) {
+        (cont.parentElement as HTMLDivElement).className = "variables-cont";
+    }
+}
+
+function updateVariablesCallback(ev: Event) {
+    updateVariables((ev.target as HTMLInputElement).value);
+}
+
+interface HasValueVAV {
+    variable: Variable,
+    hasValue: true,
+    value: number,
+}
+interface DoesntHaveValueVAV {
+    variable: Variable,
+    hasValue: false,
+    value: null
+}
+
+type VariableAndValue = HasValueVAV | DoesntHaveValueVAV;
+
+function getVariables(): VariableAndValue[] {
+    const form = document.getElementById("variables") as HTMLDivElement;
+
+    const vars = Array.from(form.children) as HTMLDivElement[];
+    const varsAndNumbers: VariableAndValue[] = vars.map((e: HTMLDivElement) => {
+        const variable = (e.querySelector("label") as HTMLLabelElement).textContent;
+        const value = (e.querySelector("input") as HTMLInputElement).value;
+
+        let isThereValue = true;
+
+        try {
+            JSON.parse(value);
+        } catch (e) {
+            isThereValue = false;
+        }
+
+        return {
+            variable: variable as Variable,
+            hasValue: isThereValue,
+            value: isThereValue 
+                ? JSON.parse(value)
+                : null
+        }
+    });
+    return varsAndNumbers
 }
 
 let order = numOrder;
@@ -154,9 +256,20 @@ function reOrderer(ev: Event, ids: {add: string, sub: string, div: string, mul: 
     runExpressionFuncs((document.getElementById("num-exp-inp") as HTMLInputElement).value)
 }
 
+function replaceVariables(exp: string, variables: VariableAndValue[]): string {
+    return variables === null 
+        ? exp
+        : variables.reduce(
+            (p, c) => c.hasValue ? p.replaceAll(c.variable, `${c.value}`) : p,
+            exp
+        )
+}
+
 let curCy: cytoscape.Core | null = null;
 
-function runExpressionFuncs(val: string) {
+function runExpressionFuncs(inp: string) {
+    const val = replaceVariables(inp, getVariables());
+
     let errored = false;
 
     try {
@@ -309,5 +422,13 @@ export function exampleClickListener(exampleCont: HTMLDivElement) {
 }
 
 export function orderListener(form: HTMLFormElement, ids: {add: string, sub: string, div: string, mul: string}) {
-    form.addEventListener("change", (ev) => reOrderer(ev, ids));
+    form.addEventListener("input", (ev) => reOrderer(ev, ids));
+}
+
+export function variablesListener() {
+    document.getElementById("variables")?.addEventListener("input", (ev) => variablesCallback(ev));
+}
+
+export function updateVariablesListener() {
+    f.addEventListener("input", (ev) => updateVariablesCallback(ev));
 }

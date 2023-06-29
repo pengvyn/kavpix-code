@@ -155,7 +155,7 @@ function updateVariables(input: string) {
     })
     
     if(newVars.length !== 0) {
-        (cont.parentElement as HTMLDivElement).className = "variables-cont";
+        (document.querySelector(".variables-cont") as HTMLElement).className = "variables-cont";
     }
 }
 

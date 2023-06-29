@@ -2582,7 +2582,7 @@ The evaluator can't evaluate something like `1 + a + 2` because the tree will lo
 
 First it'll go to the root `add`, but since it can't evaluate that it recurses and goes into the left `add`. The left `add` will just be the same once it gets evaluated since a number and a variable can't be added. `evaluate()` (or `evaluateNumExp()` in our case), the function passed in to `evaluateRecurse()`, won't call the `add` function, it'll just return the tree since the left isn't a leaf.
 
-But, addition is commutative. The result should be `a + 3`. That's what the simplifier does. It takes all `add` and `sub` expressions, brings them to the same level, adds all of them up, and returns the new tree.
+But, addition is commutative. The result should be `a + 3`. That's what the simplifier does. It takes all the `add` and `sub` expressions, brings them to the same level, adds all of them up, and returns the new tree.
 
 ## **Summary**
 

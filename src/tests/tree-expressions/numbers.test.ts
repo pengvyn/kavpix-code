@@ -2,7 +2,7 @@ import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { addListToExp, closedParan, ExpectedNumVal, isExpected, isReadyForEvaluation, joinSimilars, NumberOperator, numOrder, openParan, parseInput, removeParan, reverseParse, simplify, simplifyRecurse, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers/numbers";
 import { add, evaluateNumExp, sub, mul, div, neg } from "../../scripts/tree-expressions/numbers/evaluate";
-import { Add, Expression, Leaf, makeLeaf, makeWaiting, Neg, Sub, Variable, variables, Waiting } from "../../scripts/tree-expressions/types";
+import { Add, Expression, Leaf, makeLeaf, makeWaiting, Neg, Paran, Sub, Variable, variables, Waiting } from "../../scripts/tree-expressions/types";
 import { arbNumOperator, arbNumWaiting, arbStringAndNumList, arbVarOrNum, strNumSet } from "../arbitraries";
 import { isEqual, negate, reverse } from "lodash";
 import { evaluateTreeVar, orderOfOperations, evaluateRecurse } from "../../scripts/tree-expressions/tree-funcs";
@@ -86,7 +86,7 @@ describe("Numbers expression tree", () => {
                         const result = valueIsNumber(value, null, {operator: null, negate: false, paran: {_tag: "not-paranned", exp: null}});
                         const parsedIsVal = isEqual(result.parsed, makeLeaf(value));
                         const waitIsEmpty = isEqual(result.waiting, {operator: null, negate: false, paran: {_tag: "not-paranned", exp: null}});
-                        const nextIsOp = isEqual(result.next, ["operator"]);
+                        const nextIsOp = isEqual(result.next, ["operator", "paran"]);
                         return parsedIsVal && waitIsEmpty && nextIsOp;
                     }
                 ))
@@ -98,7 +98,7 @@ describe("Numbers expression tree", () => {
                         const result = valueIsNumber(value, null, {operator: null, negate: true, paran: {_tag: "not-paranned", exp: null}});
                         const parsedIsVal = isEqual(result.parsed, {val: makeLeaf(value), _tag: "neg"} as Neg<number>);
                         const waitIsEmpty = isEqual(result.waiting, {operator: null, negate: false, paran: {_tag: "not-paranned", exp: null}});
-                        const nextIsOp = isEqual(result.next, ["operator"]);
+                        const nextIsOp = isEqual(result.next, ["operator", "paran"]);
                         return parsedIsVal && waitIsEmpty && nextIsOp;
                     }
                 ))
@@ -123,7 +123,7 @@ describe("Numbers expression tree", () => {
                             left: parsed, right: makeLeaf(value), _tag: "add"
                         } as Add<number>);
                         const waitEquals = isEqual(result.waiting, {operator: null, negate: false, paran: {_tag: "not-paranned", exp: null}});
-                        const nextEquals = isEqual(result.next, ["operator"]);
+                        const nextEquals = isEqual(result.next, ["operator", "paran"]);
                         return parsedEquals && waitEquals && nextEquals;
                     }
                 ))
@@ -149,7 +149,7 @@ describe("Numbers expression tree", () => {
                             , _tag: "add"
                         } as Add<number>);
                         const waitEquals = isEqual(result.waiting, {operator: null, negate: false, paran: {_tag: "not-paranned", exp: null}});
-                        const nextEquals = isEqual(result.next, ["operator"]);
+                        const nextEquals = isEqual(result.next, ["operator", "paran"]);
                         return parsedEquals && waitEquals && nextEquals;
                     }
                 ))
@@ -922,7 +922,7 @@ describe("Numbers expression tree", () => {
             expect(stringed).toBe(expected);
         })
     })
-    describe.only("Order of Operations", () => {
+    describe("Order of Operations", () => {
         it.each([
             // {
             //     tree: "a + b * c",
@@ -1041,5 +1041,30 @@ describe("Numbers expression tree", () => {
                 expect(result).toEqual(expected);
             })
         })
-    }) 
+    })
+    describe("Removing unwanted parentheses (leaf)", () => {
+        it.only("Evaluator", () => {
+            const exp = parseInput("4 + 4 * (4) - 4 - 4 + 4 / 4 * 4") as Expression<number>;
+            const ordered = orderOfOperations(exp, numOrder);
+
+            const evalled = evaluateRecurse(ordered, {evaluate: evaluateNumExp, isReadyForEvaluation: isReadyForEvaluation, removeGroup: removeParan});
+            const simplified = simplifyRecurse(evalled);
+            expect(simplified).toEqual([parseInput("16")]);
+        })
+        it("Remove paran", () => {
+            const exp = parseInput("(x)");
+            const result = removeParan(exp as Expression<number>);
+            // console.log(exp, result)
+            expect(result).toEqual(makeLeaf("x"));
+        })
+        it("Process inside evaluator test", () => {
+            const exp = parseInput("(x)") as Paran<number>;
+
+            const valEvaluated = evaluateRecurse(exp.val, {evaluate: evaluateNumExp, isReadyForEvaluation: isReadyForEvaluation, removeGroup: removeParan});
+            const newExpEvaluated = evaluateNumExp({_tag: exp._tag, val: valEvaluated});
+            const paranRemoved = removeParan(newExpEvaluated);
+            console.log(paranRemoved);
+            expect(paranRemoved).toEqual(makeLeaf("x"));
+        })
+    })
 })

@@ -411,13 +411,55 @@ export function removeParan(exp: Expression<number>): Expression<number> {
                 return exp;
             }
 
-            const newLeft = leftIsParan && (left.val._tag === "add" || left.val._tag === "sub")
+            const isLeftRemovable = leftIsParan && (
+                left.val._tag === "add"
+                || left.val._tag === "sub"
+                || left.val._tag === "leaf"
+            )
+            const isRightRemovable = rightIsParan && (
+                right.val._tag === "add"
+                || right.val._tag === "sub"
+                || right.val._tag === "leaf"
+            )
+
+            const newLeft = isLeftRemovable
                 ? left.val
                 : left;
-            const newRight = rightIsParan && (right.val._tag === "add" || right.val._tag === "sub")
-            ? right.val
-            : right;
+            const newRight = isRightRemovable
+                ? right.val
+                : right;
             return {_tag: exp._tag, left: newLeft, right: newRight};
+        case "mul":
+        case "div":
+            const left2 = exp.left;
+            const right2 = exp.right;
+
+
+            const newLeft2: Expression<number> = left2._tag === "paran" && (
+                left2.val._tag === "leaf" 
+                || left2.val._tag === "neg"
+            ) 
+            ? left2.val 
+            : left2;
+
+            const newRight2: Expression<number> = right2._tag === "paran" && (
+                right2.val._tag === "leaf" 
+                || right2.val._tag === "neg"
+            )
+            ? right2.val
+            : right2
+            
+            return {
+                _tag: exp._tag,
+                left: newLeft2,
+                right: newRight2
+            }
+        case "paran":
+            console.log("removing paran")
+            if(exp.val._tag === "leaf" || exp.val._tag === "neg") {
+                return exp.val;
+            }
+            return exp;
         default:
             return exp;
     }
@@ -495,12 +537,20 @@ export function cantBeEvaluatedFurther(tree: Expression<number>): boolean {
         case "sub":
         case "mul":
         case "div":
+            const left = tree.left;
+            const right = tree.right;
             // both left and right can't be evaluated further
             // AND, left and right aren't BOTH values
             return (cantBeEvaluatedFurther(tree.left) && cantBeEvaluatedFurther(tree.right)) 
                 && !(
-                    (tree.left._tag === "leaf" && tree.left.val._tag === "val")
-                    && (tree.right._tag === "leaf" && tree.right.val._tag === "val")
+                    (
+                        (left._tag === "leaf" && left.val._tag === "val")
+                        || (left._tag === "paran" && left.val._tag === "leaf")
+                    )
+                    && (
+                        (right._tag === "leaf" && right.val._tag === "val")
+                        || (right._tag === "paran" && right.val._tag === "leaf")
+                    )
                     );
         case "paran":
             return cantBeEvaluatedFurther(tree.val);

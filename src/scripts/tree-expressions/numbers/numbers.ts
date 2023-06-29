@@ -1,4 +1,4 @@
-import { isEqual } from "lodash";
+import { findIndex, isEqual } from "lodash";
 import { Add, Div, Evaluate, Expression, Leaf, makeLeaf, makeWaiting, Mul, Neg, Paran, ParanWait, ParsedWaitNext, ParseInp, Sub, Tag, ValLeaf, Variable, variables, VarLeaf, Waiting } from "../types";
 import type { OpAndPrecedence, OrderOfOp } from "../tree-funcs";
 
@@ -283,119 +283,148 @@ export interface NegLeaf {
     _tag: "neg"
 }
 
-function makeNewVal(e: Expression<number>): Expression<number>[] {
-    if(e._tag === "add" || e._tag === "sub") {
-        return simplifyRecurse(removeParan(e));
-    }
-    if(e._tag === "neg") {
-        return e.val._tag === "leaf"
-            ? e.val.val._tag === "val" 
-                ? [
-                    {_tag: "leaf", val: {
-                            _tag: "val", val: -1 * e.val.val.val
-                        }
-                    }
-                ]
-                : [e]
-            : negateAll(makeNewVal(e.val));
-    }
-    if(e._tag === "mul" || e._tag === "div") {
-        return simplifyRecurse(e);
-    }
-    return [e];
-}
+// ------------------ SIMPLIFY -------------------
 
-const findEqualNegExp = (list: Expression<number>[], cur: Expression<number>) => list.findIndex(
-    (exp) => (exp._tag === "neg" && isEqual(exp.val, cur)) || (cur._tag === "neg" && isEqual(exp, cur.val))
-);
-function negateAll(exps: Expression<number>[]): Expression<number>[] {
-    return exps.map(
-        (exp) => exp._tag === "neg"
-            ? exp.val
-            : makeNumExp(exp, undefined, "neg") as Neg<number>
-    );
-}
+// simplify recurse
 
-export function simplifyRecurse(exp: Expression<number>): Expression<number>[] {
-    // recursion:
-    // it checks the left and right
-    // if it's a leaf, it adds it into the list
-    // if it's a neg, 
-        // if the value is a number, it multiplies it by -1 and adds it to the list
-        // if the value is a variable, it just adds the neg to the list
-    // if it's add/sub, it does the recurse, and adds the values to the list
-    // if it's none of those, it just returns the list ??
+// makes a list of expressions, each to be added with each other, and returns the list.
+// another function to add up the numbers
+// another function to convert the list to an expression
 
-    // what
-    // each recurse should return a new expression with the list as the root of the expression
-    // when recursing, no need to give the list as input, just returns the expression list
+// example: 1 + a + 2
+// wanted result: a + 3
 
-    
-    if(exp._tag === "mul" || exp._tag === "div") {
-        const newLeft = makeNewVal(exp.left);
-        const newRight = makeNewVal(exp.right);
-        return [
-            {
-                _tag: exp._tag,
-                left: addListToExp(newLeft),
-                right: addListToExp(newRight)
-            }
-        ]
-    }
-    if(exp._tag === "neg" || exp._tag === "paran") {
-        return simplifyRecurse(exp.val);
-    }
-    if(exp._tag !== "add" && exp._tag !== "sub") {
-        return [exp];
-    }
+// Step 1: (recursion for left) 1 and a get added to a list each (one for numbers and one for variables)
+// (right is just a leaf and can't be recursed)
+// Step 2: 2 is added to the list for  numbers
+// Step 3: 1 and 2 get added together to make 3
+// Step 4: a and 3 combine to form a + 3
 
-    // If the expression is add or subtract
-    const left = exp.left;
-    const right = exp.right;
+// No need for two functions. two recursions at the same time AND overlapping is way too messy
+// Only one simplify function. it recurses with the left and right / val and returns an expression, not a list
+// addSimplifiedNumbers and then convertListToExpression are called in each cycle.
+// Theres no extra list shenanigans here as well
 
-    const newLeft = makeNewVal(left);
-    const newRight = makeNewVal(
-        exp._tag === "sub" 
-            ? {_tag: "neg", val: right} 
-            : right
-    );
-
-    const listed = [...newLeft, ...newRight];
-
-    const nums = listed.filter((val) => val._tag === "leaf" && val.val._tag === "val") as {_tag: "leaf", val: {_tag: "val", val: number}}[];
-    
-    const notNums = listed.filter(
-        (val) => 
-            (val._tag === "leaf" && val.val._tag === "var") 
-            || val._tag !== "leaf"
-    );
-
-    const varEvalled = notNums.reduce(
-        (p, c) => findEqualNegExp(p, c) === -1
-            ? [...p, c] 
-            : [...p.slice(0, findEqualNegExp(p, c)), ...p.slice(findEqualNegExp(p, c) + 1)], 
-        [] as Expression<number>[]
-    )
-
-    const added = nums.reduce((p, c) => p + c.val.val, 0);
-    return [...(added === 0 ? [] : [makeLeaf(added)]), ...varEvalled];
-}
-
-export function addListToExp(list: Expression<number>[]): Expression<number> {
+export function convertAddListToExpression(list: Expression<number>[]): Expression<number> {
     if(list.length === 0) {
         return makeLeaf(0);
     }
     return list.reduce(
-        (p, c) => c._tag === "neg"
-            ? {_tag: "sub", left: p, right: c.val}
-            : {_tag: "add", left: p, right: c},
+        (p, c) => {
+            if(c._tag === "neg") {
+                return {
+                    _tag: "sub",
+                    left: p,
+                    right: c.val
+                };
+            }
+            if(p._tag === "neg") {
+                return {
+                    _tag: "sub",
+                    left: c,
+                    right: p.val,
+                }
+            }
+            return {
+                _tag: "add",
+                left: p,
+                right: c
+            }
+        }
+    );
+}
+
+export function addExpressionList(list: Expression<number>[]): Expression<number> {
+    // filters out the numbers
+    // filters out the variables
+    // adds all the numbers
+    // converts the new thing to an expression 
+        // (basically maps each element and creates a new Add for each of them)
+
+    const added: number = list.reduce(
+        (p: number, c: Expression<number>) => {
+            if(
+                c._tag === "neg" && c.val._tag === "leaf" && c.val.val._tag === "val"
+            ) {
+                return p + c.val.val.val; 
+                // neg --> leaf --> valLeaf --> actual number
+            }
+
+            if (
+                c._tag === "leaf" && c.val._tag === "val"
+            ) {
+                return p + c.val.val 
+                // leaf --> valLeaf --> actual number
+            }
+
+            return p;
+        }, 0
     )
+    const notNumbers = list.filter(
+        (tree) => 
+            !(tree._tag === "neg" && tree.val._tag === "leaf" && tree.val.val._tag === "val")
+            && !(tree._tag === "leaf" && tree.val._tag === "val")
+    )
+    const variablesSimplified = notNumbers.reduce(
+        (p: Expression<number>[], c: Expression<number>) => {
+            if(c._tag === "neg") {
+                const idx = p.findIndex((e) => isEqual(e, c.val));
+
+                if(idx !== -1) {
+                    const r = idx === 0 
+                        ? p.slice(1)
+                        : [...p.slice(0, idx), ...p.slice(idx + 1)];
+                    return r;
+                }
+            }
+            const negIdx = p.findIndex((e) => e._tag === "neg" && isEqual(e.val, c));
+
+            if(negIdx !== -1) {
+                return negIdx === 0
+                    ? p.slice(1)
+                    : [...p.slice(0, negIdx), ...p.slice(negIdx + 1)]
+            }
+
+            return [...p, c]
+        }, []
+    )
+    return convertAddListToExpression([
+        ...variablesSimplified.length === 0 ? [] : variablesSimplified, 
+        ...added === 0 ? [] : [makeLeaf(added)]
+    ]);
+}
+
+export function simplifyRecurse(tree: Expression<number>): Expression<number>[] {
+    switch(tree._tag) {
+        case "add":
+        case "sub":
+            const newLeft = simplifyRecurse(tree.left);
+            const newRight = simplifyRecurse(tree._tag === "sub" ? {_tag: "neg", val: tree.right} : tree.right);
+
+            return [...newLeft, ...newRight];
+        case "mul":
+        case "div":
+            return [{
+                _tag: tree._tag,
+                left: addExpressionList(simplifyRecurse(tree.left)),
+                right: addExpressionList(simplifyRecurse(tree.right))
+            }];
+        case "neg":
+        case "paran":
+            return [{
+                _tag: tree._tag,
+                val: addExpressionList(simplifyRecurse(tree.val))
+            }];
+        default:
+            return [tree];
+    }
 }
 
 export function simplify(tree: Expression<number>): Expression<number> {
-    const simplifyRecursed = simplifyRecurse(tree);
-    return addListToExp(simplifyRecursed);
+    return addExpressionList(simplifyRecurse(tree));
 }
+
+// -------
 
 export function removeParan(exp: Expression<number>): Expression<number> {
     switch(exp._tag) {
@@ -455,7 +484,6 @@ export function removeParan(exp: Expression<number>): Expression<number> {
                 right: newRight2
             }
         case "paran":
-            console.log("removing paran")
             if(exp.val._tag === "leaf" || exp.val._tag === "neg") {
                 return exp.val;
             }

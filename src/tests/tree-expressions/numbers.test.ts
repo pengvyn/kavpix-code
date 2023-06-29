@@ -1,6 +1,6 @@
 import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { addListToExp, closedParan, ExpectedNumVal, isExpected, isReadyForEvaluation, joinSimilars, NumberOperator, numOrder, openParan, parseInput, removeParan, reverseParse, simplify, simplifyRecurse, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers/numbers";
+import { addExpressionList, closedParan, convertAddListToExpression, ExpectedNumVal, isExpected, isReadyForEvaluation, joinSimilars, NumberOperator, numOrder, openParan, parseInput, removeParan, reverseParse, simplify, simplifyRecurse, valueIsNegate, valueIsNumber, valueIsOperator, valueIsOrInParan } from "../../scripts/tree-expressions/numbers/numbers";
 import { add, evaluateNumExp, sub, mul, div, neg } from "../../scripts/tree-expressions/numbers/evaluate";
 import { Add, Expression, Leaf, makeLeaf, makeWaiting, Neg, Paran, Sub, Variable, variables, Waiting } from "../../scripts/tree-expressions/types";
 import { arbNumOperator, arbNumWaiting, arbStringAndNumList, arbVarOrNum, strNumSet } from "../arbitraries";
@@ -882,9 +882,9 @@ describe("Numbers expression tree", () => {
             {evaluate: evaluateNumExp, removeGroup: removeParan, isReadyForEvaluation: isReadyForEvaluation}
         );
         const r = simplify(evalled);
-        console.log("--------------- RESULT ------------------");
-        console.log(r);
-        console.log(reverseParse(r));
+        // console.log("--------------- RESULT ------------------");
+        // console.log(r);
+        // console.log(reverseParse(r));
     })
     describe("Order of operations", () => {
         it.each([
@@ -915,10 +915,10 @@ describe("Numbers expression tree", () => {
             const evalled = evaluateTreeVar(result, evaluateNumExp);
             const simplified = simplify(evalled);
             const stringed = reverseParse(simplified);
-            console.log("==========+++++--- ORDER OF OPERATIONS START ---+++++==========")
-            console.log(result);
-            console.log(evalled)
-            console.log("==========+++++--- ORDER OF OPERATIONS END ---+++++==========")
+            // console.log("==========+++++--- ORDER OF OPERATIONS START ---+++++==========")
+            // console.log(result);
+            // console.log(evalled)
+            // console.log("==========+++++--- ORDER OF OPERATIONS END ---+++++==========")
             expect(stringed).toBe(expected);
         })
     })
@@ -1001,7 +1001,6 @@ describe("Numbers expression tree", () => {
                 parseInput("(10 - 3 * 5 / b) * a / b") as Expression<number>, 
                 numOrder
             )
-            console.log(tree)
             // const r = evaluateRecurse(tree as Expression<number>, evaluateNumExp);
             expect(1).toBe(1)
         })
@@ -1043,18 +1042,17 @@ describe("Numbers expression tree", () => {
         })
     })
     describe("Removing unwanted parentheses (leaf)", () => {
-        it.only("Evaluator", () => {
+        it("Evaluator", () => {
             const exp = parseInput("4 + 4 * (4) - 4 - 4 + 4 / 4 * 4") as Expression<number>;
             const ordered = orderOfOperations(exp, numOrder);
 
             const evalled = evaluateRecurse(ordered, {evaluate: evaluateNumExp, isReadyForEvaluation: isReadyForEvaluation, removeGroup: removeParan});
-            const simplified = simplifyRecurse(evalled);
-            expect(simplified).toEqual([parseInput("16")]);
+            const simplified = simplify(evalled);
+            expect(simplified).toEqual(parseInput("16"));
         })
         it("Remove paran", () => {
             const exp = parseInput("(x)");
             const result = removeParan(exp as Expression<number>);
-            // console.log(exp, result)
             expect(result).toEqual(makeLeaf("x"));
         })
         it("Process inside evaluator test", () => {
@@ -1063,8 +1061,105 @@ describe("Numbers expression tree", () => {
             const valEvaluated = evaluateRecurse(exp.val, {evaluate: evaluateNumExp, isReadyForEvaluation: isReadyForEvaluation, removeGroup: removeParan});
             const newExpEvaluated = evaluateNumExp({_tag: exp._tag, val: valEvaluated});
             const paranRemoved = removeParan(newExpEvaluated);
-            console.log(paranRemoved);
             expect(paranRemoved).toEqual(makeLeaf("x"));
+        })
+    })
+    describe("NEW simplify", () => {
+        it.each([
+            {
+                list: [
+                    parseInput("10") as Expression<number>, 
+                    parseInput("a") as Expression<number>, 
+                    parseInput("b") as Expression<number>
+                ],
+                expectation: parseInput("10 + a + b")
+            },
+            {
+                list: [
+                    parseInput("10") as Expression<number>, 
+                    parseInput("a") as Expression<number>, 
+                    parseInput("-b") as Expression<number>
+                ],
+                expectation: parseInput("10 + a - b")
+            }
+        ])("convertAddListToExpression", ({list, expectation}) => {
+            const result = convertAddListToExpression(list);
+
+            expect(result).toEqual(expectation);
+        })
+        it.each([
+            {
+                list: [
+                    parseInput("10") as Expression<number>, 
+                    parseInput("a") as Expression<number>, 
+                    parseInput("b") as Expression<number>
+                ],
+                expectation: parseInput("a + b + 10")
+            },
+            {
+                list: [
+                    parseInput("10") as Expression<number>, 
+                    parseInput("a") as Expression<number>, 
+                    parseInput("-b") as Expression<number>
+                ],
+                expectation: parseInput("a - b + 10")
+            },
+            {
+                list: [
+                    parseInput("10") as Expression<number>, 
+                    parseInput("-a") as Expression<number>, 
+                    parseInput("b") as Expression<number>
+                ],
+                expectation: parseInput("b - a + 10")
+            },
+            {
+                list: [
+                    parseInput("a") as Expression<number>,
+                    parseInput("10") as Expression<number>, 
+                    parseInput("-a") as Expression<number>, 
+                ],
+                expectation: parseInput("10"),
+            },
+            {
+                list: [
+                    parseInput("a") as Expression<number>,
+                    parseInput("-a") as Expression<number>,
+                ],
+                expectation: parseInput("0")
+            },
+            {
+                list: [
+                    parseInput("a") as Expression<number>,
+                    parseInput("b") as Expression<number>,
+                    parseInput("-a") as Expression<number>,
+                    parseInput("-b") as Expression<number>,
+                ],
+                expectation: parseInput("0")
+            },
+            {
+                list: [
+                    parseInput("-a") as Expression<number>,
+                    parseInput("a") as Expression<number>,
+                ],
+                expectation: parseInput("0")
+            }
+        ])("addExpressionList", ({list, expectation}) => {
+            const result = addExpressionList(list);
+
+            expect(result).toEqual(expectation);
+        })
+        it.each([
+            {
+                tree: parseInput("a - a"),
+                expectation: parseInput("0")
+            },
+            {
+                tree: orderOfOperations(parseInput("10 - a + b * c + a") as Expression<number>, numOrder),
+                expectation: parseInput("b * c + 10")
+            }
+        ])("Simplify", ({tree, expectation}) => {
+            const result = simplify(tree as Expression<number>);
+            expect(result).toEqual(expectation);
         })
     })
 })

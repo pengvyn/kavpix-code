@@ -22,7 +22,7 @@ When looking at an expression like `x + 10 * y`, we know that the first thing to
     graph TD;
         subgraph orderofop[x + 10 * y];
         add(+) --> x(x);
-        add --> mul(×);
+        add --> mul("×");
         mul --> 10(10);
         mul --> y(y);
         end
@@ -34,7 +34,7 @@ With the tree above, we can tell that we do the multiplication first, and the ad
     graph LR;
         subgraph p1["(x + 10) * y"];
         
-        mul(×) --> add(+);
+        mul("×") --> add(+);
         mul --> y(y);
         add --> x(x);
         add --> z10(10);
@@ -108,7 +108,7 @@ The properties of operations (commutation, association, distribution) are also e
     graph LR;
         subgraph 2_xy["2 * (x + y)"];
 
-        mul(×) --> 2(2);
+        mul("×") --> 2(2);
         mul --> add(+);
         add --> x(x);
         add --> y(y);
@@ -217,7 +217,7 @@ It takes and expression like `a + b * c` and has to convert it into:
         subgraph abc["Tree for a + b * c"];
 
         add(+) --> a(a);
-        add(+) --> mul(×);
+        add(+) --> mul("×");
         mul --> b(b);
         mul --> c(c);
 
@@ -251,7 +251,7 @@ Here's the process when going character-by-character:
 
         subgraph s3[Step 3];
 
-        mul(×) --> add3(+);
+        mul("×") --> add3(+);
         add3 --> a4(a);
         add3 --> b4(b);
 
@@ -280,7 +280,7 @@ Let's use the same example:
 <Mermaid graph={`
     graph TD;
         subgraph ab_c["Tree for a + b * c"]
-        mul(×) --> add(+);
+        mul("×") --> add(+);
         mul --> c(c);
         add --> a(a);
         add --> b(b);
@@ -293,7 +293,7 @@ If we add parentheses and translate it back to textual form, it would be `(a + b
     graph TD;
         subgraph a_bc["a + b * c following operator precedence"]
         add(+) --> a(a)
-        add --> mul(×)
+        add --> mul("×")
         mul --> b(b)
         mul --> c(c)
         end
@@ -307,257 +307,169 @@ There are 3 scenarios in which we need to re-arrange the tree: `a + b * c`, `a *
 
 #### **Precedence 1**
 
-**Step 1**
+For `a + b * c`:
 
 <Mermaid graph={`
-    graph TD;
-        subgraph s1["a + b * c"]
-        mul(×) --> add(+);
+    graph LR;
+        subgraph s1["Step 1"]
+        mul("×") --> add(+);
         mul --> c(c);
         add --> a(a);
         add --> b(b);
         end
-`} />
 
-The initial tree which we need to change
+        subgraph s2["Step 2"]
 
-**Step 2**
-
-<Mermaid graph={`
-    graph TD;
-        subgraph s2["(a + b), (* c)"]
-
-        add(+) --> a(a);
-        add --> b(b);
-        mul(×) --> c(c);
+        add2(+) --> a2(a);
+        add2 --> b2(b);
+        mul2("×") --> c2(c);
 
         end
-`} />
 
-We've now disconnected `mul` from `add`
+        subgraph s3["Step 3"]
 
-**Step 3**
-
-<Mermaid graph={`
-    graph TD;
-        subgraph s3["(+ a), (b * c)"];
-
-        add(+) --> a(a);
-        mul(×) --> b(b);
-        mul --> c(c);
+        add3(+) --> a3(a);
+        mul3("×") --> b3(b);
+        mul3 --> c3(c);
 
         end
-`} />
 
-We've given `add`'s `b` to `mul`, and put it in `mul`'s left.
+        subgraph s4["Step 4"]
 
-**Step 4**
-
-<Mermaid graph={`
-    graph TD;
-        subgraph s4["a + (b * c)"];
-
-        add(+) --> a(a);
-        add --> mul(×);
-        mul --> b(b);
-        mul --> c(c);
+        add4(+) --> a4(a);
+        add4 --> mul4("×");
+        mul4 --> b4(b);
+        mul4 --> c4(c);
 
         end
-`} />
 
-And finally `add` and `mul` have been joined together again, but this time `mul` is in `add`'s right.
+        s1 -.-> s2 -.-> s3 -.-> s4
+`} />
 
 Since multiplication has higher precedence than addition, `b` gets multiplied first.
 
-
 #### **Precedence 2**
 
-For `a * b + c` (this works if we go left to right, but in the tree it is formatted like `a * (b + c)`)
-
-**Step 1**
+For `a * b + c` (this works if we go left to right, but we still need to re-order it if the tree is formatted like `a * (b + c)`)
 
 <Mermaid graph={`
-    graph TD;
-        subgraph s1["a * (b + c)"]
+    graph LR;
+        subgraph s1["Step 1"]
 
-        mul(×) --> a(a)
+        mul("×") --> a(a)
         add(+) --> b(b)
         add --> c(c)
         mul --> add
 
         end
-`} />
 
-The starting tree
+        subgraph s2["Step 2"]
 
-**Step 2**
-
-<Mermaid graph={`
-    graph TD;
-        subgraph s2["(a *), (b + c)"]
-
-        mul(×) --> a(a)
-        add(+) --> b(b)
-        add --> c(c)
+        mul2("×") --> a2(a)
+        add2(+) --> b2(b)
+        add2 --> c2(c)
 
         end
-`} />
 
-`add` has been split from `mul`
+        subgraph s3["Step 3"]
 
-**Step 3**
-
-<Mermaid graph={`
-    graph TD;
-        subgraph s3["(a * b), (+ c)"]
-
-        mul(×) --> a(a)
-        mul(×) --> b(b)
-        add(+) --> c(c)
+        mul3("×") --> a3(a)
+        mul3("×") --> b3(b)
+        add3(+) --> c3(c)
 
         end
-`} />
 
-We've given `b` to `mul`'s right from `add`
+        subgraph s4["Step 4"]
 
-**Step 4**
-
-<Mermaid graph={`
-    graph TD;
-        subgraph s4["(a * b) + c"]
-
-        mul(×) --> a(a)
-        mul(×) --> b(b)
-        add(+) --> mul
-        add --> c(c)
+        mul4("×") --> a4(a)
+        mul4("×") --> b4(b)
+        add4(+) --> mul4
+        add4 --> c4(c)
 
         end
-`} />
 
-`mul` and `add` have been rejoined. We put `mul` in `add`'s left.
+        s1 -.-> s2 -.-> s3 -.-> s4
+`} />
 
 #### **Precedence 3**
 
 For `a + b * c + d`
 
-**Step 1**
-
 <Mermaid graph={`
-    graph TD;
-        subgraph s1["(a + b) * (c + d)"]
+    graph LR;
+        subgraph s1["Step 1"]
 
-        mul(×) --> add1(+)
-        mul(×) --> add2(+)
+        mul("×") --> add1(+)
+        mul("×") --> add2(+)
         add1 --> a(a)
         add1 --> b(b)
         add2 --> c(c)
         add2 --> d(d)
 
         end
-`} />
 
-Initial tree
+        subgraph s2["Step 2"]
 
-**Step 2**
-
-<Mermaid graph={`
-    graph TD;
-        subgraph s2["((a + b) *), (c + d)"]
-
-        mul(×) --> add1(+)
-        add1 --> a(a)
-        add1 --> b(b)
-        add2(+) --> c(c)
-        add2 --> d(d)
+        mul2("×") --> add3(+)
+        add3 --> a2(a)
+        add3 --> b2(b)
+        add4(+) --> c2(c)
+        add4 --> d2(d)
 
         end
-`} />
 
-We've removed the `add` on the right side of `mul`
+        subgraph s3["Step 3"]
 
-**Step 3**
-
-<Mermaid graph={`
-    graph TD;
-        subgraph s3["(a + b), (*), (c + d)"]
-
-        add1(+) --> a(a)
-        add1 --> b(b)
-        mul(×)
-        add2(+) --> c(c)
-        add2 --> d(d)
+        add5(+) --> a3(a)
+        add5 --> b3(b)
+        mul3("×")
+        add6(+) --> c3(c)
+        add6 --> d3(d)
 
         end
-`} />
 
-We've split the other `add` and `mul`
+        subgraph s4["Step 4"]
 
-**Step 4**
-
-<Mermaid graph={`
-    graph TD;
-        subgraph s4["(a +), (b *), (c + d)"]
-
-        add1(+) --> a(a)
-        mul(×) --> b(b)
-        add2(+) --> c(c)
-        add2 --> d(d)
+        add7(+) --> a4(a)
+        mul4("×") --> b4(b)
+        add8(+) --> c4(c)
+        add8 --> d4(d)
 
         end
-`} />
 
-We've given the left `add`'s `b` to `mul`.
+        subgraph s5["Step 5"]
 
-**Step 5**
-
-<Mermaid graph={`
-    graph TD;
-        subgraph s5["(a +), (b * c), (+ d)"]
-
-        add1(+) --> a(a)
-        mul(×) --> b(b)
-        mul --> c(c)
-        add2(+) --> d(d)
+        add9(+) --> a5(a)
+        mul5("×") --> b5(b)
+        mul5 --> c5(c)
+        add10(+) --> d5(d)
 
         end
-`} />
 
-We've put `c` in `mul`'s right
+        subgraph s6["Step 6"]
 
-**Step 6**
+        add11(+) --> a6(a)
+        add11(+) --> mul6
+        mul6("×") --> b6(b)
+        mul6 --> c6(c)
+        add12(+) --> d6(d)
 
-<Mermaid graph={`
-    graph TD;
-        subgraph s6["(a + (b * c)), (+ d)"]
-
-        add1(+) --> a(a)
-        add1(+) --> mul
-        mul(×) --> b(b)
-        mul --> c(c)
-        add2(+) --> d(d)
 
         end
-`} />
 
-And now we've attached `mul` to the left `add`
+        subgraph s7["Step 7"]
 
-**Step 7**
+        add14(+) --> add13
+        add14 --> d7(d)
+        add13(+) --> a7(a)
+        add13(+) --> mul7
+        mul7("×") --> b7(b)
+        mul7 --> c7(c)
 
-<Mermaid graph={`
-    graph TD;
-        subgraph s7["(a + (b * c)) + d"]
-
-        add2(+) --> add1
-        add2 --> d(d)
-        add1(+) --> a(a)
-        add1(+) --> mul
-        mul(×) --> b(b)
-        mul --> c(c)
-        
         end
-`} />
 
-For the final step we've attached the left `add` to right `add`.
+        s1 -.-> s2 -.-> s3 -.-> s4 -.-> s5 -.-> s6 -.-> s7
+`} />
 
 That's it! That's basically what the orderer does!
 
@@ -571,7 +483,7 @@ Let's look at the process of the evaluator with a simple example, `5 * 2 + a`. H
     graph TD;
         subgraph 52a["(5 * 2) + a"]
 
-        add(+) --> mul(×);
+        add(+) --> mul("×");
         add --> a(a);
         mul --> 5(5);
         mul --> 2(2);
@@ -593,7 +505,7 @@ It's focusing on *only* the left. So, what it sees is this:
     graph TD;
         subgraph 52["5 * 2"]
 
-        mul(×) --> 5(5)
+        mul("×") --> 5(5)
         mul --> 2(2)
 
         end
@@ -721,8 +633,8 @@ This is the standard operator precedence. The operators that are in the same "le
         sub(-) --> add(+)
         sub --> 5(5);
         add --> 1(1);
-        add --> div(÷)
-        div --> mul(×)
+        add --> div("÷")
+        div --> mul("×")
         div --> 4(4)
         mul --> 2(2)
         mul --> 3(3)
@@ -748,7 +660,7 @@ Now the opposite. Addition and subtraction get evaluated first:
     graph TD;
         subgraph 12345["((1 + 2) * 3) / (4 - 5)"]
 
-        div(÷) --> mul(×)
+        div("÷") --> mul("×")
         div --> sub(-)
         mul --> add(+)
         mul --> 3(3)
@@ -780,8 +692,8 @@ This one's a little bit different. Theres nothing on the same level.
     graph TD;
         subgraph 12345["(1 + 2) * (3 / (4 - 5))"]
 
-        mul(×) --> add(+)
-        mul --> div(÷)
+        mul("×") --> add(+)
+        mul --> div("÷")
         add --> 1(1)
         add --> 2(2)
         div --> 3(3)
@@ -813,9 +725,9 @@ This one is pretty similar to the standard precedence, but without any operators
         sub(-) --> add(+)
         sub --> 5(5);
         add --> 1(1)
-        add --> mul(×)
+        add --> mul("×")
         mul --> 2(2)
-        mul --> div(÷)
+        mul --> div("÷")
         div --> 3(3)
         div --> 4(4)
 
@@ -2007,57 +1919,43 @@ We already went through this in a [previous section](#orderer), but, to recap, w
 
 ### **Precedence 1**
 
-For the `a + b * c`.
-
-**Step 1**
+For `a + b * c`:
 
 <Mermaid graph={`
-    graph TD;
-        subgraph s1["(a + b) * c"]
-
-        mul(×) --> add(+);
+    graph LR;
+        subgraph s1["Step 1"]
+        mul("×") --> add(+);
         mul --> c(c);
         add --> a(a);
         add --> b(b);
+        end
+
+        subgraph s2["Step 2"]
+
+        add2(+) --> a2(a);
+        add2 --> b2(b);
+        mul2("×") --> c2(c);
 
         end
-`} />
 
-**Step 2**
+        subgraph s3["Step 3"]
 
-<Mermaid graph={`
-    graph TD;
-        subgraph s2["(a + b), (* c)"]
-        add(+) --> a(a);
-        add --> b(b);
-        mul(×) --> c(c);
-        end
-`} />
-
-**Step 3**
-
-<Mermaid graph={`
-    graph TD;
-        subgraph s3["(a + ), (b * c)"]
-
-        add(+) --> a(a);
-        mul(×) --> b(b);
-        mul --> c(c);
+        add3(+) --> a3(a);
+        mul3("×") --> b3(b);
+        mul3 --> c3(c);
 
         end
-`} />
-**Step 4**
 
-<Mermaid graph={`
-    graph TD;
-        subgraph s4["a + (b * c)"]
+        subgraph s4["Step 4"]
 
-        add(+) --> a(a);
-        add --> mul(×);
-        mul --> b(b);
-        mul --> c(c);
+        add4(+) --> a4(a);
+        add4 --> mul4("×");
+        mul4 --> b4(b);
+        mul4 --> c4(c);
 
         end
+
+        s1 -.-> s2 -.-> s3 -.-> s4
 `} />
 
 Let's translate this into words, it will help us a bunch when we're writing the code:
@@ -2071,56 +1969,45 @@ Let's translate this into words, it will help us a bunch when we're writing the 
 
 ### **Precedence 2**
 
-For `a * b + c`.
-
-**Step 1**
+For `a * b + c`:
 
 <Mermaid graph={`
-    graph TD;
-        subgraph s1["a * (b + c)"]
-        mul(×) --> a(a)
+    graph LR;
+        subgraph s1["Step 1"]
+
+        mul("×") --> a(a)
         add(+) --> b(b)
         add --> c(c)
         mul --> add
-        end
-`} />
-
-**Step 2**
-
-<Mermaid graph={`
-    graph TD;
-        subgraph s2["(a *), (b + c)"]
-        mul(×) --> a(a)
-        add(+) --> b(b)
-        add --> c(c)
-        end
-`} />
-
-**Step 3**
-
-<Mermaid graph={`
-    graph TD;
-        subgraph s3["(a * b), (+ c)"]
-
-        mul(×) --> a(a)
-        mul(×) --> b(b)
-        add(+) --> c(c)
 
         end
-`} />
 
-**Step 4**
+        subgraph s2["Step 2"]
 
-<Mermaid graph={`
-    graph TD;
-        subgraph s4["(a * b) + c"]
-
-        mul(×) --> a(a)
-        mul(×) --> b(b)
-        add(+) --> mul
-        add --> c(c)
+        mul2("×") --> a2(a)
+        add2(+) --> b2(b)
+        add2 --> c2(c)
 
         end
+
+        subgraph s3["Step 3"]
+
+        mul3("×") --> a3(a)
+        mul3("×") --> b3(b)
+        add3(+) --> c3(c)
+
+        end
+
+        subgraph s4["Step 4"]
+
+        mul4("×") --> a4(a)
+        mul4("×") --> b4(b)
+        add4(+) --> mul4
+        add4 --> c4(c)
+
+        end
+
+        s1 -.-> s2 -.-> s3 -.-> s4
 `} />
 
 Again, in words:
@@ -2135,109 +2022,80 @@ Again, in words:
 
 For `a + b * c + d`
 
-**Step 1**
-
 <Mermaid graph={`
-    graph TD;
-        subgraph s1["(a + b) * (c + d)"];
+    graph LR;
+        subgraph s1["Step 1"]
 
-        mul(×) --> add1(+)
-        mul(×) --> add2(+)
+        mul("×") --> add1(+)
+        mul("×") --> add2(+)
         add1 --> a(a)
         add1 --> b(b)
         add2 --> c(c)
         add2 --> d(d)
 
         end
-`} />
 
-**Step 2**
+        subgraph s2["Step 2"]
 
-<Mermaid graph={`
-    graph TD;
-        subgraph s2["((a + b) * ), (c + d)"]
-
-        mul(×) --> add1(+)
-        add1 --> a(a)
-        add1 --> b(b)
-        add2(+) --> c(c)
-        add2 --> d(d)
+        mul2("×") --> add3(+)
+        add3 --> a2(a)
+        add3 --> b2(b)
+        add4(+) --> c2(c)
+        add4 --> d2(d)
 
         end
-`} />
 
-**Step 3**
+        subgraph s3["Step 3"]
 
-<Mermaid graph={`
-    graph TD;
-        subgraph s3["(a + b), (*), (c + d)"]
-
-        add1(+) --> a(a)
-        add1 --> b(b)
-        mul(×)
-        add2(+) --> c(c)
-        add2 --> d(d)
+        add5(+) --> a3(a)
+        add5 --> b3(b)
+        mul3("×")
+        add6(+) --> c3(c)
+        add6 --> d3(d)
 
         end
-`} />
 
-**Step 4**
+        subgraph s4["Step 4"]
 
-<Mermaid graph={`
-    graph TD;
-        subgraph s4["(a +), (b *), (c + d)"]
-
-        add1(+) --> a(a)
-        mul(×) --> b(b)
-        add2(+) --> c(c)
-        add2 --> d(d)
+        add7(+) --> a4(a)
+        mul4("×") --> b4(b)
+        add8(+) --> c4(c)
+        add8 --> d4(d)
 
         end
-`} />
 
-**Step 5**
+        subgraph s5["Step 5"]
 
-<Mermaid graph={`
-    graph TD;
-        subgraph s5["(a +), (b * c), (+ d)"]
-
-        add1(+) --> a(a)
-        mul(×) --> b(b)
-        mul --> c(c)
-        add2(+) --> d(d)
+        add9(+) --> a5(a)
+        mul5("×") --> b5(b)
+        mul5 --> c5(c)
+        add10(+) --> d5(d)
 
         end
-`} />
 
-**Step 6**
+        subgraph s6["Step 6"]
 
-<Mermaid graph={`
-    graph TD;
-        subgraph s6["(a + (b * c)), (+ d)"]
+        add11(+) --> a6(a)
+        add11(+) --> mul6
+        mul6("×") --> b6(b)
+        mul6 --> c6(c)
+        add12(+) --> d6(d)
 
-        add1(+) --> a(a)
-        add1(+) --> mul
-        mul(×) --> b(b)
-        mul --> c(c)
-        add2(+) --> d(d)
 
         end
-`} />
 
-**Step 7**
+        subgraph s7["Step 7"]
 
-<Mermaid graph={`
-    graph TD;
-        subgraph s7["(a + (b * c)) + d"]
+        add14(+) --> add13
+        add14 --> d7(d)
+        add13(+) --> a7(a)
+        add13(+) --> mul7
+        mul7("×") --> b7(b)
+        mul7 --> c7(c)
 
-        add2(+) --> add1
-        add2 --> d(d)
-        add1(+) --> a(a)
-        add1(+) --> mul
-        mul(×) --> b(b)
-        mul --> c(c)     
-        
         end
+
+        s1 -.-> s2 -.-> s3 -.-> s4 -.-> s5 -.-> s6 -.-> s7
 `} />
 
 And the final one:

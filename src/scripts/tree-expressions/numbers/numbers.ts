@@ -283,7 +283,7 @@ export interface NegLeaf {
     _tag: "neg"
 }
 
-// ------------------ SIMPLIFY -------------------
+// -----------------|| SIMPLIFY ||------------------
 
 // simplify recurse
 
@@ -360,13 +360,16 @@ export function addExpressionList(list: Expression<number>[]): Expression<number
             return p;
         }, 0
     )
-    const notNumbers = list.filter(
-        (tree) => 
-            !(tree._tag === "neg" && tree.val._tag === "leaf" && tree.val.val._tag === "val")
-            && !(tree._tag === "leaf" && tree.val._tag === "val")
-    )
-    const variablesSimplified = notNumbers.reduce(
+
+    const variablesSimplified = list.reduce(
         (p: Expression<number>[], c: Expression<number>) => {
+            if(
+                (c._tag === "neg" && c.val._tag === "leaf" && c.val.val._tag === "val")
+                || (c._tag === "leaf" && c.val._tag === "val")
+            ) {
+                return p;
+            }
+
             if(c._tag === "neg") {
                 const idx = p.findIndex((e) => isEqual(e, c.val));
 
@@ -377,17 +380,18 @@ export function addExpressionList(list: Expression<number>[]): Expression<number
                     return r;
                 }
             }
-            const negIdx = p.findIndex((e) => e._tag === "neg" && isEqual(e.val, c));
+            const idx = p.findIndex((e) => e._tag === "neg" && isEqual(e.val, c));
 
-            if(negIdx !== -1) {
-                return negIdx === 0
+            if(idx !== -1) {
+                return idx === 0
                     ? p.slice(1)
-                    : [...p.slice(0, negIdx), ...p.slice(negIdx + 1)]
+                    : [...p.slice(0, idx), ...p.slice(idx + 1)]
             }
 
             return [...p, c]
         }, []
     )
+    
     return convertAddListToExpression([
         ...variablesSimplified.length === 0 ? [] : variablesSimplified, 
         ...added === 0 ? [] : [makeLeaf(added)]

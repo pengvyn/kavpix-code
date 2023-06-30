@@ -146,7 +146,7 @@ function precedenceBoth<T>(left: BiOperator<T>, right: BiOperator<T>, tag: BiOpe
     }
 }
 
-function expIsBinaryOp<T>(exp: BiOperator<T>, order: OrderOfOp): Expression<T> {
+function reArrangeBinaryOperator<T>(exp: BiOperator<T>, order: OrderOfOp): Expression<T> {
     const left = orderOfOperations(exp.left, order)
     const right = orderOfOperations(exp.right, order)
 
@@ -236,7 +236,7 @@ export function orderOfOperations<T>(exp: Expression<T>, order: OrderOfOp): Expr
         case "sub":
         case "mul":
         case "div":
-            return expIsBinaryOp(exp, order);
+            return reArrangeBinaryOperator(exp, order);
         default:
             return exp;
     }

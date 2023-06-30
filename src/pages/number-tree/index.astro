@@ -1,191 +1,30 @@
 ---
-
 import BaseHead from "../../components/BaseHead.astro";
-import Header from "../../components/Header.astro";
 import Footer from "../../components/Footer.astro";
-import ExpCalc from "../../components/stylesheets/ExpCalc.astro"
-
+import Header from "../../components/Header.astro";
+import {Content as Essay} from "../../essays/number-tree/essay.md";
 ---
 
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <BaseHead title="Kavpix | Expression Calculator"/>
-        <ExpCalc />
+        <BaseHead title="Kavpix | Expression Calculator Essay"/>
     </head>
     <body>
         <div class="page-cont">
-            <Header back="../"/>
-            <div class="code-example-cont">
-                <div class="left">
-                    <div class="input-cont">
-                        <div class="title">Number Tree</div>
-                        <div class="form-cont">
-                            <form id="input-form">
-                                <label>
-                                    <div class="input-label">
-                                        Type an expression with integers,
-                                        <span class="input-info">
-                                            <span class="text">variables,</span>
-                                            <span class="info">
-                                                Any lower-case<br>
-                                                English letter 
-                                            </span>
-                                        </span> and 
-                                        <span class="input-info">
-                                            <span class="text"> operations</span>
-                                            <span class="info align">
-                                                <span class="info-left">
-                                                    +<br>
-                                                    -<br>
-                                                    &#xD7;<br>
-                                                    &#xF7;<br>
-                                                    -<br>
-                                                    ()
-                                                </span>
-                                                <span class="info-right">
-                                                    addition<br>
-                                                    subtraction<br>
-                                                    multiplication<br>
-                                                    division<br>
-                                                    negation<br>
-                                                    parentheses
-                                                </span>
-                                            </span>
-                                        </span>
-                                    </div>
-                                </label>
-                                <input 
-                                    type = "text"
-                                    id = "num-exp-inp"
-                                    name = "num-exp-inp"
-                                    required
-                                />
-                            </form>
-                        </div>
-
-                        <div class="examples" id="examples">
-                            <div class="example">
-                                10 + a * 2
-                            </div>
-                            <div class="example">
-                                x * -(1 - y)
-                            </div>
-                            <div class="example">
-                                7 * 3 + 100
-                            </div>
-                            <div class="example">
-                                12 / -10 * a
-                            </div>
-                            <div class="example">
-                                x + x * (x) - x - x + x / x * x
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div class="change-order">
-                        <div class="title">Operator Precedence</div>
-                        <form id="re-orderer-form">
-                            <label>Change operator precedence</label>
-                            <div class="operations">
-                                <div class="operation">
-                                    <div class="symbol">
-                                        &#xD7;
-                                    </div>
-
-                                    <input
-                                        type="number"
-                                        name="order-mul"
-                                        id="order-mul"
-                                        placeholder="2"
-                                    />
-                                </div>
-
-                                <div class="operation">
-                                    <div class="symbol">
-                                        &#xF7;
-                                    </div>
-
-                                    <input
-                                        type="number"
-                                        name="order-div"
-                                        id="order-div"
-                                        placeholder="2"
-                                    />
-                                </div>
-                                
-                                <div class="operation">
-                                    <div class="symbol">+</div>
-
-                                    <input
-                                        type="number"
-                                        name="order-add"
-                                        id="order-add"
-                                        placeholder="1"
-                                    />
-                                </div>
-
-                                <div class="operation">
-                                    <div class="symbol">
-                                        -
-                                    </div>
-
-                                    <input
-                                        type="number"
-                                        name="order-sub"
-                                        id="order-sub"
-                                        placeholder="1"
-                                    />
-                                </div>
-                            </div>
-                        </form>
-                        <script>
-                            import { orderListener } from "../../scripts/tree-expressions/numbers/numbers-browser";
-                            const ids = {
-                                add: "order-add",
-                                sub: "order-sub",
-                                mul: "order-mul",
-                                div: "order-div"
-                            }
-                            orderListener(document.getElementById("re-orderer-form"), ids);
-                        </script>
-                    </div>
-                    <div class="variables-cont hidden">
-                        <div class="title">Variables</div>
-                        <div class="variables-text">Assign values to the variables</div>
-                        <div class="variables" id="variables">
-                            <!-- EXAMPLE:
-                            <div class="variable">
-                                <label>a</label>
-                                <input type="number">
-                            </div>
-                            -->
-                        </div>
-                    </div>
-                    <script>
-                        import { variablesListener } from "../../scripts/tree-expressions/numbers/numbers-browser";
-                        variablesListener();
-                    </script>
-                </div>
-
-                <div class="right">
-                    <div class="result-cont">
-                        <div class="result" id="result" />
-                        <div class="tree" id="tree">
-                            <div id="myDiagramDiv" />
-                        </div>
-                    </div>
-                </div>
-                
-                <script>
-                    import { startListening, exampleClickListener, updateVariablesListener } from "../../scripts/tree-expressions/numbers/numbers-browser";
-                    startListening();
-                    exampleClickListener(document.getElementById("examples"));
-                    updateVariablesListener();
-                </script>
+            <Header back="https://code.kavpix.com" />
+            <div>
+                <Essay />
             </div>
             <Footer />
         </div>
+        <script type="module">
+            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+            mermaid.initialize({ startOnLoad: true });
+        </script>
+
+        <script>
+            document.addEventListener("click", (ev) => {console.log("Clickeddd")});
+        </script>
     </body>
 </html>

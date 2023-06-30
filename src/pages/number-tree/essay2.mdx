@@ -1,0 +1,32 @@
+import Mermaid from '../../components/Mermaid.astro'
+
+# **Expression Tree**
+
+<Mermaid graph={`
+  graph LR;
+        subgraph p1["(x + 10) * y"];
+        
+        mul(*) --> add(+);
+        mul --> y(y);
+        add --> x(x);
+        add --> z10(10);
+        end
+
+        subgraph p2["x + (10 * y)"];
+
+        add2(+) --> x2(x);
+        add2 --> mul2(*);
+        mul2 --> 10_2(10);
+        mul2 --> y2(y);
+
+        end
+
+        p1 -.-> p2;
+`}/>
+
+<script type="module">
+{`
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+`}
+</script>

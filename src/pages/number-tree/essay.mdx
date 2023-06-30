@@ -1,60 +1,16 @@
+import Mermaid from '../../components/Mermaid.astro'
+
 # **Expression Tree**
 
-## **Table of Contents**
-- [**Expression Tree**](#expression-tree)
-  - [**Table of Contents**](#table-of-contents)
-  - [**Intro**](#intro)
-  - [**Order of Operations**](#order-of-operations)
-  - [**Properties**](#properties)
-    - [**Commutation**](#commutation)
-    - [**Association**](#association)
-    - [**Distribution**](#distribution)
-  - [**Levels/Branches**](#levelsbranches)
-  - [**Four modules**](#four-modules)
-    - [**Parser**](#parser)
-    - [**Orderer**](#orderer)
-      - [**Precedence 1**](#precedence-1)
-      - [**Precedence 2**](#precedence-2)
-      - [**Precedence 3**](#precedence-3)
-    - [**Evaluator**](#evaluator)
-      - [**Step 1**](#step-1)
-      - [**Step 2**](#step-2)
-      - [**Step 3**](#step-3)
-    - [**Simplifier**](#simplifier)
-  - [**Different Operator Precedences**](#different-operator-precedences)
-    - [**Mul, div \> add, sub**](#mul-div--add-sub)
-    - [**Add, sub \> mul, div**](#add-sub--mul-div)
-    - [**Sub \> div \> add \> mul**](#sub--div--add--mul)
-    - [**Div \> mul \> add \> sub**](#div--mul--add--sub)
-- [**Code**](#code)
-  - [**Parser**](#parser-1)
-    - [**Expression Types**](#expression-types)
-      - [**Negation**](#negation)
-      - [**Parentheses**](#parentheses)
-      - [**Leaf**](#leaf)
-      - [**Generic Types**](#generic-types)
-    - [**The 3 boxes**](#the-3-boxes)
-    - [**The parser function**](#the-parser-function)
-      - [**Preparing the input**](#preparing-the-input)
-      - [**Join Similarities**](#join-similarities)
-      - [**Using the boxes**](#using-the-boxes)
-      - [**The Parser Loop**](#the-parser-loop)
-      - [**Value handlers**](#value-handlers)
-  - [**Orderer**](#orderer-1)
-    - [**Precedence 1**](#precedence-1-1)
-    - [**Precedence 2**](#precedence-2-1)
-    - [**Precedence 3**](#precedence-3-1)
-    - [**Precedence code**](#precedence-code)
-  - [**Evaluator**](#evaluator-1)
-  - [**Simplifier**](#simplifier-1)
-- [**Summary**](#summary)
-  - [**To-Do list**](#to-do-list)
-  - [**Libraries Used**](#libraries-used)
 ## **Intro**
 
-I was learning about mathematical and logical proofs, the tree structure came up when doing that. I needed a deeper understanding about the tree structure, and also about code. So, I made this [expression calculator](https://code.kavpix.com/expression-calculator) to learn both of them at the same time!
+This article is for the [Expression Calculator]("./index.astro"), make sure to play around with that so that the article makes sense.
 
-The expression tree is a structural representation of an expression. An expression is some numbers and variables being joined together in many ways with operators, like `a + b` or `5 * x`. Every expression can be shown as a tree. Why does this matter? The tree isn't only a different way of writing an expression, but it's also a *data structure*. Using the tree structure is helpful for computation.
+I've been learning about mathematical proofs by trying to understand the concepts fully by learning from first-principles. 
+The concept of the tree structure came up when learning about subsets. That was pretty interesting on its own, but when I started learning about logic, (and, or, not, truth tables, etc.), it was getting a little bit complicated to visualize. So, I decided to write code to make a tree so that I can get a better understanding of it. But, after I realized that I'd have to make a parser, I thought it would be better to start out by doing it for something simpler like numbers. While doing that, I thought it wouldn't be complete without variables, so that got added too.
+I'm working on a logical expression calculator and a few others as well, they'll all be released soon! 
+
+The expression tree is a structural representation of an expression. An expression is some numbers and variables being joined together in many ways with operators, like `a + b` or `5 * x`. Every expression can be shown as a tree. Why does this matter? The tree isn't only a different way of writing an expression, but it's also a *data structure*. Using the tree structure is helpful for computation. But that's not all, theres also some magical things we can do with this structure. 
 
 I've divided this article into 2 sections, the first one is about the visualization of the tree, and the second one is about the code. All the code for this project is open-source [on github](github.com/pengvyn/kavpix-code)
 
@@ -62,23 +18,23 @@ I've divided this article into 2 sections, the first one is about the visualizat
 
 When looking at an expression like `x + 10 * y`, we know that the first thing to do is `10 * y` and then add `x`, but it isn't naturally obvious. Let's look at why with a tree for `x + 10 * y`:
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph orderofop[x + 10 * y];
         add(+) --> x(x);
-        add --> mul(*);
+        add --> mul(×);
         mul --> 10(10);
         mul --> y(y);
         end
-```
+`} />
 
 With the tree above, we can tell that we do the multiplication first, and the addition second. But if we use the symbolic notation without the tree, the most natural thing for people who are used to left-to-right reading is to solve it like `(x + 10) * y`. The order in which we have to solve it becomes clear when using the tree:
 
-```mermaid
+<Mermaid graph={`
     graph LR;
         subgraph p1["(x + 10) * y"];
         
-        mul(*) --> add(+);
+        mul(×) --> add(+);
         mul --> y(y);
         add --> x(x);
         add --> z10(10);
@@ -94,7 +50,7 @@ With the tree above, we can tell that we do the multiplication first, and the ad
         end
 
         p1 -.-> p2;
-```
+`} />
 
 ## **Properties**
 
@@ -102,7 +58,7 @@ The properties of operations (commutation, association, distribution) are also e
 
 ### **Commutation**
 
-```mermaid
+<Mermaid graph={`
     graph LR;
         subgraph ab[a + b];
 
@@ -119,11 +75,11 @@ The properties of operations (commutation, association, distribution) are also e
         end
 
         ab -.-> ba;
-```
+`} />
 
 ### **Association**
 
-```mermaid
+<Mermaid graph={`
     graph LR;
         subgraph a_bc["a + (b + c)"];
 
@@ -144,15 +100,15 @@ The properties of operations (commutation, association, distribution) are also e
         end
 
         a_bc -.-> ab_c;
-```
+`} />
 
 ### **Distribution**
 
-```mermaid
+<Mermaid graph={`
     graph LR;
         subgraph 2_xy["2 * (x + y)"];
 
-        mul(*) --> 2(2);
+        mul(×) --> 2(2);
         mul --> add(+);
         add --> x(x);
         add --> y(y);
@@ -171,7 +127,7 @@ The properties of operations (commutation, association, distribution) are also e
         end
 
         2_xy -.-> 2x_2y
-```
+`} />
 
 (note: distribution hasn't been implemented in my code [yet](#to-do-list))
 
@@ -179,7 +135,7 @@ The properties of operations (commutation, association, distribution) are also e
 
 The one downside to the tree format is that there are always different levels. For example, when adding `1 + a + 3`, it doesn’t matter which 2 numbers you add first, but with the tree you *have* to have an order. So, the tree will look like this:
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph 1a3["(1 + a) + 3"];
 
@@ -189,13 +145,13 @@ The one downside to the tree format is that there are always different levels. F
         add2 --> a(a);  
         
         end
-```
+`} />
 
 The ideal solution we want is `a + 4`, but in this format, it will first add `1 + a`, which isn't possible since `a` is a variable, and then add `3` to `1 + a`. This will just result in `1 + a + 3` again.
 
 What we want instead is something like this:
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph 1a3["1 + a + 3"];
 
@@ -204,11 +160,11 @@ What we want instead is something like this:
         add --> 3(3);
 
         end
-```
+`} />
 
 Now, all of them are on the same “level”. Since addition is commutative, we can just re-arrange the expression and add `1` and `3` like so:
 
-```mermaid
+<Mermaid graph={`
     graph LR;
         subgraph 1a3["1 + a + 3"];
 
@@ -234,11 +190,12 @@ Now, all of them are on the same “level”. Since addition is commutative, we 
         end
 
         1a3 -.-> a13 -.-> a4;
-```
+`} />
 
 And we’ve got `a + 4`. Perfect!
 
 So, the tree and the textual format are both good for different scenarios, but the tree is helpful when visualizing an expression, and the textual form is good for daily usage.
+
 
 ## **Four modules**
 
@@ -255,23 +212,23 @@ Let's see how they work without getting into the actual code part of it. The fol
 
 It takes and expression like `a + b * c` and has to convert it into:
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph abc["Tree for a + b * c"];
 
         add(+) --> a(a);
-        add(+) --> mul(*);
+        add(+) --> mul(×);
         mul --> b(b);
         mul --> c(c);
 
         end
-```
+`} />
 
 We won't look at the code in this section, but when programming, the tree is needed so that it can understand the input you typed in in.
 
 Here's the process when going character-by-character:
 
-```mermaid
+<Mermaid graph={`
     graph LR;
         subgraph s1["Step 1"];
 
@@ -294,7 +251,7 @@ Here's the process when going character-by-character:
 
         subgraph s3[Step 3];
 
-        mul(*) --> add3(+);
+        mul(×) --> add3(+);
         add3 --> a4(a);
         add3 --> b4(b);
 
@@ -310,7 +267,7 @@ Here's the process when going character-by-character:
         end;
 
         s1 -.-> s2 -.-> s3 -.-> s4;
-```
+`} />
 
 Nice! It's pretty straightforward, it takes the first character, adds it to the tree, then the second, third, etc. 
 
@@ -320,27 +277,27 @@ Although, you might notice that it doesn't follow the operation precedence. Let'
 
 Let's use the same example:
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph ab_c["Tree for a + b * c"]
-        mul(*) --> add(+);
+        mul(×) --> add(+);
         mul --> c(c);
         add --> a(a);
         add --> b(b);
         end
-```
+`} />
 
 If we add parentheses and translate it back to textual form, it would be `(a + b) * c`. But, what we want is
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph a_bc["a + b * c following operator precedence"]
         add(+) --> a(a)
-        add --> mul(*)
+        add --> mul(×)
         mul --> b(b)
         mul --> c(c)
         end
-```
+`} />
 
 Which translates to `a + (b * c)`. We need to write a function to do that ordering for us.
 
@@ -352,61 +309,61 @@ There are 3 scenarios in which we need to re-arrange the tree: `a + b * c`, `a *
 
 **Step 1**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s1["a + b * c"]
-        mul(*) --> add(+);
+        mul(×) --> add(+);
         mul --> c(c);
         add --> a(a);
         add --> b(b);
         end
-```
+`} />
 
 The initial tree which we need to change
 
 **Step 2**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s2["(a + b), (* c)"]
 
         add(+) --> a(a);
         add --> b(b);
-        mul(*) --> c(c);
+        mul(×) --> c(c);
 
         end
-```
+`} />
 
 We've now disconnected `mul` from `add`
 
 **Step 3**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s3["(+ a), (b * c)"];
 
         add(+) --> a(a);
-        mul(*) --> b(b);
+        mul(×) --> b(b);
         mul --> c(c);
 
         end
-```
+`} />
 
 We've given `add`'s `b` to `mul`, and put it in `mul`'s left.
 
 **Step 4**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s4["a + (b * c)"];
 
         add(+) --> a(a);
-        add --> mul(*);
+        add --> mul(×);
         mul --> b(b);
         mul --> c(c);
 
         end
-```
+`} />
 
 And finally `add` and `mul` have been joined together again, but this time `mul` is in `add`'s right.
 
@@ -419,63 +376,63 @@ For `a * b + c` (this works if we go left to right, but in the tree it is format
 
 **Step 1**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s1["a * (b + c)"]
 
-        mul(*) --> a(a)
+        mul(×) --> a(a)
         add(+) --> b(b)
         add --> c(c)
         mul --> add
 
         end
-```
+`} />
 
 The starting tree
 
 **Step 2**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s2["(a *), (b + c)"]
 
-        mul(*) --> a(a)
+        mul(×) --> a(a)
         add(+) --> b(b)
         add --> c(c)
 
         end
-```
+`} />
 
 `add` has been split from `mul`
 
 **Step 3**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s3["(a * b), (+ c)"]
 
-        mul(*) --> a(a)
-        mul(*) --> b(b)
+        mul(×) --> a(a)
+        mul(×) --> b(b)
         add(+) --> c(c)
 
         end
-```
+`} />
 
 We've given `b` to `mul`'s right from `add`
 
 **Step 4**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s4["(a * b) + c"]
 
-        mul(*) --> a(a)
-        mul(*) --> b(b)
+        mul(×) --> a(a)
+        mul(×) --> b(b)
         add(+) --> mul
         add --> c(c)
 
         end
-```
+`} />
 
 `mul` and `add` have been rejoined. We put `mul` in `add`'s left.
 
@@ -485,108 +442,108 @@ For `a + b * c + d`
 
 **Step 1**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s1["(a + b) * (c + d)"]
 
-        mul(*) --> add1(+)
-        mul(*) --> add2(+)
+        mul(×) --> add1(+)
+        mul(×) --> add2(+)
         add1 --> a(a)
         add1 --> b(b)
         add2 --> c(c)
         add2 --> d(d)
 
         end
-```
+`} />
 
 Initial tree
 
 **Step 2**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s2["((a + b) *), (c + d)"]
 
-        mul(*) --> add1(+)
+        mul(×) --> add1(+)
         add1 --> a(a)
         add1 --> b(b)
         add2(+) --> c(c)
         add2 --> d(d)
 
         end
-```
+`} />
 
 We've removed the `add` on the right side of `mul`
 
 **Step 3**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s3["(a + b), (*), (c + d)"]
 
         add1(+) --> a(a)
         add1 --> b(b)
-        mul(*)
+        mul(×)
         add2(+) --> c(c)
         add2 --> d(d)
 
         end
-```
+`} />
 
 We've split the other `add` and `mul`
 
 **Step 4**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s4["(a +), (b *), (c + d)"]
 
         add1(+) --> a(a)
-        mul(*) --> b(b)
+        mul(×) --> b(b)
         add2(+) --> c(c)
         add2 --> d(d)
 
         end
-```
+`} />
 
 We've given the left `add`'s `b` to `mul`.
 
 **Step 5**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s5["(a +), (b * c), (+ d)"]
 
         add1(+) --> a(a)
-        mul(*) --> b(b)
+        mul(×) --> b(b)
         mul --> c(c)
         add2(+) --> d(d)
 
         end
-```
+`} />
 
 We've put `c` in `mul`'s right
 
 **Step 6**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s6["(a + (b * c)), (+ d)"]
 
         add1(+) --> a(a)
         add1(+) --> mul
-        mul(*) --> b(b)
+        mul(×) --> b(b)
         mul --> c(c)
         add2(+) --> d(d)
 
         end
-```
+`} />
 
 And now we've attached `mul` to the left `add`
 
 **Step 7**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s7["(a + (b * c)) + d"]
 
@@ -594,11 +551,11 @@ And now we've attached `mul` to the left `add`
         add2 --> d(d)
         add1(+) --> a(a)
         add1(+) --> mul
-        mul(*) --> b(b)
+        mul(×) --> b(b)
         mul --> c(c)
         
         end
-```
+`} />
 
 For the final step we've attached the left `add` to right `add`.
 
@@ -610,17 +567,17 @@ The evaluator that *we* use when we're calculating expressions, even if we use i
 
 Let's look at the process of the evaluator with a simple example, `5 * 2 + a`. Here's how the tree looks after parsing it:
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph 52a["(5 * 2) + a"]
 
-        add(+) --> mul(*);
+        add(+) --> mul(×);
         add --> a(a);
         mul --> 5(5);
         mul --> 2(2);
 
         end
-```
+`} />
 
 We'll go step by step and see how the evaluator works:
 
@@ -632,15 +589,15 @@ First, it starts with the root, `add`. It knows that there's `a` on the right, b
 
 It's focusing on *only* the left. So, what it sees is this:
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph 52["5 * 2"]
 
-        mul(*) --> 5(5)
+        mul(×) --> 5(5)
         mul --> 2(2)
 
         end
-```
+`} />
 
 Okay, this is the information it currently has:
 
@@ -662,15 +619,16 @@ And combined with the old information, this is everything it knows:
 
 It has all the information it needs to get the final result: `10 + a`. It can't be evaluated any further, so it's done!
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph 10a["10 + a"];
 
-        add(add) --> 10(10);
-        add(add) --> a(a);
+        add(+) --> 10(10);
+        add(+) --> a(a);
 
         end
-```
+`} />
+
 
 ### **Simplifier**
 
@@ -678,7 +636,7 @@ And last but not least, the simplifier! The evaluator seems like it evaluates ev
 
 Let me give you an example:
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph 10_a5["10 + (a + 5)"];
 
@@ -688,7 +646,7 @@ Let me give you an example:
         add2 --> 5(5);
 
         end
-```
+`} />
 
 This translates to `10 + a + 5`. The answer we want is `a + 15`, but the evaluator can't do that. Here's the step-by-step process of the evaluator so that we can see why that happens:
 
@@ -705,7 +663,7 @@ This is the problem here. The evaluator only focuses on *one* branch. When the e
 
 What we need to do is bring the branches to the same level. Right now, `add` always has only two branches. If we make it so that it can have more, we can move other branches down or up into one `add`, re-arrange the elements and add them all up. Let's try it out for `10 + a + 5`:
 
-```mermaid
+<Mermaid graph={`
     graph LR;
         subgraph s1[Step 1]
 
@@ -742,7 +700,7 @@ What we need to do is bring the branches to the same level. Right now, `add` alw
         s1 -.-> s2;
         s2 -.-> s3;
         s3 -.-> s4;
-```
+`} />
 
 And that's all the simplifier does! The good thing about this is that it can bring any number of branches to the same level, not just three.
 
@@ -750,27 +708,27 @@ And that's all the simplifier does! The good thing about this is that it can bri
 
 The four modules are complete, but there's one more thing we should talk about. 
 
-With the order of operations, we always do multiplication and division before addition and subtraction. But what if we didn't? What if we did the addition first, and *then* multiplication? What if we did subtraction first, multiplication second, addition third, and division last? Let's try changing the precedence of each of the operators on `1 + 2 * 3 / 4 - 5`.
+With the order of operations, we always do multiplication and division before addition and subtraction. But what if we didn't? What if we did the addition first, and *then* multiplication? What if we did subtraction first, multiplication second, addition third, and division last? With this structure, we don't have to follow the rules, we can experiment and play around very easily with this structure. Let's use `1 + 2 * 3 / 4 - 5` and see what all we can do with it.
 
 ### **Mul, div > add, sub**
 
 This is the standard operator precedence. The operators that are in the same "level" (eg. multiplication and division) will get evaluated left-to-right. Here's how the expression and the tree would look:
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph 12345["(1 + ((2 * 3) / 4)) - 5"]
 
-        sub(sub) --> add(add)
+        sub(-) --> add(+)
         sub --> 5(5);
         add --> 1(1);
-        add --> div(div)
-        div --> mul(mul)
+        add --> div(÷)
+        div --> mul(×)
         div --> 4(4)
         mul --> 2(2)
         mul --> 3(3)
 
         end
-```
+`} />
 
 This gets evaluated to:
 
@@ -786,13 +744,13 @@ This gets evaluated to:
 
 Now the opposite. Addition and subtraction get evaluated first:
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph 12345["((1 + 2) * 3) / (4 - 5)"]
 
-        div(div) --> mul(mul)
-        div --> sub(sub)
-        mul --> add(add)
+        div(÷) --> mul(×)
+        div --> sub(-)
+        mul --> add(+)
         mul --> 3(3)
         add --> 1(1)
         add --> 2(2)
@@ -800,7 +758,7 @@ Now the opposite. Addition and subtraction get evaluated first:
         sub --> 5(5)
     
     end
-```
+`} />
 
 In textual form:
 
@@ -818,21 +776,21 @@ It's pretty interesting how it works!
 
 This one's a little bit different. Theres nothing on the same level.
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph 12345["(1 + 2) * (3 / (4 - 5))"]
 
-        mul(mul) --> add(add)
-        mul --> div(div)
+        mul(×) --> add(+)
+        mul --> div(÷)
         add --> 1(1)
         add --> 2(2)
         div --> 3(3)
-        div --> sub(sub)
+        div --> sub(-)
         sub --> 4(4)
         sub --> 5(5)
 
         end
-```
+`} />
 
 Again, in textual form:
 
@@ -848,21 +806,21 @@ Again, in textual form:
 
 This one is pretty similar to the standard precedence, but without any operators on the same level as the other. This looks a little different that the standard form, but the result actually turns out to be the same:
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph 12345["(1 + (2 * (3 / 4))) - 5"];
 
-        sub(sub) --> add(add)
+        sub(-) --> add(+)
         sub --> 5(5);
         add --> 1(1)
-        add --> mul(mul)
+        add --> mul(×)
         mul --> 2(2)
-        mul --> div(div)
+        mul --> div(÷)
         div --> 3(3)
         div --> 4(4)
 
         end
-```
+`} />
 
 And it gets evaluated to:
 
@@ -877,6 +835,7 @@ And it gets evaluated to:
 In summary, changing the order could make a huge difference to the final result. Even if it doesn't, it's interesting to see the different answers that come when changing the precedence.
 
 There are plenty more operation precedences, but we won't be talking about them. If you want to play around with changing the precedences, you can [over here](https://code.kavpix.com/expression-calculator)!
+
 
 # **Code**
 
@@ -897,7 +856,7 @@ As mentioned before, it transforms a `string` into a tree. Before we start with 
 
 First, we can start with a simple expression like `1 + 2`. This is how it looks like as a tree:
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph 12["1 + 2"]
 
@@ -905,14 +864,13 @@ First, we can start with a simple expression like `1 + 2`. This is how it looks 
         add --> 2(2);
 
         end
-```
+`} />
 
 There are three main things here: `add`, `1`, and `2`. If we generalize this, we get `operation`, `number`, and `number` 
 
 Nice! We now know the three things needed for a tree. An object would be perfect for this
 
-<Code>
-
+```typescript
 type Operation = "add" | "sub" | "mul" | "div";
 
 interface Expression {
@@ -920,13 +878,13 @@ interface Expression {
     right: number,
     operation: Operation
 }
-</Code>
+```
 
 Now we have a union type for the operation, the left, and the right. With all of these together we have an `Expression`!
 
 This is good, but for a tree like this:
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph 123["1 + 2 + 3"]
 
@@ -936,7 +894,7 @@ This is good, but for a tree like this:
         add2 --> 3(3)
 
         end
-```
+`} />
 
 The right isn't a number. it's another `add`.
 
@@ -951,6 +909,7 @@ interface Expression {
 ```
 
 That's better! Now we can have an even bigger tree. But, what about negation? It should be included in `Expression` as well, but it only has 1 value, and not left and right.
+
 
 #### **Negation**
 
@@ -1114,6 +1073,7 @@ type Expression<T> = Add<T> | Sub<T> | ... ;
 
 And we're finished with `Expression`! We can finally move on
 
+
 ### **The 3 boxes**
 
 Okay, now that we've got the expression itself taken care of, we can go a bit deeper into the writing the function. Although, we aren't done with types just yet. For our parser, one method to use is to go character-by-character, which means we use the `.split()` function for the input string, and go from there.
@@ -1136,14 +1096,14 @@ let parsed: Expression<number> = {
 
 Here's how `parsed` looks so far:
 
-```mermaid
+<Mermaid graph={`
     graph TD;
-        subgraph graph[];
+        subgraph graph[" "];
 
         a(a);
 
         end
-```
+`} />
 
 **Character 2: `+`**
 
@@ -1185,7 +1145,7 @@ waiting = null;
 
 `parsed` now looks like this:
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph ab["a + b"]
 
@@ -1193,7 +1153,7 @@ waiting = null;
         add --> b(b);
 
         end
-```
+`} />
 
 Nice, now we know what we need, one box for the parsed values, and another box for the elements that need more information before they can be parsed. 
 
@@ -1271,6 +1231,7 @@ function parseInput(input: string): Expression<number> | null {
 ```
 
 All the unnecessary spaces have been removed! But, if someone types in an expression with a 2 digit number, like `10 + a`, it will result in `["1", "0", "+", "a"]`. But we don't want `["1", "0", ...]`, we want `["10", ...]`. Let's write a new function to join them together:
+
 
 #### **Join Similarities**
 
@@ -2039,6 +2000,7 @@ function parseInput(input: string): Expression<number> | null {
 
 Awesome! We've finally finished our parser!!
 
+
 ## **Orderer**
 
 We already went through this in a [previous section](#orderer), but, to recap, we went through 3 scenarios where we'll need to re-arrange the tree when it doesn't follow the order of operations. Let's quickly look at the process again:
@@ -2049,54 +2011,54 @@ For the `a + b * c`.
 
 **Step 1**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s1["(a + b) * c"]
 
-        mul(*) --> add(+);
+        mul(×) --> add(+);
         mul --> c(c);
         add --> a(a);
         add --> b(b);
 
         end
-```
+`} />
 
 **Step 2**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s2["(a + b), (* c)"]
         add(+) --> a(a);
         add --> b(b);
-        mul(*) --> c(c);
+        mul(×) --> c(c);
         end
-```
+`} />
 
 **Step 3**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s3["(a + ), (b * c)"]
 
         add(+) --> a(a);
-        mul(*) --> b(b);
+        mul(×) --> b(b);
         mul --> c(c);
 
         end
-```
+`} />
 **Step 4**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s4["a + (b * c)"]
 
         add(+) --> a(a);
-        add --> mul(*);
+        add --> mul(×);
         mul --> b(b);
         mul --> c(c);
 
         end
-```
+`} />
 
 Let's translate this into words, it will help us a bunch when we're writing the code:
 
@@ -2106,59 +2068,60 @@ Let's translate this into words, it will help us a bunch when we're writing the 
 
 (This is very hard to follow, but it's easier with the images as reference)
 
+
 ### **Precedence 2**
 
 For `a * b + c`.
 
 **Step 1**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s1["a * (b + c)"]
-        mul(*) --> a(a)
+        mul(×) --> a(a)
         add(+) --> b(b)
         add --> c(c)
         mul --> add
         end
-```
+`} />
 
 **Step 2**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s2["(a *), (b + c)"]
-        mul(*) --> a(a)
+        mul(×) --> a(a)
         add(+) --> b(b)
         add --> c(c)
         end
-```
+`} />
 
 **Step 3**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s3["(a * b), (+ c)"]
 
-        mul(*) --> a(a)
-        mul(*) --> b(b)
+        mul(×) --> a(a)
+        mul(×) --> b(b)
         add(+) --> c(c)
 
         end
-```
+`} />
 
 **Step 4**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s4["(a * b) + c"]
 
-        mul(*) --> a(a)
-        mul(*) --> b(b)
+        mul(×) --> a(a)
+        mul(×) --> b(b)
         add(+) --> mul
         add --> c(c)
 
         end
-```
+`} />
 
 Again, in words:
 
@@ -2167,102 +2130,103 @@ Again, in words:
 3. Attach the root to the `left` of `right`
 
 
+
 ### **Precedence 3**
 
 For `a + b * c + d`
 
 **Step 1**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s1["(a + b) * (c + d)"];
 
-        mul(*) --> add1(+)
-        mul(*) --> add2(+)
+        mul(×) --> add1(+)
+        mul(×) --> add2(+)
         add1 --> a(a)
         add1 --> b(b)
         add2 --> c(c)
         add2 --> d(d)
 
         end
-```
+`} />
 
 **Step 2**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s2["((a + b) * ), (c + d)"]
 
-        mul(*) --> add1(+)
+        mul(×) --> add1(+)
         add1 --> a(a)
         add1 --> b(b)
         add2(+) --> c(c)
         add2 --> d(d)
 
         end
-```
+`} />
 
 **Step 3**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s3["(a + b), (*), (c + d)"]
 
         add1(+) --> a(a)
         add1 --> b(b)
-        mul(*)
+        mul(×)
         add2(+) --> c(c)
         add2 --> d(d)
 
         end
-```
+`} />
 
 **Step 4**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s4["(a +), (b *), (c + d)"]
 
         add1(+) --> a(a)
-        mul(*) --> b(b)
+        mul(×) --> b(b)
         add2(+) --> c(c)
         add2 --> d(d)
 
         end
-```
+`} />
 
 **Step 5**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s5["(a +), (b * c), (+ d)"]
 
         add1(+) --> a(a)
-        mul(*) --> b(b)
+        mul(×) --> b(b)
         mul --> c(c)
         add2(+) --> d(d)
 
         end
-```
+`} />
 
 **Step 6**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s6["(a + (b * c)), (+ d)"]
 
         add1(+) --> a(a)
         add1(+) --> mul
-        mul(*) --> b(b)
+        mul(×) --> b(b)
         mul --> c(c)
         add2(+) --> d(d)
 
         end
-```
+`} />
 
 **Step 7**
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph s7["(a + (b * c)) + d"]
 
@@ -2270,11 +2234,11 @@ For `a + b * c + d`
         add2 --> d(d)
         add1(+) --> a(a)
         add1(+) --> mul
-        mul(*) --> b(b)
+        mul(×) --> b(b)
         mul --> c(c)     
         
         end
-```
+`} />
 
 And the final one:
 
@@ -2969,23 +2933,24 @@ function evaluateRecurse<T>(
 
 We're done with the evaluator! Onto the final function, the simplifier!
 
+
 ## **Simplifier**
 
 We looked at the simplifier in [this section](#simplifier), but let's check out the things we need to do.
 
 The evaluator can't evaluate something like `1 + a + 2` because the tree will look like this:
 
-```mermaid
+<Mermaid graph={`
     graph TD;
         subgraph 1a_2["(1 + a) + 2"]
 
-        add(add) --> add2(add)
+        add(+) --> add2(add)
         add2 --> one(1);
         add2 --> a(a);
         add --> two(2);
         
         end
-```
+`} />
 
 First it'll go to the root `add`, but since it can't evaluate that it recurses and goes into the left `add`. The left `add` will just be the same once it gets evaluated since a number and a variable can't be added. `evaluate()` (or `evaluateNumExp()` in our case), the function passed in to `evaluateRecurse()`, won't call the `add` function, it'll just return the tree since the left isn't a leaf.
 
@@ -3361,7 +3326,7 @@ The parser is a very important function, not just for this expression calculator
 ## **To-Do list**
 
 - Distribution
-- Simplifying multiplication/division for expression like `1 * a` or `a / 1`
+- Simplifying multiplication/division for expressions like `1 * a` or `a / 1`
 
 ## **Libraries Used**
 
@@ -3369,3 +3334,11 @@ The parser is a very important function, not just for this expression calculator
 - [Vitest](https://vitest.dev)
 - [Astro](https://astro.build)
 - [Cytoscape](https://js.cytoscape.org)
+- [Mermaid](https://mermaid.js.org)
+
+<script type="module">
+{`
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+`}
+</script>

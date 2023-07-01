@@ -16,8 +16,6 @@ describe("Power Sets", () => {
         })
     })
     describe("Power set iteration generator", () => {
-        // Length is 1 + set length
-        // Each iteration has elements of the same length
         it("Length is 1+n", () => {
             fc.assert(fc.property(
                 strNumSet, (set: StrNumSet) => {
@@ -36,9 +34,6 @@ describe("Power Sets", () => {
         })
     })
     describe("Power set parsing actions", () => {
-        // Convert set to string:
-        // all elements and no extra elements
-        // all elements from set are wrapped in curly braces
         describe("Convert set to string", () => {
             it("All elements from set are in the string", () => {
                 fc.assert(fc.property(

@@ -59,25 +59,13 @@ export function listify<T>(
     return right;
 }
 
-// function traverseRight<T>(root: Expression<T>)
-
-// export function getBranchList<T>(tree: Expression<T>) {
-//     return branchListRecurse<T>(tree);
-// }
 
 // ------ ORDER OF OPERATIONS ---------
 
 export type OpAndPrecedence = {op: Tag, precedence: number};
-// export type OrderOfOp = Tag[][];
-// ^ is a list of lists because of things that are of the same order
-// for numbers, the list would be [[add, sub], [mul, div], [paran]]
-
 export type OrderOfOp = OpAndPrecedence[];
 
 function isOperatorHigher(operator: Tag, comparer: Tag, order: OrderOfOp): boolean {
-    // const operatorIdx = order.findIndex((op) => op.includes(operator));
-    // const comparerIdx = order.findIndex((op) => op.includes(comparer));
-    // return operatorIdx > comparerIdx;
     const operatorPrecedence = order[order.findIndex((oap) => oap.op === operator)].precedence;
     const comparerPrecedence = order[order.findIndex((oap) => oap.op === comparer)].precedence;
 
@@ -169,24 +157,6 @@ function reArrangeBinaryOperator<T>(exp: BiOperator<T>, order: OrderOfOp): Expre
         return newExp;
     }
 
-    // left lower, right not lower.
-        // left leaf
-            // do nothing
-        // left not leaf
-            // precedence 1
-    // right lower, left not lower.
-        // right leaf
-            // do nothing
-        // right not leaf
-            // precedence 2
-    // both lower
-        // left leaf, right not leaf
-            // precedence 2
-        // right leaf, left not leaf
-            // precedence 1
-        // neither are leaves
-            // precedence 3
-
     if(leftLower && rightLower) {
         if(leftTooLow) {
             return precedenceRight(left, right as BiOperator<T>, exp._tag);
@@ -213,10 +183,6 @@ function reArrangeBinaryOperator<T>(exp: BiOperator<T>, order: OrderOfOp): Expre
 
 export function orderOfOperations<T>(exp: Expression<T>, order: OrderOfOp): Expression<T> {
     switch(exp._tag) {
-        // case "mul":
-        // case "div":
-        //     const r = expIsMulOrDiv(exp, order);
-        //     return r
         case "neg":
         case "paran":
             const newVal = orderOfOperations(exp.val, order);
@@ -225,13 +191,6 @@ export function orderOfOperations<T>(exp: Expression<T>, order: OrderOfOp): Expr
                 val: newVal
             }
             return result;
-        // case "add":
-        // case "sub":
-        //     return {
-        //         _tag: exp._tag,
-        //         left: orderOfOperations(exp.left, order),
-        //         right: orderOfOperations(exp.right, order)
-        //     }
         case "add":
         case "sub":
         case "mul":

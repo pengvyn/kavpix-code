@@ -103,13 +103,6 @@ export function evaluateNumExp(tree: Expression<number>): Expression<number> {
 }
 
 export function evaluateNumExp2(exp: Expression<number>): Expression<number> | Leaf<number> {
-    // if(exp._tag === "neg" || exp._tag === "paran") {
-    //     return exp.val._tag === "leaf" ? exp.val : exp;
-    // } else if(exp._tag === "leaf" || exp._tag === "var" || exp._tag === "val") {
-    //     return exp;
-    // } else if(exp.left._tag !== "leaf" || exp.right._tag !== "leaf") {
-    //     return exp;
-    // }
     if(
         ((exp._tag === "neg" || exp._tag === "paran") && exp.val._tag !== "leaf")
     ) {

@@ -175,6 +175,7 @@ div::selection {
     padding: 5px 0px;
     display: flex;
     justify-content: center;
+    text-align: center;
 }
 .card:hover .card-title {
     color: var(--card-title-hov);

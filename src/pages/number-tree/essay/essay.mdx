@@ -1,4 +1,7 @@
 import Mermaid from '../../components/Mermaid.astro'
+import "../../../styles/essay.css"
+
+<article class="font-sans max-w-prose m-auto m-0 leading-relaxed">
 
 # **Expression Tree**
 
@@ -229,7 +232,7 @@ We won't look at the code in this section, but when programming, the tree is nee
 Here's the process when going character-by-character:
 
 <Mermaid graph={`
-    graph LR;
+    graph TD;
         subgraph s1["Step 1"];
 
         a1(a);
@@ -310,19 +313,21 @@ There are 3 scenarios in which we need to re-arrange the tree: `a + b * c`, `a *
 For `a + b * c`:
 
 <Mermaid graph={`
-    graph LR;
+    graph TD;
         subgraph s1["Step 1"]
-        mul("×") --> add(+);
-        mul --> c(c);
-        add --> a(a);
-        add --> b(b);
+
+            mul("×") --> add(+);
+            mul --> c(c);
+            add --> a(a);
+            add --> b(b);
+
         end
 
         subgraph s2["Step 2"]
 
-        add2(+) --> a2(a);
-        add2 --> b2(b);
-        mul2("×") --> c2(c);
+            add2(+) --> a2(a);
+            add2 --> b2(b);
+            mul2("×") --> c2(c);
 
         end
 
@@ -342,6 +347,7 @@ For `a + b * c`:
         mul4 --> c4(c);
 
         end
+    
 
         s1 -.-> s2 -.-> s3 -.-> s4
 `} />
@@ -353,7 +359,7 @@ Since multiplication has higher precedence than addition, `b` gets multiplied fi
 For `a * b + c` (this works if we go left to right, but we still need to re-order it if the tree is formatted like `a * (b + c)`)
 
 <Mermaid graph={`
-    graph LR;
+    graph TD;
         subgraph s1["Step 1"]
 
         mul("×") --> a(a)
@@ -396,7 +402,7 @@ For `a * b + c` (this works if we go left to right, but we still need to re-orde
 For `a + b * c + d`
 
 <Mermaid graph={`
-    graph LR;
+    graph TD;
         subgraph s1["Step 1"]
 
         mul("×") --> add1(+)
@@ -630,7 +636,7 @@ This is the standard operator precedence. The operators that are in the same "le
     graph TD;
         subgraph 12345["(1 + ((2 * 3) / 4)) - 5"]
 
-        sub(-) --> add(+)
+        sub("-") --> add("+")
         sub --> 5(5);
         add --> 1(1);
         add --> div("÷")
@@ -661,8 +667,8 @@ Now the opposite. Addition and subtraction get evaluated first:
         subgraph 12345["((1 + 2) * 3) / (4 - 5)"]
 
         div("÷") --> mul("×")
-        div --> sub(-)
-        mul --> add(+)
+        div --> sub("-")
+        mul --> add("+")
         mul --> 3(3)
         add --> 1(1)
         add --> 2(2)
@@ -692,12 +698,12 @@ This one's a little bit different. Theres nothing on the same level.
     graph TD;
         subgraph 12345["(1 + 2) * (3 / (4 - 5))"]
 
-        mul("×") --> add(+)
+        mul("×") --> add("+")
         mul --> div("÷")
         add --> 1(1)
         add --> 2(2)
         div --> 3(3)
-        div --> sub(-)
+        div --> sub("-")
         sub --> 4(4)
         sub --> 5(5)
 
@@ -722,7 +728,7 @@ This one is pretty similar to the standard precedence, but without any operators
     graph TD;
         subgraph 12345["(1 + (2 * (3 / 4))) - 5"];
 
-        sub(-) --> add(+)
+        sub("-") --> add("+")
         sub --> 5(5);
         add --> 1(1)
         add --> mul("×")
@@ -1922,7 +1928,7 @@ We already went through this in a [previous section](#orderer), but, to recap, w
 For `a + b * c`:
 
 <Mermaid graph={`
-    graph LR;
+    graph TD;
         subgraph s1["Step 1"]
         mul("×") --> add(+);
         mul --> c(c);
@@ -1972,7 +1978,7 @@ Let's translate this into words, it will help us a bunch when we're writing the 
 For `a * b + c`:
 
 <Mermaid graph={`
-    graph LR;
+    graph TD;
         subgraph s1["Step 1"]
 
         mul("×") --> a(a)
@@ -2023,7 +2029,7 @@ Again, in words:
 For `a + b * c + d`
 
 <Mermaid graph={`
-    graph LR;
+    graph TD;
         subgraph s1["Step 1"]
 
         mul("×") --> add1(+)
@@ -3193,6 +3199,8 @@ The parser is a very important function, not just for this expression calculator
 - [Astro](https://astro.build)
 - [Cytoscape](https://js.cytoscape.org)
 - [Mermaid](https://mermaid.js.org)
+
+</article>
 
 <script type="module">
 {`

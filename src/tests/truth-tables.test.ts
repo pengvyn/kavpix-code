@@ -5,8 +5,6 @@ import { statementsArb } from "./arbitraries";
 
 describe("Truth tables", () => {
     describe("Remove statement dupes", () => {
-        // always less than or equal to og length
-        // all items in result are in og list
         it("Always less than or equal to og length", () => {
             fc.assert(fc.property(
                 statementsArb, (stmt: Statement[]) => {
@@ -25,9 +23,6 @@ describe("Truth tables", () => {
         })
     })
     describe("Single statement table (row)", () => {
-        // length of each row = input's length;
-        // all rows are different
-        // number of rows is 2^[input's length]
         it("Number of rows is 2^n", () => {
             fc.assert(fc.property(
                 statementsArb, (stmtDupes: Statement[]) => {
@@ -59,9 +54,6 @@ describe("Truth tables", () => {
         })
     })
     describe("Single statement table (col)", () => {
-        // length of each col is 2^[og set's length]
-        // number of columns is the number of statements
-        // all cols are different
         it("Length of each col is 2^n", () => {
             fc.assert(fc.property(
                 statementsArb, (stmtDupes: Statement[]) => {

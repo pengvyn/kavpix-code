@@ -1,0 +1,75 @@
+---
+
+const { chapter } = Astro.props;
+
+const chaptersList = [
+    "Intro", 
+    "Order of Operations", 
+    "Four Modules", 
+    "Operator Precedence",
+    "Code Intro",
+    "Parser",
+    "Orderer",
+    "Evaluator", 
+    "Simplifier",
+    "Outro"
+]
+
+const nonCodeChapters = {
+    title: "Visualization",
+    chapters: [
+        "Intro", 
+        "Order of Operations", 
+        "Four Modules", 
+        "Operator Precedence",
+    ]
+}
+
+const codeChapters = {
+    title: "Code",
+    chapters: [
+        "Code Intro",
+        "Parser",
+        "Orderer",
+        "Evaluator", 
+        "Simplifier",
+    ]
+}
+
+const outroChapter = {
+    title: "",
+    chapters: ["Outro"]
+}
+
+const allChapters = [nonCodeChapters, codeChapters, outroChapter];
+
+function getHref(chapters, chapter) {
+    const idx = chapters.findIndex((c) => c === chapter);
+
+    return `./part${idx + 1}`;
+}
+
+---
+
+<p class="pt-10 font-semibold">Go To:</p>
+
+<ol class="pt-10">
+    {
+        allChapters.map((chapterCategory, idx) => 
+            <div class="p-2">
+                <hr class="toc-category-break border-indigo-500"/>
+                <p class="opacity-80 p-3">{chapterCategory.title}</p>
+                <div>
+                    {
+                        chapterCategory.chapters.map(
+                            (c, idx) => 
+                            <li class={`w-max px-2 text-center rounded-md ${c === chapter ? "bg-blue-100 text-indigo-900" : ""}`}>
+                                    <a href={getHref(chaptersList, c)}>{c}</a>
+                            </li>
+                        )
+                    }
+                </div>
+            </div>
+        )
+    }
+</ol>

@@ -39,7 +39,6 @@ export interface ValLeaf<T> {
     _tag: "val"
 }
 
-// TODO: Get rid of Leaf<T>
 export type Expression<T> = Add<T> | Sub<T> | Neg<T> | Mul<T> | Div<T> | Paran<T> | Leaf<T> | ValLeaf<T> | VarLeaf;
 
 export interface LeafWithVar {
@@ -53,16 +52,9 @@ export interface LeafWithVal<T> {
 
 export type Tag = Expression<unknown>["_tag"]
 
-// export type Variable = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z";
 export const _variables = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"] as const;
 export type Variable = typeof _variables[number];
 export const variables: readonly Variable[] = _variables;
-
-// export interface Var {
-//     val: Variable
-//     _tag: "var"
-// }
-
 
 interface Paranned {
     exp: string
@@ -81,8 +73,6 @@ export interface Waiting<Operator> {
 }
 
 // waiting structure:
-// 
-
 
 export type ParseInp<T> = (input: string) => Expression<T> | null;
 export type Evaluate<T> = (exp: Expression<T>) => Expression<T>;
@@ -113,11 +103,4 @@ export function makeLeaf<T>(val: T | Variable): Leaf<T> {
         _tag: "leaf",
         val: makeLeafVal(val)
     }
-    // return { 
-    //     val: {
-    //         _tag: "val",
-    //         val: leaf
-    //     }, 
-    //     _tag: "leaf" 
-    // };
 }

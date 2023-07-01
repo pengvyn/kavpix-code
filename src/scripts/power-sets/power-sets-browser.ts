@@ -31,9 +31,7 @@ function showNewIter(iter: string, result: HTMLElement): Animation {
 }
 
 function showAllIters(iters: string[], result: HTMLElement, count: number = 0) {
-    // input.disabled = true;
     if(count === iters.length) {
-        // input.disabled = false;
         return;
     }
     const anim = showNewIter(iters[count], result);

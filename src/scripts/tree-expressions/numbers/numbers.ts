@@ -74,7 +74,7 @@ export function isExpected(value: string, expected: ExpectedNumVal[]): boolean {
     return false;
 }
 
-// ------------- VALUE IS ____ FUNCS ----------
+// ------------- VALUE IS ____ FUNCTIONS ----------
 
 export function valueIsOperator(
     value: NumberOperator, 
@@ -221,9 +221,6 @@ export function valueIsVar(
         next
     }
 }
-// --------------== variables ==-------------------
-
-// ----------
 
 export function parseInput(input: string): Expression<number> | null {
     const listed = joinSimilars(input.replaceAll(" ", "").split(""), "1234567890".split(""));
@@ -283,28 +280,6 @@ export interface NegLeaf {
     _tag: "neg"
 }
 
-// -----------------|| SIMPLIFY ||------------------
-
-// simplify recurse
-
-// makes a list of expressions, each to be added with each other, and returns the list.
-// another function to add up the numbers
-// another function to convert the list to an expression
-
-// example: 1 + a + 2
-// wanted result: a + 3
-
-// Step 1: (recursion for left) 1 and a get added to a list each (one for numbers and one for variables)
-// (right is just a leaf and can't be recursed)
-// Step 2: 2 is added to the list for  numbers
-// Step 3: 1 and 2 get added together to make 3
-// Step 4: a and 3 combine to form a + 3
-
-// No need for two functions. two recursions at the same time AND overlapping is way too messy
-// Only one simplify function. it recurses with the left and right / val and returns an expression, not a list
-// addSimplifiedNumbers and then convertListToExpression are called in each cycle.
-// Theres no extra list shenanigans here as well
-
 export function convertAddListToExpression(list: Expression<number>[]): Expression<number> {
     if(list.length === 0) {
         return makeLeaf(0);
@@ -335,12 +310,6 @@ export function convertAddListToExpression(list: Expression<number>[]): Expressi
 }
 
 export function addExpressionList(list: Expression<number>[]): Expression<number> {
-    // filters out the numbers
-    // filters out the variables
-    // adds all the numbers
-    // converts the new thing to an expression 
-        // (basically maps each element and creates a new Add for each of them)
-
     const added: number = list.reduce(
         (p: number, c: Expression<number>) => {
             if(
@@ -498,11 +467,6 @@ export function removeParan(exp: Expression<number>): Expression<number> {
 }
 
 export function reverseParse(exp: Expression<number>): string {
-    // does the same as evaluation, first evaluates left, then right
-    // or evaluates val
-    // if its a leaf, it returns the value
-    // if it's an expression (like add/neg/div etc) 
-    // it does the left, right/val and translates the tag and adds it together
     const revParBoth = (
         left: Expression<number>, 
         right: Expression<number>, 
@@ -529,26 +493,12 @@ export function reverseParse(exp: Expression<number>): string {
         case "paran":
             return "(" + reverseParse(exp.val) + ")";
     }
-
-    // if(exp._tag === "paran") {
-    //     const paranVal = reverseParse(exp.val);
-    //     return "(" + paranVal + ")";
-    // }
-    // if(exp._tag === "leaf") {
-    //     return `${exp.val.val}`;
-    // }
-    // if(exp.)
-    // switch(exp._tag) {
-    //     case "add":
-    //         return "+"
-    // }
 }
 
 function makeOap(op: Tag, precedence: number): OpAndPrecedence {
     return {op, precedence}
 }
 
-// export const numOrder: OrderOfOp = [["leaf", "val", "var"], ["neg"], ["add", "sub"], ["mul", "div"], ["paran"]];
 export const numOrder: OrderOfOp = [
     makeOap("leaf", 1),
     makeOap("var", 1),
@@ -560,8 +510,6 @@ export const numOrder: OrderOfOp = [
     makeOap("div", 4),
     makeOap("paran", 5)
 ];
-
-////NEW evaluateRecurse
 
 export function cantBeEvaluatedFurther(tree: Expression<number>): boolean {
     switch(tree._tag) {

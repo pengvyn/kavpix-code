@@ -321,9 +321,6 @@ function runExpressionFuncs(inp: string) {
 
     // ----------- MAKE INPUT FOR CYTOSCAPE ----------
 
-
-    // const nodes: {data: {id: string}}[] = listified.map((val) => {n: val.key});
-    
     function makeNode(key: string, label: string): CyNodeInp { 
         return {data: {id: key, label: translateLabel(label)} };
     };
@@ -356,11 +353,6 @@ function runExpressionFuncs(inp: string) {
                     "text-halign": "center",
                     "text-valign": "center",
 
-                    // "border-color": function(n) {
-                    //     return isNodeOperator(n)
-                    //         ? "#1101dd"
-                    //         : "#ffb2a1"
-                    // },
                     "border-opacity": 0.5,
                     "border-width": "1px",
                     "border-color": "#220011",
@@ -382,7 +374,6 @@ function runExpressionFuncs(inp: string) {
             {
                 selector: "edge",
                 style: {
-                    // "line-color": "blue",
                     "opacity": 0.9,
                     "line-fill": "linear-gradient",
                     "line-gradient-stop-colors": ["#c8dce0", "orange", "#c8dce0"],
@@ -401,9 +392,6 @@ function runExpressionFuncs(inp: string) {
         fit: true,
 
         animate: true,
-        // fit: true,
-        // directed: true,
-        // animate: true,
     } as BaseLayoutOptions).run();
 
     c.resize()

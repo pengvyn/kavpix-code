@@ -1,0 +1,367 @@
+import Mermaid from '../../../components/Mermaid.astro'
+import "../../../styles/index.css"
+import "../../../styles/essay.css"
+import Header from "../../../components/Header.astro"
+import Toc from "../../../components/essay/Toc.astro"
+import Title from "../../../components/essay/Title.astro"
+import NextPg from "../../../components/essay/NextPg.astro"
+
+<Title chapter="Evaluator"/>
+
+<Header back="../../"/>
+<div class="bg-slate-300 w-full h-max">
+
+<article class="font-sans max-w-prose my-0 mx-auto leading-relaxed pb-6">
+
+## **Evaluator**
+
+The evaluator is pretty straightforward. We looked at the process [here](#evaluator), and that's all it does. It starts at the root, checks if it can be immediately evaluated, if it can't then in evaluates the left and the right, using recursion again, and then finally evaluates the new root.
+
+We can use [generic types](#generic-types) for our evaluator again. It can take in the tree, and an `evaluate()` function as inputs. The `evaluate()` function will actually evaluate the expressions, and the evaluator just goes through the entire tree and calls the `evaluate` function it has as an input in each cycle.
+
+Since we're using recursion, we don't want to do too many unnecessary cycles, so let's write a function that checks if the tree is ready for `evaluate` to be called. These are the cases in which an expression is fully evaluated:
+
+- The tree is just a number
+- The tree is just a variable
+- At least one of the left and right are variables
+- The value (in `Neg` and `Group`) is fully evaluated
+
+Note that this is recursion, so the `left` and `right`, or the `val` would have already been evaluated. Let's write the basic structure of our `evaluateRecurse` function:
+
+```typescript
+function evaluateRecurse<T>(
+    tree: Expression<T>, 
+    functions: {
+        evaluate: (t: Expression<T>) => Expression<T>,
+        isReadyForEvaluation: (t: Expression<T>) => boolean
+    }
+): Expression<T> {
+    const {evaluate, isReadyForEvaluation} = functions;
+
+    if(tree._tag === "leaf" || tree._tag === "var" || tree._tag === "val") {
+        return tree;
+    }
+
+    if(isReadyForEvaluation(tree)) {
+        return evaluate(tree);
+    }
+
+    // recursion and evaluation
+}
+```
+
+If `isReadyForEvaluation(tree)` is true, it should return the evaluated tree. Otherwise, it should evaluate the left and right. or evaluate the val. After that, it should call `evaluate()` with the new left and new right, or with the new val. 
+
+Let's write the `isReadyForEvaluation` function now using these cases:
+
+- The tree is just a number
+- The tree is just a variable
+- At least one of the left and right are variables
+- The value (in `Neg` and `Group`) is fully evaluated
+
+```typescript
+function cantBeEvaluatedFurther(tree: Expression<number>): boolean {
+    switch(tree._tag) {
+        case "add":
+        case "sub":
+        case "mul":
+        case "div":
+            const lAndRFullyEvaluated = cantBeEvaluatedFurther(tree.left) && cantBeEvaluatedFurther(tree.right);
+
+            const leftIsValLeaf = tree.left._tag === "leaf" && tree.left.val._tag === "val"
+            const rightIsValLeaf = tree.right._tag === "leaf" && tree.right.val._tag === "val";
+            // checks if the left and right are both number leaves
+
+            return lAndRFullyEvaluated && !(leftIsValLeaf && rightIsValLeaf);
+
+        case "group":
+            return cantBeEvaluatedFurther(tree.val);
+
+        case "neg":
+            const valIsNumber = tree.val._tag === "leaf" && tree.val.val._tag === "val";
+            // checks if the value is a number leaf
+
+            return cantBeEvaluatedFurther(tree.val) && !valIsNumber;
+
+        default:
+            return true;
+    }
+}
+
+function isReadyForEvaluation(tree: Expression<number>): boolean {
+    switch(tree._tag) {
+        case "group":
+        case "neg":
+            return cantBeEvaluatedFurther(tree.val);
+
+        case "add":
+        case "sub":
+        case "mul":
+        case "div":
+            return cantBeEvaluatedFurther(tree.left) && cantBeEvaluatedFurther(tree.right);
+
+        default:
+            return true;
+    }
+}
+```
+
+I've added a new function `cantBeEvaluatedFurther`. The `isReadyForEvaluation` function checks if the tree is ready for `evaluate` to be called. Which means, if we used recursion here it would work even if there are un-evaluated expressions. `cantBeEvaluatedFurther` on the other hand, checks if the tree is *fully* evaluated. `1 + 2` would be true with `isReadyForEvaluation`, but it would be false for `cantBeEvaluatedFurther`.
+
+So far so good! Our `evaluateRecurse()` function has a breaking point! Now what we need to add is the recursion. If the tree is a binary operator, we need to call `evaluateRecurse()` for the left and the right, otherwise we need to call it for `tree.val`.
+
+```typescript
+function evaluateRecurse<T>(
+    tree: Expression<T>, 
+    functions: {
+        evaluate: (t: Expression<T>) => Expression<T>,
+        isReadyForEvaluation: (t: Expression<T>) => boolean
+    }
+): Expression<T> {
+    const {evaluate, isReadyForEvaluation} = functions;
+
+    if(tree._tag === "leaf" || tree._tag === "var" || tree._tag === "val") {
+        return tree;
+    }
+    if(isReadyForEvaluation(tree)) {
+        return evaluate(tree);
+    }
+
+    if(tree._tag === "neg" || tree._tag === "group") {
+        const valueEvaluated = evaluateRecurse(tree.val, functions);
+        return evaluate({_tag: tree._tag, val: valueEvaluated});
+    }
+
+    const leftEvaluated = evaluateRecurse(left, functions);
+    const rightEvaluated = evaluateRecurse(right, functions);
+    return evaluate({tag: tree._tag, left: leftEvaluated, right: rightEvaluated});
+}
+```
+Let's create the `evaluate()` function now.
+
+We can make functions for add, sub, mul, etc, and then just call them through `evaluate`. First up, add:
+
+```typescript
+function add(left: Leaf<number>, right: Leaf<number>): AddLeaf | Leaf<number> {
+    if(left.val._tag === "var" || right.val._tag === "var") {
+        return {_tag: "add", left, right};
+    }
+    return {
+        _tag: "leaf",
+        val: {
+            _tag: "val",
+            val: left.val.val + right.val.val
+        }
+    }
+}
+```
+
+It's a little messy, but all it does is that it adds the two numbers and returns a `Leaf`, or it just returns an `add` if any of  them are variables.
+
+Let's just copy this over for all the other functions:
+
+```typescript
+function add(left: Leaf<number>, right: Leaf<number>): AddLeaf | Leaf<number> {
+    if(left.val._tag === "var" || right.val._tag === "var") {
+        return {_tag: "add", left, right};
+    }
+    return {
+        _tag: "leaf",
+        val: {
+            _tag: "val",
+            val: left.val.val + right.val.val
+        }
+    }
+}
+function sub(left: Leaf<number>, right: Leaf<number>): SubLeaf | Leaf<number> {
+    if(left.val._tag === "var" || right.val._tag === "var") {
+        if(isEqual(left, right)) {
+            return makeLeaf(0);
+        }
+        return {_tag: "sub", left, right};
+    }
+    return {
+        _tag: "leaf",
+        val: {
+            _tag: "val",
+            val: left.val.val - right.val.val
+        }
+    }
+}
+function mul(left: Leaf<number>, right: Leaf<number>): MulLeaf | Leaf<number> {
+    if(left.val._tag === "var" || right.val._tag === "var") {
+        return {_tag: "mul", left, right};
+    }
+    return {
+        _tag: "leaf",
+        val: {
+            _tag: "val",
+            val: left.val.val * right.val.val
+        }
+    }
+}
+function div(left: Leaf<number>, right: Leaf<number>): DivLeaf | Leaf<number> {
+    if(left.val._tag === "var" || right.val._tag === "var") {
+        return {_tag: "div", left, right};
+    }
+    return {
+        _tag: "leaf",
+        val: {
+            _tag: "val",
+            val:  left.val.val / right.val.val
+        }
+    };
+}
+function neg(val: Leaf<number>): NegLeaf | Leaf<number> {
+    if(val.val._tag === "var") {
+        return {_tag: "neg", val};
+    }
+    return {
+        _tag: "leaf",
+        val: {
+            _tag: "val",
+            val: -1 * val.val.val
+        }
+    };
+}
+```
+
+Perfect! Time for the actual `evaluate` function. 
+
+All the functions take in a two `Leaf`s. Our `evaluate` function has to make sure they aren't given anything else, too.
+
+```typescript
+function treeIsValueLeaf(tree: Expression<number>): tree is {_tag: "leaf", val: {_tag: "val", val: number}} {
+    return tree._tag === "leaf" && tree.val._tag === "val";
+};
+
+function evaluateNumExp(tree: Expression<number>): Expression<number> {
+    switch(tree._tag) {
+        case "neg":
+            return treeIsValueLeaf(tree.val)
+                ? neg(tree.val)
+                : tree;
+        case "add":
+            return treeIsValueLeaf(tree.left) && treeIsValueLeaf(tree.right)
+                ? add(tree.left, tree.right)
+                : tree
+        case "sub":
+            return treeIsValueLeaf(tree.left) && treeIsValueLeaf(tree.right)
+                ? sub(tree.left, tree.right)
+                : tree
+        case "div":
+            return treeIsValueLeaf(tree.left) && treeIsValueLeaf(tree.right)
+                ? div(tree.left, tree.right)
+                : tree
+        case "mul":
+            return treeIsValueLeaf(tree.left) && treeIsValueLeaf(tree.right)
+                ? mul(tree.left, tree.right)
+                : tree
+        case "group":
+            return {
+                _tag: "group",
+                val: evaluateNumExp(tree.val)
+            }
+        default:
+            return tree;
+    }
+}
+```
+
+Each of those ternary operators just check if the left and right or the val are leaves, if they are then it calls the function, if it isn't it just returns the tree.
+
+And we're finished with our evaluator! But, there's just one more thing we can add to spice it up. In an expression like `1 + (2 + 3)`, the parentheses are unnecessary. We might as well remove them and evaluate the expression even further. Let's add another function to remove any unnecessary parentheses.
+
+These are the cases in which parentheses are not needed:
+
+- The value in the parentheses is only a number or variable.
+- The parent of the parentheses is add/sub, and the expression inside the parentheses is also add/sub.
+
+```typescript
+
+function removeParentheses(tree: Expression<number>): Expression<number> {
+    switch(tree._tag) {
+        case "add":
+        case "sub":
+            const left = tree.left;
+            const right = tree.right;
+
+            const leftIsGroup = left._tag === "group";
+            const rightIsGroup = right._tag === "group";
+
+            if(!leftIsGroup && !rightIsGroup) {
+                return tree;
+            }
+
+            const newLeft = leftIsGroup && (left._tag === "add" || left._tag === "sub")
+                ? left.val
+                : left
+            const newRight = rightIsGroup && (right._tag === "add" || right._tag === "sub")
+                ? right.val
+                : right
+            // if the left/right is a group and it is either add or sub, remove the parentheses
+            // else just leave it as is
+
+            return {
+                _tag: tree._tag,
+                left: newLeft,
+                right: newRight
+            }
+        default:
+            return tree;
+    }
+}
+```
+
+Now we just have to call this in `evaluateRecurse()` like so:
+
+```typescript
+function evaluateRecurse<T>(
+    treeWithGroup: Expression<T>, 
+    functions: {
+        evaluate: (t: Expression<T>) => Expression<T>,
+        isReadyForEvaluation: (t: Expression<T>) => boolean,
+        removeParentheses: (t: Expression<T>) => Expression<T>
+    }
+): Expression<T> {
+    const {evaluate, isReadyForEvaluation, removeParentheses} = functions;
+
+    const tree = removeParentheses(treeWithGroup);
+
+    if(tree._tag === "leaf" || tree._tag === "var" || tree._tag === "val") {
+        return tree;
+    }
+    if(isReadyForEvaluation(tree)) {
+        return evaluate(tree);
+    }
+
+    if(tree._tag === "neg" || tree._tag === "group") {
+        const valueEvaluated = evaluateRecurse(tree.val, functions);
+        return evaluate({_tag: tree._tag, val: valueEvaluated});
+    }
+
+    const leftEvaluated = evaluateRecurse(left, functions);
+    const rightEvaluated = evaluateRecurse(right, functions);
+    return evaluate({tag: tree._tag, left: leftEvaluated, right: rightEvaluated});
+}
+```
+
+We're done with the evaluator! Onto the final function, the simplifier!
+
+
+<Toc chapter="Evaluator"/>
+
+
+</article>
+
+
+<NextPg chapter="Evaluator"/>
+
+</div>
+
+<script type="module">
+{`
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+`}
+</script>

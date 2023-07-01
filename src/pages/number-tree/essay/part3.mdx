@@ -1,0 +1,452 @@
+import Mermaid from '../../../components/Mermaid.astro'
+import "../../../styles/index.css"
+import "../../../styles/essay.css"
+import Header from "../../../components/Header.astro"
+import Toc from "../../../components/essay/Toc.astro"
+import Title from "../../../components/essay/Title.astro"
+import NextPg from "../../../components/essay/NextPg.astro"
+
+<Title chapter="Four Modules"/>
+
+<Header back="../../"/>
+<div class="bg-slate-300 w-full h-max">
+
+<article class="font-sans max-w-prose my-0 mx-auto leading-relaxed pb-6">
+
+## **Four modules**
+
+I had to write 4 main modules for my code:
+
+1. Parser. It takes the input you type and transforms it into a tree
+2. Orderer. Re-arranges the tree to follow the order of operations
+3. Evaluator. Takes a tree as input and evaluates/solves it as much as it can.
+4. Simplifier. Evaluates the expression even further (more on this later)
+
+Let's see how they work without getting into the actual code part of it. The following bits are very simplified, but if you want the details, make sure to check out the [code](#code-1) section.
+
+### **Parser**
+
+It takes and expression like `a + b * c` and has to convert it into:
+
+<Mermaid graph={`
+    graph TD;
+        subgraph abc["Tree for a + b * c"];
+
+        add(+) --> a(a);
+        add(+) --> mul("×");
+        mul --> b(b);
+        mul --> c(c);
+
+        end
+`} />
+
+We won't look at the code in this section, but when programming, the tree is needed so that it can understand the input you typed in in.
+
+Here's the process when going character-by-character:
+
+<Mermaid graph={`
+    graph TD;
+        subgraph s1["Step 1"];
+
+        a1(a);
+
+        end;
+
+        subgraph s2[Step 2];
+
+        add1(+) --> a2(a);
+
+        end
+
+        subgraph s2[Step 3];
+
+        add2(+) --> a3(a);
+        add2 --> b3(b);
+
+        end
+
+        subgraph s3[Step 3];
+
+        mul("×") --> add3(+);
+        add3 --> a4(a);
+        add3 --> b4(b);
+
+        end
+
+        subgraph s4[Step 4]
+
+        mul2(*) --> add4(+);
+        mul2 --> c(c);
+        add4 --> a5(a);
+        add4 --> b5(b);
+
+        end;
+
+        s1 -.-> s2 -.-> s3 -.-> s4;
+`} />
+
+Nice! It's pretty straightforward, it takes the first character, adds it to the tree, then the second, third, etc. 
+
+Although, you might notice that it doesn't follow the operation precedence. Let's take care of that now!
+
+### **Orderer**
+
+Let's use the same example:
+
+<Mermaid graph={`
+    graph TD;
+        subgraph ab_c["Tree for a + b * c"]
+        mul("×") --> add(+);
+        mul --> c(c);
+        add --> a(a);
+        add --> b(b);
+        end
+`} />
+
+If we add parentheses and translate it back to textual form, it would be `(a + b) * c`. But, what we want is
+
+<Mermaid graph={`
+    graph TD;
+        subgraph a_bc["a + b * c following operator precedence"]
+        add(+) --> a(a)
+        add --> mul("×")
+        mul --> b(b)
+        mul --> c(c)
+        end
+`} />
+
+Which translates to `a + (b * c)`. We need to write a function to do that ordering for us.
+
+With the same example as before, let's look at what exactly we need to do.
+
+There are 3 scenarios in which we need to re-arrange the tree: `a + b * c`, `a * b + c` (normally this one works fine, but we still need to re-arrange it if it ends up like `a * (b + c)`), and `a + b * c + d`. Let's go one by one, starting with `a + b * c`:
+
+#### **Precedence 1**
+
+For `a + b * c`:
+
+<Mermaid graph={`
+    graph TD;
+        subgraph s1["Step 1"]
+
+            mul("×") --> add(+);
+            mul --> c(c);
+            add --> a(a);
+            add --> b(b);
+
+        end
+
+        subgraph s2["Step 2"]
+
+            add2(+) --> a2(a);
+            add2 --> b2(b);
+            mul2("×") --> c2(c);
+
+        end
+
+        subgraph s3["Step 3"]
+
+        add3(+) --> a3(a);
+        mul3("×") --> b3(b);
+        mul3 --> c3(c);
+
+        end
+
+        subgraph s4["Step 4"]
+
+        add4(+) --> a4(a);
+        add4 --> mul4("×");
+        mul4 --> b4(b);
+        mul4 --> c4(c);
+
+        end
+    
+
+        s1 -.-> s2 -.-> s3 -.-> s4
+`} />
+
+Since multiplication has higher precedence than addition, `b` gets multiplied first.
+
+#### **Precedence 2**
+
+For `a * b + c`
+
+<Mermaid graph={`
+    graph TD;
+        subgraph s1["Step 1"]
+
+        mul("×") --> a(a)
+        add(+) --> b(b)
+        add --> c(c)
+        mul --> add
+
+        end
+
+        subgraph s2["Step 2"]
+
+        mul2("×") --> a2(a)
+        add2(+) --> b2(b)
+        add2 --> c2(c)
+
+        end
+
+        subgraph s3["Step 3"]
+
+        mul3("×") --> a3(a)
+        mul3("×") --> b3(b)
+        add3(+) --> c3(c)
+
+        end
+
+        subgraph s4["Step 4"]
+
+        mul4("×") --> a4(a)
+        mul4("×") --> b4(b)
+        add4(+) --> mul4
+        add4 --> c4(c)
+
+        end
+
+        s1 -.-> s2 -.-> s3 -.-> s4
+`} />
+
+#### **Precedence 3**
+
+For `a + b * c + d`
+
+<Mermaid graph={`
+    graph TD;
+        subgraph s1["Step 1"]
+
+        mul("×") --> add1(+)
+        mul("×") --> add2(+)
+        add1 --> a(a)
+        add1 --> b(b)
+        add2 --> c(c)
+        add2 --> d(d)
+
+        end
+
+        subgraph s2["Step 2"]
+
+        mul2("×") --> add3(+)
+        add3 --> a2(a)
+        add3 --> b2(b)
+        add4(+) --> c2(c)
+        add4 --> d2(d)
+
+        end
+
+        subgraph s3["Step 3"]
+
+        add5(+) --> a3(a)
+        add5 --> b3(b)
+        mul3("×")
+        add6(+) --> c3(c)
+        add6 --> d3(d)
+
+        end
+
+        subgraph s4["Step 4"]
+
+        add7(+) --> a4(a)
+        mul4("×") --> b4(b)
+        add8(+) --> c4(c)
+        add8 --> d4(d)
+
+        end
+
+        subgraph s5["Step 5"]
+
+        add9(+) --> a5(a)
+        mul5("×") --> b5(b)
+        mul5 --> c5(c)
+        add10(+) --> d5(d)
+
+        end
+
+        subgraph s6["Step 6"]
+
+        add11(+) --> a6(a)
+        add11(+) --> mul6
+        mul6("×") --> b6(b)
+        mul6 --> c6(c)
+        add12(+) --> d6(d)
+
+
+        end
+
+        subgraph s7["Step 7"]
+
+        add14(+) --> add13
+        add14 --> d7(d)
+        add13(+) --> a7(a)
+        add13(+) --> mul7
+        mul7("×") --> b7(b)
+        mul7 --> c7(c)
+
+        end
+
+        s1 -.-> s2 -.-> s3 -.-> s4 -.-> s5 -.-> s6 -.-> s7
+`} />
+
+That's it! That's basically what the orderer does!
+
+### **Evaluator**
+
+The evaluator that *we* use when we're calculating expressions, even if we use it subconsciously. It just calculates as much of the the expression (or tree, in this case) as it can. 
+
+Let's look at the process of the evaluator with a simple example, `5 * 2 + a`. Here's how the tree looks after parsing it:
+
+<Mermaid graph={`
+    graph TD;
+        subgraph 52a["(5 * 2) + a"]
+
+        add(+) --> mul("×");
+        add --> a(a);
+        mul --> 5(5);
+        mul --> 2(2);
+
+        end
+`} />
+
+We'll go step by step and see how the evaluator works:
+
+#### **Step 1**
+
+First, it starts with the root, `add`. It knows that there's `a` on the right, but what about the left? The left is an expression: `mul`. It can't evaluate an expression and a number, so it'll evaluate left first, and then use the result to evaluate the whole thing:
+
+#### **Step 2**
+
+It's focusing on *only* the left. So, what it sees is this:
+
+<Mermaid graph={`
+    graph TD;
+        subgraph 52["5 * 2"]
+
+        mul("×") --> 5(5)
+        mul --> 2(2)
+
+        end
+`} />
+
+Okay, this is the information it currently has:
+
+- The left is `5`
+- The right is `2`
+- The operation is multiplication
+
+That's sufficient information for it to realize that `5` and `2` need to be multiplied! So, it multiplies `5 * 2` and gets `10`! Now, remember how in step 1 it couldn't evaluate and expression and a number? If we give it `10`, it has a number and a number!
+
+#### **Step 3**
+
+It now has some new information: The `mul` on the evaluates to `10`.
+
+And combined with the old information, this is everything it knows:
+
+- The left is `10`
+- The right is `a`
+- The operation is addition
+
+It has all the information it needs to get the final result: `10 + a`. It can't be evaluated any further, so it's done!
+
+<Mermaid graph={`
+    graph TD;
+        subgraph 10a["10 + a"];
+
+        add(+) --> 10(10);
+        add(+) --> a(a);
+
+        end
+`} />
+
+### **Simplifier**
+
+And last but not least, the simplifier! The evaluator seems like it evaluates everything, *but* there are some instances when it doesn't. That's what the simplifier is for!
+
+Let me give you an example:
+
+<Mermaid graph={`
+    graph TD;
+        subgraph 10_a5["10 + (a + 5)"];
+
+        add(+) --> 10(10);
+        add --> add2(+);
+        add2 --> a(a);
+        add2 --> 5(5);
+
+        end
+`} />
+
+This translates to `10 + a + 5`. The answer we want is `a + 15`, but the evaluator can't do that. Here's the step-by-step process of the evaluator so that we can see why that happens:
+
+1. It looks at the root
+    - The left is `10`
+    - The right is an `add`
+2. It can't evaluate it right now, so it checks if it can evaluate the right
+    - The left is `a`
+    - The right is `5`
+3. It can't add a variable and a number, so it doesn't do anything.
+4. Since the left of the root hasn't been updated, it also doesn't do anything
+
+This is the problem here. The evaluator only focuses on *one* branch. When the evaluator is trying to evaluate `a + 5`, it has completely forgotten about the `10`. We could change the evaluator so that it does this, but that might get too complicated so let's just make a simplifier!
+
+What we need to do is bring the branches to the same level. Right now, `add` always has only two branches. If we make it so that it can have more, we can move other branches down or up into one `add`, re-arrange the elements and add them all up. Let's try it out for `10 + a + 5`:
+
+<Mermaid graph={`
+    graph TD;
+        subgraph s1[Step 1]
+
+        add(+) --> 10(10);
+        add --> add2(+);
+        add2 --> a(a);
+        add2 --> 5(5);
+
+        end
+
+        subgraph s2[Step 2]
+
+        add3(+) --> 10_2(10);
+        add3 --> a2(a);
+        add3 --> 5_2(5);
+
+        end
+
+        subgraph s3[Step 3]
+
+        add4(+) --> a3(a);
+        add4 --> 10_3(10);
+        add4 --> 5_3(5);
+
+        end
+
+        subgraph s4[Step 4]
+
+        add5(+) --> a4(a);
+        add5 --> 15(15);
+
+        end
+
+        s1 -.-> s2;
+        s2 -.-> s3;
+        s3 -.-> s4;
+`} />
+
+And that's all the simplifier does! The good thing about this is that it can bring any number of branches to the same level, not just three.
+
+<Toc chapter="Four Modules"/>
+
+
+</article>
+
+
+<NextPg chapter="Four Modules"/>
+
+</div>
+
+<script type="module">
+{`
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+`}
+</script>

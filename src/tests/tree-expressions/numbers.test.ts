@@ -9,7 +9,6 @@ import { evaluateTreeVar, orderOfOperations, evaluateRecurse } from "../../scrip
 
 describe("Numbers expression tree", () => {
     describe("Join similars", () => {
-        // length is less than or equal to
         const nums = "0123456789".split("");
         it("Length is less than or equal to", () => {
             fc.assert(fc.property(
@@ -67,7 +66,6 @@ describe("Numbers expression tree", () => {
             const result: boolean = isExpected("-", ["paran"]);
             const result2: boolean = isExpected("-", ["number"]);
             const result3: boolean = isExpected("-", ["variable", "number", "paran"]);
-            // return !result && !result2 && !result3;
             expect(result).toBe(false);
             expect(result2).toBe(false);
             expect(result3).toBe(false);
@@ -75,10 +73,6 @@ describe("Numbers expression tree", () => {
     })
     describe("Value is ____", () => {
         describe("Value is number", () => {
-            // nothing parsed, nothing waiting: parsed should have the value, next is operator
-            // nothing parsed, negate
-            // parsed, no negate
-            // parsed, negate
             it("Nothing parsed, nothing waiting", () => {
                 fc.assert(fc.property(
                     fc.integer({min: -1000, max: 1000}),
@@ -156,11 +150,6 @@ describe("Numbers expression tree", () => {
             })
         })
         it("Value is operator", () => {
-            // all have to be parsed
-            // not possible to have negate either...
-            // sooo the next expected always has to be ["operator", "neg"]
-            // and the waiting should have the operator
-            // parsed remains the same
             fc.assert(fc.property(
                 arbNumOperator, (operator: NumberOperator) => {
                     const parsed: Expression<number> = { 
@@ -190,8 +179,6 @@ describe("Numbers expression tree", () => {
             ))
         })
         describe("Value is negate", () => {
-            // nothing parsed
-            // parsed
             it("Nothing parsed", () => {
                 const result = valueIsNegate(null, {operator: null, negate: false, paran: {_tag: "not-paranned", exp: null}});
                 const parsedEquals = result.parsed === null;
@@ -230,10 +217,6 @@ describe("Numbers expression tree", () => {
     describe("Paran functions", () => {
         
         describe("Open paran", () => {
-            // parsed is same as before
-            // waiting paran is {_tag: "paranned", exp: ""}
-            // next is ["paran", "neg", "number"]
-
             const parsed1: Expression<number> = {
                 _tag: "add",
                 left: {
@@ -325,14 +308,6 @@ describe("Numbers expression tree", () => {
 
         })
         describe("Closed paran", () => {
-            // if the input string has more open than closed parans:
-                // parsed stays the same
-                // waiting.paran is {_tag: paranned, exp: [exp with ) attatched]}
-                // next is [paran, operator]
-            // if the input string doesn't have more open:
-                // waiting gets reset to default
-                // parsed's right should be the paran expression
-                // next is [paran, operator]
 
             const parsed: Expression<number> = {
                 _tag: "mul",
@@ -369,10 +344,6 @@ describe("Numbers expression tree", () => {
             }
             
             describe("Unclosed nested paran", () => {
-                // parsed is empty
-                // parsed is the example
-                // closed paran is part of the string
-                // closed paran is ending the paran in the waiting
                 const wait1: Waiting<NumberOperator> = {
                     operator: "*",
                     negate: false,
@@ -475,9 +446,6 @@ describe("Numbers expression tree", () => {
             })
         })
         describe("Value in paran", () => {
-            // parsed stays the same
-            // waiting.paran.exp has the value attatched to it but otherwise same
-            // next is [neg, number, paran, operator]
             const parsed: Expression<number> = {
                 _tag: "mul",
                 left: {
@@ -882,9 +850,6 @@ describe("Numbers expression tree", () => {
             {evaluate: evaluateNumExp, removeGroup: removeParan, isReadyForEvaluation: isReadyForEvaluation}
         );
         const r = simplify(evalled);
-        // console.log("--------------- RESULT ------------------");
-        // console.log(r);
-        // console.log(reverseParse(r));
     })
     describe("Order of operations", () => {
         it.each([
@@ -915,27 +880,11 @@ describe("Numbers expression tree", () => {
             const evalled = evaluateTreeVar(result, evaluateNumExp);
             const simplified = simplify(evalled);
             const stringed = reverseParse(simplified);
-            // console.log("==========+++++--- ORDER OF OPERATIONS START ---+++++==========")
-            // console.log(result);
-            // console.log(evalled)
-            // console.log("==========+++++--- ORDER OF OPERATIONS END ---+++++==========")
             expect(stringed).toBe(expected);
         })
     })
     describe("Order of Operations", () => {
         it.each([
-            // {
-            //     tree: "a + b * c",
-            //     expectation: {
-            //         _tag: "add",
-            //         left: makeLeaf("a"),
-            //         right: {
-            //             _tag: "mul",
-            //             left: makeLeaf("b"),
-            //             right: makeLeaf("c"),
-            //         },
-            //     }
-            // },
             {
                 tree: "(10 - 3 * 5 / b) * a / d",
                 expectation: {
@@ -1001,7 +950,6 @@ describe("Numbers expression tree", () => {
                 parseInput("(10 - 3 * 5 / b) * a / b") as Expression<number>, 
                 numOrder
             )
-            // const r = evaluateRecurse(tree as Expression<number>, evaluateNumExp);
             expect(1).toBe(1)
         })
         describe("Precedence funcs", () => {

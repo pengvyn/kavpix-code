@@ -1,0 +1,413 @@
+import Mermaid from '../../../components/Mermaid.astro'
+import "../../../styles/index.css"
+import "../../../styles/essay.css"
+import Header from "../../../components/Header.astro"
+import Toc from "../../../components/essay/Toc.astro"
+import Title from "../../../components/essay/Title.astro"
+import NextPg from "../../../components/essay/NextPg.astro"
+
+<Title chapter="Simplifier"/>
+
+<Header back="../../"/>
+<div class="bg-slate-300 w-full h-max">
+
+<article class="font-sans max-w-prose my-0 mx-auto leading-relaxed pb-6">
+
+## **Simplifier**
+
+We looked at the simplifier in [this section](#simplifier), but let's check out the things we need to do.
+
+The evaluator can't evaluate something like `1 + a + 2` because the tree will look like this:
+
+<Mermaid graph={`
+    graph TD;
+        subgraph 1a_2["(1 + a) + 2"]
+
+        add(+) --> add2(add)
+        add2 --> one(1);
+        add2 --> a(a);
+        add --> two(2);
+        
+        end
+`} />
+
+First it'll go to the root `add`, but since it can't evaluate that it recurses and goes into the left `add`. The left `add` will just be the same once it gets evaluated since a number and a variable can't be added. `evaluate()` (or `evaluateNumExp()` in our case), the function passed in to `evaluateRecurse()`, won't call the `add` function, it'll just return the tree since the left isn't a leaf.
+
+But, addition is commutative. The result should be `a + 3`. That's what the simplifier does. It takes all the `add` and `sub` expressions, brings them to the same level, adds all of them up, and returns the new tree.
+
+We need to make each cycle of the recursion return a list. The list will have all the branches that need to be added. For example, an expression like `a + b + c - a` should be transformed to `[a, b, c, -a]`. Of course, we're dealing with trees here so we won't have `[a, b...]`, but instead each of the elements inside will be leaves.
+
+In each cycle, we need to do these things:
+
+1. Evaluate the branch/es of the tree.
+2. If the tree's `_tag` is `add` or `sub`, we need to combine the two lists. 
+3. If it's not, we need to make a new tree with the new left and right.
+
+We can use `switch()` again:
+
+```typescript
+function simplifyRecurse(tree: Expression<number>): Expression<number>[] {
+    switch(tree._tag) {
+        case "add":
+        case "sub":
+            const newLeft = simplifyRecurse(tree.left);
+            const newRight = simplifyRecurse(tree.right);
+
+            return [...newLeft, newRight]
+        case "mul":
+        case "div":
+            const newLeft = simplifyRecurse(tree.left);
+            const newRight = simplifyRecurse(tree.right);
+
+            // create a new tree
+        case "neg":
+        case "group":
+            const newVal = simplifyRecurse(tree.val);
+
+            // create a new tree
+        default:
+            return [tree];
+    }
+}
+```
+
+This is good, but we still need to add the part that actually simplifies the list. Right now, this function just creates a list using the tree.
+
+Let's write a new function to simplify the list. It will take in a list of trees and return a tree. There are a few things we need to do in this function:
+
+1. Separate the numbers and variables
+2. Add all of the numbers
+3. Put the sum of the numbers into the list of variables
+4. Create a new tree by using `reduce()` on the new list
+
+First up, adding the numbers:
+
+```typescript
+function addExpressionList(list: Expression<number>[]): Expression<number> {
+    const numbers = list.filter((e) => e._tag === "leaf" && e.val._tag === "val");
+    const notNumbers = list.filter((e) => !(e._tag === "leaf" && e.val._tag === "val"));
+
+    const added = numbers.reduce(
+        (p, c) => p + c.val.val, 0
+    )
+
+    const newList = [notNumbers, ...numbers];
+}
+```
+
+Nice! Instead of creating the tree in `addExpressionList`, let's make another function for that. It'll be much cleaner then.
+
+```typescript
+function convertAddListToExpression(list: Expression<number>[]): Expression<number> {
+    if(list.length === 0) {
+        return makeLeaf(0);
+    }
+
+    return list.reduce(
+        (p, c) => {
+            return {
+                _tag: "add",
+                left: p,
+                right: c
+            }
+        }
+    )
+}
+```
+
+Now we can call this in `addExpressionList` like so:
+
+```typescript
+function addExpressionList(list: Expression<number>[]): Expression<number> {
+    const numbers = list.filter((e) => e._tag === "leaf" && e.val._tag === "val");
+    const notNumbers = list.filter((e) => !(e._tag === "leaf" && e.val._tag === "val"));
+
+    const added = numbers.reduce(
+        (p, c) => p + c.val.val, 0
+    )
+
+    const newList = [notNumbers, ...numbers];
+
+    return convertAddListToExpression(newList);
+}
+```
+
+Perfect! Time to call this in `simplifyRecurse`. Since we're turning the result we get from simplifying the branch/es to a tree, we can use it to create the new tree we couldn't make before:
+
+```typescript
+function simplifyRecurse(tree: Expression<number>): Expression<number>[] {
+    switch(tree._tag) {
+        case "add":
+        case "sub":
+            const newLeft = simplifyRecurse(tree.left);
+            const newRight = simplifyRecurse(tree.right);
+
+            return [...newLeft, newRight]
+        case "mul":
+        case "div":
+            const newLeft = addExpressionList(simplifyRecurse(tree.left));
+            const newRight = addExpressionList(simplifyRecurse(tree.right));
+
+            return {
+                _tag: tree._tag,
+                left: newLeft,
+                right: newRight
+            }
+        case "neg":
+        case "group":
+            const newVal = addExpressionList(simplifyRecurse(tree.val));
+
+            return {
+                _tag: tree._tag,
+                val: newVal
+            }
+        default:
+            return [tree];
+    }
+}
+```
+
+Everything is looking good so far, but there's just another thing we need to add: Subtraction. `addExpressionList` doesn't subtract anything right now, it only adds. Instead of fixing that in `addExpressionList`, lets fix it in `simplifyRecurse`. Right now, we send in `tree.right` even if the `_tag` is `sub`:
+
+```typescript
+function simplifyRecurse(tree: Expression<number>): Expression<number>[] {
+    switch(tree._tag) {
+        case "add":
+        case "sub":
+            const newLeft = simplifyRecurse(tree.left);
+            const newRight = simplifyRecurse(tree.right); // <--
+
+            return [...newLeft, newRight];
+```
+
+If we negated `tree.right`, `addExpressionList` and `convertAddListToExpression` will remain relatively unchanged, since the only thing they need to do is subtract whenever the `_tag` is `neg`.
+
+```typescript
+function simplifyRecurse(tree: Expression<number>): Expression<number>[] {
+    switch(tree._tag) {
+        case "add":
+        case "sub":
+            const newLeft = simplifyRecurse(tree.left);
+            const newRight = simplifyRecurse(
+                tree._tag === "sub"
+                    ? {_tag: "neg", val: tree.right}
+                    : tree.right
+            );
+
+            return [...newLeft, newRight];
+```
+
+And now to update `convertAddListToExpression`:
+
+```typescript
+function convertAddListToExpression(list: Expression<number>[]): Expression<number> {
+    if(list.length === 0) {
+        return makeLeaf(0);
+    }
+
+    return list.reduce(
+        (p, c) => {
+            if(c._tag === "neg") {
+                return {
+                    _tag: "sub",
+                    left: p,
+                    right: c
+                }
+            }
+            
+            if(p._tag === "neg") {
+                return {
+                    _tag: "sub",
+                    left: c,
+                    right: p
+                }
+            }
+
+            return {
+                _tag: "add",
+                left: p,
+                right: c
+            }
+        }
+    )
+}
+```
+
+Finally, `addExpressionList`. This one is a little bit more complicated because of the `filter()`s:
+
+```typescript
+function addExpressionList(list: Expression<number>[]): Expression<number> {
+    const numbers = list.filter((e) => e._tag === "leaf" && e.val._tag === "val"); // <--
+    const notNumbers = list.filter((e) => !(e._tag === "leaf" && e.val._tag === "val")); // <--
+
+    const added = numbers.reduce(
+        (p, c) => p + c.val.val, 0
+    )
+
+    ...
+```
+
+In addition to checking if the tree is a `leaf` and `val`, we also need to check if the tree is a `neg`. *And*, we have to account for the negatives when adding as well. Let's start with the filters:
+
+```typescript
+function addExpressionList(list: Expression<number>[]): Expression<number> {
+    const numbers = list.filter(
+        (e) => (e._tag === "leaf" && e.val._tag === "val")
+            || (e._tag === "neg" && e.val._tag === "tree" && e.val.val._tag === "val")
+    );
+    const notNumbers = list.filter(
+        (e) => !(e._tag === "leaf" && e.val._tag === "val")
+            && !(e._tag === "neg" && e.val._tag === "tree" && e.val.val._tag === "val")
+    );
+
+    ...
+```
+
+It's a little hard to read, but it makes sense! Moving on to adding the numbers:
+
+
+```typescript
+function addExpressionList(list: Expression<number>[]): Expression<number> {
+    const numbers = list.filter(
+        (e) => (e._tag === "leaf" && e.val._tag === "val")
+            || (e._tag === "neg" && e.val._tag === "tree" && e.val.val._tag === "val")
+    );
+    const notNumbers = list.filter(
+        (e) => !(e._tag === "leaf" && e.val._tag === "val")
+            && !(e._tag === "neg" && e.val._tag === "tree" && e.val.val._tag === "val")
+    );
+
+    const added = numbers.reduce(
+        (p, c) => {
+            if(c._tag === "neg") {
+                return p + c.val.val.val;
+                // neg -> leaf -> valLeaf -> actual number
+            }
+            return p + c.val.val; 
+            // leaf -> valLeaf -> actual number
+        }, 0
+    )
+    ...
+```
+
+Everything works, but there's one more things we can do for efficiency. Right now, we're filtering out the number *and* reducing them. We can just do those with just one `reduce()` instead:
+
+```typescript
+function addExpressionList(list: Expression<number>[]): Expression<number> {
+    const added: number = list.reduce(
+        (p: number, c: Expression<number>) => {
+            if(
+                c._tag === "neg" && c.val._tag === "leaf" && c.val.val._tag === "val"
+            ) {
+                return p + c.val.val.val;
+            }
+
+            if (
+                c._tag === "leaf" && c.val._tag === "val"
+            ) {
+                return p + c.val.val;
+            }
+
+            return p;
+        }, 0
+    )
+```
+
+Awesome! We could stop here, but let's add one more thing to spice it up. Right now, the variables just stay the same, but an expression like `a - a` should be simplified into `0`. Let's take care of that:
+
+```typescript
+function addExpressionList(list: Expression<number>[]): Expression<number> {
+    const added: number = list.reduce(
+        (p: number, c: Expression<number>) => {
+            if(
+                c._tag === "neg" && c.val._tag === "leaf" && c.val.val._tag === "val"
+            ) {
+                return p + c.val.val.val;
+            }
+
+            if (
+                c._tag === "leaf" && c.val._tag === "val"
+            ) {
+                return p + c.val.val;
+            }
+
+            return p;
+        }, 0
+    )
+
+    const variablesSimplified = list.reduce(
+        (p: Expression<number>[], c: Expression<number>) => {
+            if(
+                (c._tag === "neg" && c.val._tag === "leaf" && c.val.val._tag === "val")
+                || (c._tag === "leaf" && c.val._tag === "val")
+            ) {
+                return p;
+            }
+
+            if(c._tag === "neg") {
+                const idx = p.findIndex((e) => isEqual(e, c.val));
+
+                if(idx !== -1) {
+                    const r = idx === 0 
+                        ? p.slice(1)
+                        : [...p.slice(0, idx), ...p.slice(idx + 1)];
+                    return r;
+                }
+            }
+
+            const idx = p.findIndex((e) => e._tag === "neg" && isEqual(e.val, c));
+
+            if(idx !== -1) {
+                return idx === 0
+                    ? p.slice(1)
+                    : [...p.slice(0, idx), ...p.slice(idx + 1)]
+            }
+
+            return [...p, c]
+        }, []
+    )
+
+    return convertAddListToExpression([
+        ...variablesSimplified.length === 0 ? [] : variablesSimplified, 
+        ...added === 0 ? [] : [makeLeaf(added)]
+    ]);
+}
+```
+
+The `isEqual()` function is from [Lodash](https://lodash.com/docs/4.17.15#isEqual).
+
+It's a little bit complicated, so here's what it does step-by-step:
+
+1. It checks if the tree is a number (what it did in the filtering)
+    - If it is, it just returns the previous value
+    - Otherwise,
+2. It checks if the current value is `neg`
+    - If it is, it checks if the previous value has an expression which is equal to the current value without the negation
+      - If the previous value has it, it removes that element and returns
+      - Otherwise,
+
+     - Check if the previous value has an element which is the negation of the current value
+       - If yes, it removes that element and returns
+       - Otherwise, it adds the current value to the previous value and returns
+
+It's still complicated, but all it does is remove any two values which add up to 0.
+
+We're done with, not just the simplifier, but everything! Awesome!
+
+
+<Toc chapter="Simplifier"/>
+
+
+</article>
+
+
+<NextPg chapter="Simplifier"/>
+
+</div>
+
+<script type="module">
+{`
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+`}
+</script>

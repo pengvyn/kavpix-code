@@ -1,0 +1,42 @@
+import Mermaid from '../../../components/Mermaid.astro'
+import "../../../styles/index.css"
+import "../../../styles/essay.css"
+import Header from "../../../components/Header.astro"
+import Toc from "../../../components/essay/Toc.astro"
+import Title from "../../../components/essay/Title.astro"
+import NextPg from "../../../components/essay/NextPg.astro"
+
+<Title chapter="Code Intro"/>
+
+<Header back="../../"/>
+<div class="bg-slate-300 w-full h-max">
+
+<article class="font-sans max-w-prose my-0 mx-auto leading-relaxed pb-6">
+
+# **Code**
+
+This section just shows some snippets of the code I wrote, if you want to see the full project (or more), it’s open-source [on github](https://github.com/pengvyn/kavpix-code). All of this code is written in TypeScript, with the help of a [few libraries](#libraries).
+
+There are 4 main modules we need to write for this:
+
+1. Parser. It takes the input you type and transforms it into a tree
+2. Orderer. Re-arranges the tree to follow the order of operations
+3. Evaluator. Takes a tree as input and evaluates/solves it as much as it can.
+4. Simplifier. Evaluates the expression even further (more on this later)
+
+<Toc chapter="Code Intro"/>
+
+
+</article>
+
+
+<NextPg chapter="Code Intro"/>
+
+</div>
+
+<script type="module">
+{`
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+`}
+</script>

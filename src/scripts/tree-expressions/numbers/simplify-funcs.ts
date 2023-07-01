@@ -1,9 +1,6 @@
 import type { Add, Expression, Sub } from "../types";
 
 export function addOrSub(exp: Add<number> | Sub<number>, evaluate: Function): Expression<number> {
-    // simplification of left and right should be doen in the main func
-    // has to check if left is add/sub
-    // 
     const left = exp.left;
     const right = exp.right;
 

@@ -1,0 +1,53 @@
+import Mermaid from '../../../components/Mermaid.astro'
+import "../../../styles/index.css"
+import "../../../styles/essay.css"
+import Header from "../../../components/Header.astro"
+import Toc from "../../../components/essay/Toc.astro"
+import Title from "../../../components/essay/Title.astro"
+import NextPg from "../../../components/essay/NextPg.astro"
+
+<Title chapter="Intro"/>
+
+<Header back="../../"/>
+<div class="bg-slate-300 w-full h-max">
+
+<article class="font-sans max-w-prose my-0 mx-auto leading-relaxed pb-6">
+
+# **Expression Tree**
+
+## **Intro**
+
+This article is for the [Expression Calculator](../expression-calculator), make sure to play around with that so that the article makes sense.
+
+<br />
+
+I've been learning mathematical proofs by learning from first-principles. 
+The concept of the tree structure came up when learning about subsets. That was pretty interesting on its own, but when I started learning about logical operations, it was getting a little bit complicated to visualize. So, I decided to write code to make a tree so that I can get a better understanding of it. But, after I realized that I'd have to make a parser, I thought it would be better to start out by doing it for something simpler like numbers. While doing that, I thought it wouldn't be complete without variables, so that got added too.
+I'm working on a logical expression calculator and a few others as well, they'll all be released soon! 
+
+<br />
+
+### **Intro to the Expression Tree**
+
+The expression tree is a structural representation of an expression. An expression is some numbers and variables being joined together in many ways with operators, like `a + b` or `5 * x`. Every expression can be shown as a tree. Why does this matter? The tree isn't only a different way of writing an expression, but it's also a *data structure*. Using the tree structure is helpful for computation. But that's not all, theres also some magical things we can do with this structure. 
+
+<br />
+
+This article is made up of 10 mini-articles, but I've divided it into 2 sections, the first one is about the visualization of the tree, and the second one is about the code. All the code for this project is open-source [on github](github.com/pengvyn/kavpix-code)
+
+<Toc chapter="Intro"/>
+
+
+</article>
+
+
+<NextPg chapter="Intro"/>
+
+</div>
+
+<script type="module">
+{`
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+`}
+</script>

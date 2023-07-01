@@ -1,0 +1,51 @@
+h1 {
+    font-size: 2.5rem !important;
+}
+h2 {
+    font-size: 1.8rem !important;
+}
+h3 {
+    font-size: 1.2rem !important;
+}
+
+h1, h2, h3, h4 {
+    padding: 2rem 0rem 1rem 0rem !important;
+}
+body {
+    /* background-color: #e3f1e3; */
+    color: #331c33;
+}
+
+code {
+    color: #160b86;
+    padding: 0.1rem 0.3rem !important;
+    border-radius: 0.3rem !important;  
+}
+
+.astro-code {
+    padding: 1rem;
+    border-radius: 0.5rem !important;
+    margin: 1rem 0rem !important;
+}
+
+ol {
+    list-style-type:decimal !important;
+}
+
+ul {
+    list-style-type: circle !important;
+}
+
+ol, ul {
+    padding: 1rem !important;
+    padding-left: 2rem !important
+}
+
+p {
+    padding: 1 !important;
+}
+
+a {
+    color: #36326b !important;
+    text-decoration: underline !important;
+}

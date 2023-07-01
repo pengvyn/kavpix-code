@@ -1,0 +1,163 @@
+import Mermaid from '../../../components/Mermaid.astro'
+import "../../../styles/index.css"
+import "../../../styles/essay.css"
+import Header from "../../../components/Header.astro"
+import Toc from "../../../components/essay/Toc.astro"
+import Title from "../../../components/essay/Title.astro"
+import NextPg from "../../../components/essay/NextPg.astro"
+
+<Title chapter="Operator Precedence"/>
+
+<Header back="../../"/>
+<div class="bg-slate-300 w-full h-max">
+
+<article class="font-sans max-w-prose my-0 mx-auto leading-relaxed pb-6">
+
+## **Different Operator Precedences**
+
+The four modules are complete, but there's one more thing we should talk about. 
+
+With the order of operations, we always do multiplication and division before addition and subtraction. But what if we didn't? What if we did the addition first, and *then* multiplication? What if we did subtraction first, multiplication second, addition third, and division last? With this structure, we don't have to follow the rules, we can experiment and play around very easily with this structure. Let's use `1 + 2 * 3 / 4 - 5` and see what all we can do with it.
+
+### **Mul, div > add, sub**
+
+This is the standard operator precedence. The operators that are in the same "level" (eg. multiplication and division) will get evaluated left-to-right. Here's how the expression and the tree would look:
+
+<Mermaid graph={`
+    graph TD;
+        subgraph 12345["(1 + ((2 * 3) / 4)) - 5"]
+
+        sub("-") --> add("+")
+        sub --> 5(5);
+        add --> 1(1);
+        add --> div("÷")
+        div --> mul("×")
+        div --> 4(4)
+        mul --> 2(2)
+        mul --> 3(3)
+
+        end
+`} />
+
+This gets evaluated to:
+
+```
+1 + 2 * 3 / 4 - 5
+= 1 + 6 / 4 - 5
+= 1 + 1.5 - 5
+= 2.5 - 5
+= -2.5
+```
+
+### **Add, sub > mul, div**
+
+Now the opposite. Addition and subtraction get evaluated first:
+
+<Mermaid graph={`
+    graph TD;
+        subgraph 12345["((1 + 2) * 3) / (4 - 5)"]
+
+        div("÷") --> mul("×")
+        div --> sub("-")
+        mul --> add("+")
+        mul --> 3(3)
+        add --> 1(1)
+        add --> 2(2)
+        sub --> 4(4)
+        sub --> 5(5)
+    
+    end
+`} />
+
+In textual form:
+
+```
+1 + 2 * 3 / 4 - 5
+= 3 * 3 / 4 - 5
+= 3 * 3 / -1
+= 9 / -1
+= -9
+```
+
+It's pretty interesting how it works!
+
+### **Sub > div > add > mul**
+
+This one's a little bit different. Theres nothing on the same level.
+
+<Mermaid graph={`
+    graph TD;
+        subgraph 12345["(1 + 2) * (3 / (4 - 5))"]
+
+        mul("×") --> add("+")
+        mul --> div("÷")
+        add --> 1(1)
+        add --> 2(2)
+        div --> 3(3)
+        div --> sub("-")
+        sub --> 4(4)
+        sub --> 5(5)
+
+        end
+`} />
+
+Again, in textual form:
+
+```
+1 + 2 * 3 / 4 - 5
+= 1 + 2 * 3 / -1
+= 1 + 2 * -3
+= 3 * -3
+= -9
+```
+
+### **Div > mul > add > sub**
+
+This one is pretty similar to the standard precedence, but without any operators on the same level as the other. This looks a little different that the standard form, but the result actually turns out to be the same:
+
+<Mermaid graph={`
+    graph TD;
+        subgraph 12345["(1 + (2 * (3 / 4))) - 5"];
+
+        sub("-") --> add("+")
+        sub --> 5(5);
+        add --> 1(1)
+        add --> mul("×")
+        mul --> 2(2)
+        mul --> div("÷")
+        div --> 3(3)
+        div --> 4(4)
+
+        end
+`} />
+
+And it gets evaluated to:
+
+```
+1 + 2 * 3 / 4 - 5
+= 1 + 2 * 0.75 - 5
+= 1 + 1.5 - 5
+= 2.5 - 5
+= -2.5
+```
+
+In summary, changing the order could make a huge difference to the final result. Even if it doesn't, it's interesting to see the different answers that come when changing the precedence.
+
+There are plenty more operation precedences, but we won't be talking about them. If you want to play around with changing the precedences, you can [over here](https://code.kavpix.com/expression-calculator)!
+
+<Toc chapter="Operator Precedence"/>
+
+
+</article>
+
+
+<NextPg chapter="Operator Precedence"/>
+
+</div>
+
+<script type="module">
+{`
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+`}
+</script>

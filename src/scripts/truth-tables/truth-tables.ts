@@ -1,10 +1,4 @@
-// input will be in string format
-// input should look like "X and Y" or "X or Y" ORR "X => Y" (that can also be written as "If X then Y") etc etc.
-// parse the input to have statements and functions(?) separately
-// the number of rows is 2^[number of statements]
-// returns truth table in string format? separated by | and _ maybe
-
-import { parseInput } from "../tree-expressions/numbers";
+import { parseInput } from "../tree-expressions/numbers/numbers";
 import type { Expression } from "./truth-tables-parsing";
 
 export type Statement = "A"|"B"|"C"|"D"|"E"|"F"|"G"|"H"|"I"|"J"|"K"|"L"|"M"|"N"|"O"|"P"|"Q"|"R"|"S"|"T"|"U"|"V"|"W"|"X"|"Y"|"Z";
@@ -23,13 +17,6 @@ export function removeStatementDupes(statements: Statement[]): Statement[] {
 }
 
 export function singleStatementTableRows(statements: Statement[]): TOrF[][] {
-    // s1: [T] [F]
-    // s2: [T, T] [T, F] [F, T] [F, F]
-    // s3: [T, T, T] [T, T, F] [T, F, T] [T, F, F] [F, T, T] [F, T, F] [F, F, T] [F, F, F]
-
-    // start w [[T], [F]]
-    // when the index goes up, combine T with all the values, then F with all the values and join them together
-    // keep repeating until all the statements are finished / count is the statement's length
     let table: TOrF[][] = [["T"], ["F"]];
     for(let c = 1; c < statements.length; c++) {
         const tableWithT = table.map((row) => ["T" as TOrF, ...row]);
@@ -40,11 +27,10 @@ export function singleStatementTableRows(statements: Statement[]): TOrF[][] {
 }
 
 export function singleStatementTableCols(rows: TOrF[][]): TOrF[][] {
-    const cols = Array(rows[0].length).fill([]); // rows[0].length is the number of columns
+    const cols = Array(rows[0].length).fill([]);
 
     function updateCols(columns: TOrF[][], row: TOrF[]): TOrF[][] {
         return row.map((el, idx) => [...columns[idx], el]); 
-        // new list with the columns having all the values of the row respectively 
     }
 
     return rows.reduce((columns, row) => updateCols(columns, row), cols);
@@ -81,20 +67,11 @@ function biconditional(v1: TOrF[], v2: TOrF[]): TOrF[] {
     );
 }
 
-// What should be done w the tree?
-// Maybe find the smallest part(s) (like a place where an expressions isn't nested in another expression)
-// And call the functions based on the tag?
-// how should i go to the smallest part .. rhghrgnhjdns
-// Or maybe i should start at the main thing and go from there... like go through each expression from there (??)
-
 function untitled(tree: Expression, branches: Expression[] = [tree]) {
     
 }
 
 export function getTruthTable(input: string): string {
-    // const statements = removeStatementDupes(getStatements(input));
-    // const sstr = singleStatementTableRows(statements);
-    // const sstc = singleStatementTableCols(sstr);
     const tree = parseInput(input);
     console.log(tree);
 

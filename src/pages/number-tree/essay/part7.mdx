@@ -1,0 +1,575 @@
+import Mermaid from '../../../components/Mermaid.astro'
+import "../../../styles/index.css"
+import "../../../styles/essay.css"
+import Header from "../../../components/Header.astro"
+import Toc from "../../../components/essay/Toc.astro"
+import Title from "../../../components/essay/Title.astro"
+import NextPg from "../../../components/essay/NextPg.astro"
+
+<Title chapter="Orderer"/>
+
+<Header back="../../"/>
+<div class="bg-slate-300 w-full h-max">
+
+<article class="font-sans max-w-prose my-0 mx-auto leading-relaxed pb-6">
+
+## **Orderer**
+
+We already went through this in a [previous section](#orderer), but, to recap, we went through 3 scenarios where we'll need to re-arrange the tree when it doesn't follow the order of operations. Let's quickly look at the process again:
+
+### **Precedence 1**
+
+For `a + b * c`:
+
+<Mermaid graph={`
+    graph TD;
+        subgraph s1["Step 1"]
+        mul("×") --> add(+);
+        mul --> c(c);
+        add --> a(a);
+        add --> b(b);
+        end
+
+        subgraph s2["Step 2"]
+
+        add2(+) --> a2(a);
+        add2 --> b2(b);
+        mul2("×") --> c2(c);
+
+        end
+
+        subgraph s3["Step 3"]
+
+        add3(+) --> a3(a);
+        mul3("×") --> b3(b);
+        mul3 --> c3(c);
+
+        end
+
+        subgraph s4["Step 4"]
+
+        add4(+) --> a4(a);
+        add4 --> mul4("×");
+        mul4 --> b4(b);
+        mul4 --> c4(c);
+
+        end
+
+        s1 -.-> s2 -.-> s3 -.-> s4
+`} />
+
+Let's translate this into words, it will help us a bunch when we're writing the code:
+
+1. Remove the `left` from the root.
+2. Take the `right` of the `left`, and attach it to the `left` of the root.
+3. Attach the root to the `right` of the `left`.
+
+(This is very hard to follow, but it's easier with the images as reference)
+
+
+### **Precedence 2**
+
+For `a * b + c`:
+
+<Mermaid graph={`
+    graph TD;
+        subgraph s1["Step 1"]
+
+        mul("×") --> a(a)
+        add(+) --> b(b)
+        add --> c(c)
+        mul --> add
+
+        end
+
+        subgraph s2["Step 2"]
+
+        mul2("×") --> a2(a)
+        add2(+) --> b2(b)
+        add2 --> c2(c)
+
+        end
+
+        subgraph s3["Step 3"]
+
+        mul3("×") --> a3(a)
+        mul3("×") --> b3(b)
+        add3(+) --> c3(c)
+
+        end
+
+        subgraph s4["Step 4"]
+
+        mul4("×") --> a4(a)
+        mul4("×") --> b4(b)
+        add4(+) --> mul4
+        add4 --> c4(c)
+
+        end
+
+        s1 -.-> s2 -.-> s3 -.-> s4
+`} />
+
+Again, in words:
+
+1. Remove `right` from the root
+2. Take the `left` from `right` and attach it to the `right` of the `root`
+3. Attach the root to the `left` of `right`
+
+
+
+### **Precedence 3**
+
+For `a + b * c + d`
+
+<Mermaid graph={`
+    graph TD;
+        subgraph s1["Step 1"]
+
+        mul("×") --> add1(+)
+        mul("×") --> add2(+)
+        add1 --> a(a)
+        add1 --> b(b)
+        add2 --> c(c)
+        add2 --> d(d)
+
+        end
+
+        subgraph s2["Step 2"]
+
+        mul2("×") --> add3(+)
+        add3 --> a2(a)
+        add3 --> b2(b)
+        add4(+) --> c2(c)
+        add4 --> d2(d)
+
+        end
+
+        subgraph s3["Step 3"]
+
+        add5(+) --> a3(a)
+        add5 --> b3(b)
+        mul3("×")
+        add6(+) --> c3(c)
+        add6 --> d3(d)
+
+        end
+
+        subgraph s4["Step 4"]
+
+        add7(+) --> a4(a)
+        mul4("×") --> b4(b)
+        add8(+) --> c4(c)
+        add8 --> d4(d)
+
+        end
+
+        subgraph s5["Step 5"]
+
+        add9(+) --> a5(a)
+        mul5("×") --> b5(b)
+        mul5 --> c5(c)
+        add10(+) --> d5(d)
+
+        end
+
+        subgraph s6["Step 6"]
+
+        add11(+) --> a6(a)
+        add11(+) --> mul6
+        mul6("×") --> b6(b)
+        mul6 --> c6(c)
+        add12(+) --> d6(d)
+
+
+        end
+
+        subgraph s7["Step 7"]
+
+        add14(+) --> add13
+        add14 --> d7(d)
+        add13(+) --> a7(a)
+        add13(+) --> mul7
+        mul7("×") --> b7(b)
+        mul7 --> c7(c)
+
+        end
+
+        s1 -.-> s2 -.-> s3 -.-> s4 -.-> s5 -.-> s6 -.-> s7
+`} />
+
+And the final one:
+
+1. Remove `left` from the root
+2. Remove `right` from the root
+3. Attach `left`'s `right` to the root's `left`
+4. Attach `right`'s `left` to the root's `right`
+5. Attach the root to the `left`'s `right`
+6. Attach `left` to `right`'s `left`
+
+The text for this example is very hard to follow, but if you look at it and the trees together it's a little easier. It's the kind of thing that's seems simple until you write it down. But, we've got the 3 precedences generalized with the words. We can apply this to our code now!
+
+### **Precedence code**
+
+Why don't we use recursion to re-arrange everything into order? We first re-arrange the left, then the right, and then we put the new left and right back together and re-arrange the whole thing!
+
+Before that, there are only certain things that we want to re-arrange. For example, if we have `add` and `mul`, we need to make sure that `mul` takes precedence. But, we can't just do it for `mul` and `add`, or `div` and `sub`. Why? Because then we can't generalize it. 
+
+If we were doing this ordering for number trees exclusively, it would be okay. But if we used generic types, we could use the same function for other types of trees and also play around with changing the order even for numbers. So, we can make our orderer function have an input called `order`, which will tell us the precedence of each operator.
+
+Before we get into that, define the main function:
+
+```typescript
+type Tag = Expression<unknown>["_tag"]; // "add" | "sub" | "mul" | ...
+
+type OpAndPrecedence = {op: Tag, precedence: number};
+type OrderOfOp = OpAndPrecedence[];
+
+function orderOfOperations<T>(tree: Expression<T>, order: OrderOfOp): Expression<T> {
+    switch(tree._tag) {
+        case "add":
+            ...
+        
+        case "sub":
+            ...
+
+        case "mul":
+            ...
+
+        case "div":
+            ...
+
+        case "neg":
+        case "group":
+            const newVal = orderOfOperations(tree.val);
+
+            return {
+                _tag: tree._tag,
+                val: newVal
+            }
+        
+        default:
+            return exp;
+    }
+}
+```
+
+This is how the `order` input will look like for the standard operator precedence:
+
+```typescript
+[
+    {op: "leaf", precedence: 1},
+    {op: "var", precedence: 1},
+    {op: "val", precedence: 1},
+    {op: "neg", precedence: 2},
+    {op: "add", precedence: 3},
+    {op: "sub", precedence: 3},
+    {op: "mul", precedence: 4},
+    {op: "div", precedence: 4},
+    {op: "group", precedence: 5}
+]
+```
+
+What this says is that `group > mul, div > add, sub > neg > leaf, val, var`. If two operators are of the same precedence, we have to just let it go left to right.
+
+Now we need to create a function that actually rearranges the tree. We can only rearrange binary operators, which are `add`, `sub`, `mul`, and `div`. We an call this function for each of them in the `switch` block. Let's name this function `reArrangeBinaryOperator`.
+
+In each cycle of the recursion, we need to check if the left, right, or both are of lower precedence than the parent branch. If that's true, ordering is needed, otherwise it can just be left alone. Let's start with the conditions so we know when we need to use which of the three precedences.
+
+1. Left and right are lower than the root
+    - 3rd precedence
+2. Left is lower than the root, right is not
+    - 1st precedence
+3. Right is lower than the root, left is not
+    - 2nd precedence
+4. Neither of them are lower than the root
+    - No re-arranging needed
+  
+Nice! We can use this for some `if` blocks inside of `reArrangeBinaryOperator`.
+
+But, there's just one more thing. What if the left or the right are `leaf`s? Then the left of the left doesn't exist. We need to check that too, to decide exactly what we want to do. `leaf` is lower than `add`, but we can't apply the first precedence on a `leaf`. We need to make sure we apply it in the correct place, and do something else if we can't apply it.
+
+```typescript
+export function isLeaf<T>(exp: Expression<T>): exp is Leaf<T> {
+    return exp._tag === "leaf";
+}
+export function isVar<T>(exp: Expression<T>): exp is VarLeaf {
+    return exp._tag === "var";
+}
+export function isVal<T>(exp: Expression<T>): exp is ValLeaf<T> {
+    return exp._tag === "val";
+}
+export function isGroup<T>(exp: Expression<T>): exp is Group<T> {
+    return exp._tag === "group";
+}
+export function isNeg<T>(exp: Expression<T>): exp is Neg<T> {
+    return exp._tag === "neg";
+}
+
+type BinaryOperator<T> = Add<T> | Sub<T> | Mul<T> | Div<T>;
+
+function reArrangeBinaryOperator<T>(tree: BinaryOperator<T> order: OrderOfOp): Expression<T> {
+    const left = orderOfOperations(tree.left);
+    const right = orderOfOperations(tree.right);
+
+    const newTree = {
+        _tag: tree._tag,
+        left,
+        right
+    }
+
+    const leftNotBinary: boolean = isLeaf(left) | isVar(left) | isVal(left) | isGroup(left) | isNeg(left);
+    const rightNotBinary: boolean = isLeaf(right) | isVar(right) | isVal(right) | isGroup(right) | isNeg(right);
+
+    if(leftNotBinary && rightNotBinary) {
+        return newTree
+    }
+    // re-arranging happens here
+}
+```
+
+If both the left and right are not binary operators, no re-arranging is needed, so it just returns a tree with the new left and right.
+
+Okay, now we need to adjust the conditions we had:
+
+1. Left and right are lower than the root
+    - 3rd precedence
+2. Left is lower than the root, right is not
+    - 1st precedence
+3. Right is lower than the root, left is not
+    - 2nd precedence
+4. Neither of them are lower than the root
+    - No re-arranging needed
+
+All of these assume that the left or right are binary operators, but they could be `Leaf`s or `Group`s. In our `if` block above, we don't want to re-arrange when *both* of them are not binary operators. We need to account for the unary (single input) operators as well. With `2` ("Left is lower than the root, right is not"), left could be a `leaf`. We need to make sure that left is a binary operator, and only then apply the first precedence:
+
+1. Left and right are lower than the root
+    - Left is a unary operator
+        - 2nd precedence
+
+    - Right is a unary operator
+        - 1st precedence
+
+    - Neither are leaves
+        - 3rd precedence
+
+2. Left is lower than the root, and left is a binary operator
+    - 1st precedence
+  
+3. Right is lower than the root, and right is a binary operator
+    - 2nd precedence
+
+4. Neither of them are lower than the root
+    - No re-arranging
+
+That's better!
+
+I've removed the "right is not" and "left is not" part for `2.` and `3.` respectively because if any of them were true, `1.` would take care of it.
+
+We're checking the comparing the precedences of left, right, and the root a lot, so let's write a function for it:
+
+```typescript
+function isOperatorHigher(operator: Tag, comparer: Tag, order: OrderOfOp): boolean {
+    const operatorIdx = order.findIndex((l) => l.includes(operator));
+    const comparerIdx = order.findIndex((l) => l.includes(comparer));
+    return operatorIdx > comparerIdx;
+}
+```
+
+Let's now use this for our `if` blocks:
+
+```typescript
+function isOperatorHigher(operator: Tag, comparer: Tag, order: OrderOfOp): boolean {
+    const operatorIdx = order.findIndex((l) => l.includes(operator));
+    const comparerIdx = order.findIndex((l) => l.includes(comparer));
+    return operatorIdx > comparerIdx;
+}
+
+function reArrangeBinaryOperator<T>(tree: Mul<T> | Div<T>, order: OrderOfOp): Expression<T> {
+    const left = orderOfOperations(tree.left);
+    const right = orderOfOperations(tree.right);
+
+    const leftNotBinary: boolean = isLeaf(left) | isVar(left) | isVal(left) | isGroup(left) | isNeg(left);
+    const rightNotBinary: boolean = isLeaf(right) | isVar(right) | isVal(right) | isGroup(right) | isNeg(right);
+
+    if(leftNotBinary && rightNotBinary) {
+        return {
+            ...tree,
+            left,
+            right
+        };
+    }
+
+    const leftLower = isOperatorHigher(tree._tag, left._tag, order);
+    const rightLower = isOperatorHigher(tree._tag, right._tag, order);
+
+    if(leftLower && rightLower) {
+        if(leftNotBinary) {
+            // precedence 2
+        }
+        if(rightNotBinary) {
+            // precedence 1
+        }
+        // precedence 3
+    }
+    if(leftLower && !leftNotBinary) {
+        // precedence 1
+    }
+    if(rightLower && !rightNotBinary) {
+        // precedence 2
+    }
+
+    return newTree;
+}
+```
+
+Perfect! We're using precedence 1 and 2 twice, so let's make functions for them as well:
+
+```typescript
+type BinaryOperator<T> = Add<T> | Sub<T> | Mul<T> | Div<T>
+type BinaryTag = "add" | "sub" | "mul" | "div";
+
+function precedenceLeft<T>(left: BinaryOperator<T>, right: Expression<T>, tag: BinaryTag): Expression<T> { // precedence 1
+    const ll = left.left;
+    const lr = left.right;
+
+    const attached: Expression<T> = {
+        _tag: tag,
+        left: lr,
+        right
+    }
+    return {
+        _tag: left._tag,
+        left: ll,
+        right: attached
+    };
+}
+
+function precedenceRight<T>(left: Expression<T>, right: BinaryOperator<T>, tag: BinaryTag): Expression<T> { // precedence 2
+    const rl = right.left;
+    const rr = right.right;
+
+    const attached: Expression<T> = {
+        _tag: tag,
+        left,
+        right: rl
+    }
+    return {
+        _tag: right._tag,
+        left: attached,
+        right: rr
+    }
+}
+
+function precedenceBoth<T>(left: BinaryOperator<T>, right: BinaryOperator<T>, tag: BinaryTag): Expression<T> { // precedence 3
+    const ll = left.left;
+    const lr = left.right;
+    const rl = right.left;
+    const rr = right.right;
+
+    const centerAttached: Expression<T> = {
+        _tag: tag,
+        left: lr,
+        right: rl
+    }
+
+    const leftAttached: Expression<T> = {
+        _tag: left._tag,
+        left: ll,
+        right: centerAttached
+    }
+
+    return {
+        _tag: right._tag,
+        left: leftAttached,
+        right: rr
+    }
+}
+```
+
+There we go! Now, we can just call these functions inside of the `reArrangeBinaryOperator` function and we're finished!
+
+```typescript
+function reArrangeBinaryOperator<T>(tree: Mul<T> | Div<T>, order: OrderOfOp): Expression<T> {
+    const left = orderOfOperations(tree.left);
+    const right = orderOfOperations(tree.right);
+
+    const newTree = {
+        _tag: tree._tag,
+        left,
+        right,
+    }
+
+    const leftNotBinary: boolean = isLeaf(left) | isVar(left) | isVal(left) | isGroup(left) | isNeg(left);
+    const rightNotBinary: boolean = isLeaf(right) | isVar(right) | isVal(right) | isGroup(right) | isNeg(right);
+
+    if(leftNotBinary && rightNotBinary) {
+        return newTree;
+    }
+
+    const leftLower = isOperatorHigher(tree._tag, left._tag, order);
+    const rightLower = isOperatorHigher(tree._tag, right._tag, order);
+
+    if(leftLower && rightLower) {
+        if(leftNotBinary) {
+            return precedenceRight(left, right, tree._tag);
+        }
+        if(rightNotBinary) {
+            return precedenceLeft(left, right, tree._tag);
+        }
+        return precedenceBoth(left, right, tree._tag);
+    }
+    if(leftLower && !leftNotBinary) {
+        return precedenceLeft(left, right, tree._tag);
+    }
+    if(rightLower && !rightNotBinary) {
+        return precedenceRight(left, right, tree._tag);
+    }
+
+    return newTree;
+}
+```
+
+Thats our `reArrangeBinaryOperator` function! Now to call it in `orderOfOperations`:
+
+```typescript
+function orderOfOperations<T>(exp: Expression<T>, order: OrderOfOp): Expression<T> {
+    switch(exp._tag) {
+        case "neg":
+        case "group":
+            const newVal = orderOfOperations(exp.val, order);
+            const result = {
+                _tag: exp._tag,
+                val: newVal
+            }
+            return result;
+        case "add":
+        case "sub":
+        case "mul":
+        case "div":
+            return reArrangeBinaryOperator(exp, order);
+        default:
+            return exp;
+    }
+}
+```
+
+And with that our orderer is fully finished! Now the 3rd module, the evaluator!
+
+
+<Toc chapter="Orderer"/>
+
+
+</article>
+
+
+<NextPg chapter="Orderer"/>
+
+</div>
+
+<script type="module">
+{`
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+`}
+</script>

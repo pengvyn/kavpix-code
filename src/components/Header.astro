@@ -5,14 +5,14 @@ export interface HeaderProps {
 const { back } = Astro.props;
 ---
 
-<div class="header">
+<div class="header bg-blue-300">
 	<div class="header-left">
 		{back === undefined ? null : <div class="back-cont"><a class="back" href={back}>&lt;</a></div>}
 	</div>
 	<div class="header-middle">
 		<div class="header-title">
 			<a href="https://kavpix.com">
-				<img class="header-img" src="/images/website-header.svg" alt="header"/>
+				<img class="header-img" src="/images/header-title.svg" alt="header"/>
 			</a>
 		</div>
 	</div>

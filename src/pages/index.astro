@@ -6,7 +6,7 @@ import { SITE_TITLE } from "../config";
 import Cards from "../components/Cards.astro";
 
 const cards: CardValues[] = [
-	{text: "Expression Calculator", thumbnail: "", link: "/number-tree/essay/part1"},
+	{text: "Expression Calculator", thumbnail: "/images/exp-calc-logo.svg", link: "/number-tree/essay/part1"},
 ]
 ---
 
@@ -15,7 +15,7 @@ const cards: CardValues[] = [
 	<head>
 		<BaseHead title={SITE_TITLE}/>
 	</head>
-	<body>
+	<body class=" bg-slate-200">
 		<Header />
 		<Cards cards={cards}/>
 		<footer/>

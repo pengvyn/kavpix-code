@@ -13,8 +13,8 @@ export interface CardProps {
 const { card } = Astro.props;
 ---
 <a class="card-link" href={card.link}>
-    <div class="card">
-        <div class="card-title">{card.text}</div>
+    <div class="card border-0">
+        <div class="card-title bg-orange-200 rounded-t-xl text-indigo-600">{card.text}</div>
         <div class="card-thumbnail">
             <img src={card.thumbnail} />
         </div>

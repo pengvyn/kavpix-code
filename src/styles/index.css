@@ -53,7 +53,7 @@ div::selection {
 
 .page-cont {
     display: grid;
-    grid-template-rows: 4rem 1fr 3rem;
+    grid-template-rows: 3rem 1fr 3rem;
     
     height: 100vh;
     width: 100vw;
@@ -93,7 +93,7 @@ div::selection {
 }
 .back {
     color: var(--header-link);
-    text-decoration: none;
+    text-decoration: none !important;
     font-size: 2rem;
 }
 
@@ -105,8 +105,8 @@ div::selection {
     opacity: 0.7;
 }
 .social-img {
-    height: 1.3rem;
-    width: 1.3rem;
+    height: 2.3rem;
+    width: 2.3rem;
     margin: 0 0.3rem;
 }
 
@@ -191,9 +191,11 @@ div::selection {
     justify-content: center;
     overflow: hidden;
 }
+
 .card-thumbnail img {
-    object-fit: cover;
-    min-width: 100%;
+    /* object-fit: cover;
+    min-width: 100%; */
+    min-height: 50%;
 }
 .card-link {
     width: fit-content;

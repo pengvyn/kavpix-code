@@ -5,8 +5,8 @@ import Header from "../components/Header.astro";
 import { SITE_TITLE } from "../config";
 import Cards from "../components/Cards.astro";
 
-const cards: CardValues[] = [
-	{text: "Expression Calculator", thumbnail: "/images/exp-calc-logo.svg", link: "/number-tree/essay/part1"},
+const cards: Partial<CardValues>[] = [
+	{text: "Expression Calculator", thumbnail: "/images/exp-calc-logo.svg", link: "/number-tree/expression-calculator", bgColor: "bg-slate-300", h: "h-1/2"},
 ]
 ---
 

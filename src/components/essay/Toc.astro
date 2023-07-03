@@ -2,7 +2,21 @@
 
 const { chapter } = Astro.props;
 
-const chaptersList = [
+type Chapter =
+    "Intro" | 
+    "Order of Operations" | 
+    "Four Modules" | 
+    "Operator Precedence" | 
+    "Code Intro" |
+    "Parser" |
+    "Orderer" |
+    "Evaluator" | 
+    "Simplifier" |
+    "Outro";
+// ^ same as in ./NextPg.astro
+
+
+const chaptersList: Chapter[] = [
     "Intro", 
     "Order of Operations", 
     "Four Modules", 
@@ -22,7 +36,7 @@ const nonCodeChapters = {
         "Order of Operations", 
         "Four Modules", 
         "Operator Precedence",
-    ]
+    ] as Chapter[]
 }
 
 const codeChapters = {
@@ -33,18 +47,18 @@ const codeChapters = {
         "Orderer",
         "Evaluator", 
         "Simplifier",
-    ]
+    ] as Chapter[]
 }
 
 const outroChapter = {
     title: "",
-    chapters: ["Outro"]
+    chapters: ["Outro"] as Chapter[]
 }
 
 const allChapters = [nonCodeChapters, codeChapters, outroChapter];
 
-function getHref(chapters, chapter) {
-    const idx = chapters.findIndex((c) => c === chapter);
+function getHref(chap: Chapter) {
+    const idx = chaptersList.findIndex((c) => c === chap);
 
     return `./part${idx + 1}`;
 }
@@ -64,7 +78,7 @@ function getHref(chapters, chapter) {
                         chapterCategory.chapters.map(
                             (c, idx) => 
                             <li class={`w-max px-2 text-center rounded-md ${c === chapter ? "bg-blue-100 text-indigo-900" : ""}`}>
-                                    <a href={getHref(chaptersList, c)}>{c}</a>
+                                    <a href={getHref(c)}>{c}</a>
                             </li>
                         )
                     }

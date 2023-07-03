@@ -13,9 +13,21 @@ const chapters = [
     "Evaluator", 
     "Simplifier",
     "Outro"
-]
+] as const;
 
-function getBackHref(chapters, chapter) {
+type Chapter =
+    "Intro" | 
+    "Order of Operations" | 
+    "Four Modules" | 
+    "Operator Precedence" | 
+    "Code Intro" |
+    "Parser" |
+    "Orderer" |
+    "Evaluator" | 
+    "Simplifier" |
+    "Outro";
+
+function getBackHref(chapter: Chapter) {
     const idx = chapters.findIndex((c) => c === chapter);
 
     if(idx === -1 || idx === 0) {
@@ -25,7 +37,7 @@ function getBackHref(chapters, chapter) {
     return `./part${idx}`;
 }
 
-function getNextHref(chapters, chapter) {
+function getNextHref(chapter: Chapter) {
     const idx = chapters.findIndex((c) => c === chapter);
 
     if(idx === -1 || idx === chapters.length - 1) {
@@ -35,7 +47,7 @@ function getNextHref(chapters, chapter) {
     return `./part${idx + 2}`;
 }
 
-function getBackName(chapters, chapter) {
+function getBackName(chapter: Chapter) {
     const idx = chapters.findIndex((c) => c === chapter);
 
     if(idx === -1 || idx === 0) {
@@ -45,7 +57,7 @@ function getBackName(chapters, chapter) {
     return `< ${chapters[idx - 1]}`;
 }
 
-function getNextName(chapters, chapter) {
+function getNextName(chapter: Chapter) {
     const idx = chapters.findIndex((c) => c === chapter);
 
     if(idx === -1 || idx === chapters.length - 1) {
@@ -57,17 +69,17 @@ function getNextName(chapters, chapter) {
 ---
 
 
-<div class="sticky bottom-0 w-full grid grid-cols-2 py-4 font-sans gap-x-8 bg-slate-300">
+<div class="bottom-0 w-full grid grid-cols-2 py-4 font-sans gap-x-8 bg-slate-300">
     <a 
         class="w-max ml-auto text-center p-2 px-5 bg-blue-300 rounded-md opacity-70 text-indigo-800" 
-        href={getBackHref(chapters, chapter)}
+        href={getBackHref(chapter)}
     >
-        {getBackName(chapters, chapter)}
+        {getBackName(chapter)}
     </a>
     <a 
         class="w-max mr-auto text-center p-2 px-5 bg-blue-300 rounded-md opacity-70 text-indigo-800"
-        href={getNextHref(chapters, chapter)}
+        href={getNextHref(chapter)}
     >
-        {getNextName(chapters, chapter)}
+        {getNextName(chapter)}
     </a>
 </div>

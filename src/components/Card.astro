@@ -4,6 +4,9 @@ export interface CardValues {
     text: string;
     thumbnail: string;
     link: string;
+    bgColor: string | undefined,
+    w: string | undefined,
+    h: string | undefined
 }
 
 export interface CardProps {
@@ -11,12 +14,31 @@ export interface CardProps {
 };
 
 const { card } = Astro.props;
+
+const {h, bgColor} = card;
+
+function ifUndefinedEmptyString(inp: undefined | string): string {
+    return inp === undefined ? "" : inp;
+}
+
 ---
 <a class="card-link" href={card.link}>
     <div class="card border-0">
-        <div class="card-title bg-orange-200 rounded-t-xl text-indigo-600">{card.text}</div>
-        <div class="card-thumbnail">
-            <img src={card.thumbnail} />
+        <div class="card-title bg-purple-300 rounded-t-xl text-slate-700 text-sm py-3">{card.text}</div>
+        <div class=`
+            card-thumbnail 
+            ${bgColor === undefined ? "" : bgColor}
+            h-full
+            w-full
+        `>
+            <img src={card.thumbnail} 
+                class=`
+                    ${ifUndefinedEmptyString(h)}
+                    m-auto
+                    object-contain
+                    rounded-xl
+                `
+            />
         </div>
     </div>
 </a>

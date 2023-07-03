@@ -13,7 +13,7 @@ type Chapter =
     "Evaluator" | 
     "Simplifier" |
     "Outro";
-// ^ same as in ./NextPg.astro
+// ^ same as in NextPg.astro
 
 
 const chaptersList: Chapter[] = [
@@ -60,7 +60,7 @@ const allChapters = [nonCodeChapters, codeChapters, outroChapter];
 function getHref(chap: Chapter) {
     const idx = chaptersList.findIndex((c) => c === chap);
 
-    return `./part${idx + 1}`;
+    return `/number-tree/essay/part${idx + 1}`;
 }
 
 ---

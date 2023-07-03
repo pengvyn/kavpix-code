@@ -160,8 +160,6 @@ div::selection {
     border: 2px solid var(--card-border);
     border-radius: 1rem;
 
-    background-color: var(--card-bg);
-
     display: grid;
     grid-template-rows: auto 1fr;
 }
@@ -184,7 +182,7 @@ div::selection {
     color: var(--card-title-fcs);
 }
 .card-thumbnail {
-    background-color: var(--card-tn-bg);
+    @apply bg-slate-300;
     border-radius: 0 0 1rem 1rem;
 
     display: flex;

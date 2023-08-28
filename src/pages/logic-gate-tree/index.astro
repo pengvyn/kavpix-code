@@ -22,8 +22,10 @@ import Header from "../../components/Header.astro";
                         required
                     />
                 </form>
-
-                <div id="result" />
+                <div class="result-cont" style="height: 100%; width: 100%;">
+                    <div id="result" />
+                    <div id="tree" style="width: calc(100vw - 20px); height: 90%"/>
+                </div>
             </div>
             <script>
                 import { gateListener } from "../../scripts/logic-gate-tree/logic-tree-interactions";

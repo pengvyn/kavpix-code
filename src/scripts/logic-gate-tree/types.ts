@@ -65,8 +65,18 @@ export interface Group {
     val: Gate,
     _tag: "group"
 }
-export type GatesWithInputs =  Not | And | Or | Nand | Nor | Xor | Group
-export type BinaryInputGate = And | Or | Nand | Nor | Xor;
+export interface Implies {
+    a: Gate,
+    b: Gate,
+    _tag: "=>"
+}
+export interface Equivalence {
+    a: Gate,
+    b: Gate,
+    _tag: "<=>"
+}
+export type GatesWithInputs =  Not | And | Or | Nand | Nor | Xor | Group | Implies | Equivalence;
+export type BinaryInputGate = And | Or | Nand | Nor | Xor | Implies | Equivalence;
 export type GateName = GatesWithInputs["_tag"];
 
 export type BinaryInputLeafGate = {
@@ -77,7 +87,7 @@ export type BinaryInputLeafGate = {
 
 // ===== MAIN GATE TYPE =====
 
-export type Gate = Not | And | Or | Nand | Nor | Xor | Leaf | Group;
+export type Gate = Not | And | Or | Nand | Nor | Xor | Leaf | Group | Implies | Equivalence;
 
 // --------------------------------------------------------------------------------------
 
@@ -109,6 +119,6 @@ export interface ParsedWaitNext {
 // ======== !ORDERER! ========
 
 export interface GatePrecedence {
-    name: GateName,
+    name: Gate["_tag"],
     precedence: number,
 }

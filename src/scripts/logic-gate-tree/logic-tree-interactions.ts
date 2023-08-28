@@ -21,6 +21,7 @@ function gateCallback(ev: SubmitEvent) {
 
     const ordered = reOrderGates(parsed, defaultOrder);
     const evalled = evaluateGateRecurse(ordered);
+    console.log(evalled);
     const strung = gateToString(evalled);
 
     (document.getElementById("result") as HTMLElement).textContent = strung;

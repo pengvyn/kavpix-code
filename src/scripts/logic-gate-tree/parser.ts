@@ -61,7 +61,7 @@ export function prepareGateString(gate: string, names: string[]): string[] {
     return r;
 }
 
-const binaryGateNames = ["&", "|", "~&", "~|", "#"];
+const binaryGateNames = ["&", "|", "~&", "~|", "#", "=>", "<=>"];
 
 export function isExpected(cur: string, nextExp: NextExp[]): NextExp | "unexpected" {
     if(["(", ")"].includes(cur)) {
@@ -90,10 +90,6 @@ export function valueIsLeaf(stringVal: string, PWD: ParsedWaitNext): ParsedWaitN
     const val = stringVal === "1" || stringVal === "0" ? JSON.parse(stringVal) : stringVal;
     const {parsed, wait, next} = PWD;
     const leafed: Gate = wait.isNegated ? makeGate("~", makeLeaf(val), null) : makeLeaf(val);
-
-    if(wait.isNegated) {
-        console.log("SLJFHSKJDFHLskjfLAKSLAKJD")
-    }
 
     // parsed is empty and waiting is empty
     // parsed is empty but waiting is not empty
@@ -234,7 +230,7 @@ export function parseGate(gate: string): Gate | null {
         if(curValType === "unexpected") {
             console.log(waiting, parsed)
             console.log("UNEXPECTED:", curVal)
-            throw "Unexpected character";
+            throw "Unexpected character: " + curVal;
         }
 
         const curPWD = {parsed, wait: waiting, next: nextExp};

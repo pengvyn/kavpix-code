@@ -122,3 +122,25 @@ export interface GatePrecedence {
     name: Gate["_tag"],
     precedence: number,
 }
+
+// ====== !LISTIFIER! =========
+
+export interface GateBranch {
+    name: string,
+    key: string,
+    parent: string | null
+}
+
+export interface CytoscapeNode {
+    data: {
+        id: string,
+        label: string,
+    }
+}
+export interface CytoscapeEdge {
+    data: {
+        id: string,
+        source: string,
+        target: string,
+    }
+}

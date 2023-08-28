@@ -22,6 +22,8 @@ export function evaluateGateRecurse(gate: Gate): Gate {
         case "~&":
         case "~|":
         case "#":
+        case "=>":
+        case "<=>":
             const evalA = evaluateGateRecurse(gate.a);
             const evalB = evaluateGateRecurse(gate.b);
 
@@ -82,6 +84,24 @@ export function xorGate(aBool: BinaryOrBoolLeaf, bBool: BinaryOrBoolLeaf): Binar
 
     return andGate(aNandB, aOrB);
 }
+export function impliesGate(aBool: BinaryOrBoolLeaf, bBool: BinaryOrBoolLeaf): BinaryLeaf {
+    const a = makeLeaf(getBinaryValue(aBool.value)) as BinaryLeaf;
+    const b = makeLeaf(getBinaryValue(bBool.value)) as BinaryLeaf;
+
+    const notA = notGate(a);
+
+    return orGate(notA, b);
+}
+
+export function equivalenceGate(aBool: BinaryOrBoolLeaf, bBool: BinaryOrBoolLeaf): BinaryLeaf {
+    // aka xNor
+    const a = makeLeaf(getBinaryValue(aBool.value)) as BinaryLeaf;
+    const b = makeLeaf(getBinaryValue(bBool.value)) as BinaryLeaf;
+
+    const aXorB = xorGate(a, b);
+
+    return notGate(aXorB);
+}
 
 function aAndBBinaryBoolLeaf(gate: BinaryInputGate): gate is BinaryInputLeafGate {
     return isBinaryOrBooleanLeaf(gate.a) && isBinaryOrBooleanLeaf(gate.b);
@@ -127,6 +147,16 @@ export function evaluateGate(gate: Gate): Gate {
                 return gate;
             }
             return xorGate(gate.a, gate.b);
+        case "=>":
+            if(!aAndBBinaryBoolLeaf(gate)) {
+                return gate;
+            }
+            return impliesGate(gate.a, gate.b);
+        case "<=>":
+            if(!aAndBBinaryBoolLeaf(gate)) {
+                return gate;
+            }
+            return equivalenceGate(gate.a, gate.b);
     }
     return gate;
 }

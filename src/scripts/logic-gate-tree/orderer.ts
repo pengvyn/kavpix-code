@@ -1,3 +1,4 @@
+import { isEqual } from "lodash";
 import { makeGate } from "./make-gates";
 import type { BinaryInputGate, Gate, GatePrecedence } from "./types";
 
@@ -8,11 +9,20 @@ export const defaultOrder: GatePrecedence[] = [
     { name: "~|", precedence: 4 },
     { name: "&", precedence: 3 },
     { name: "|", precedence: 2},
+    { name: "=>", precedence: 2},
     { name: "#", precedence: 1 },
+    { name: "<=>", precedence: 1},
+    { name: "variable", precedence: 0},
+    { name: "boolean", precedence: 0},
+    { name: "binary", precedence: 0},
 ];
 
 function isAHigherThanB(a: Gate, b: Gate, order: GatePrecedence[]): boolean {
-    const aPrecedence = order[order.findIndex(g => g.name === a._tag)].precedence;
+    console.log(a, b, order)
+    const aPrecedence = order[order.findIndex(g => {
+        console.log(g, a)
+        return g.name === a._tag;
+    })].precedence;
     const bPrecedence = order[order.findIndex(g => g.name === b._tag)].precedence;
 
     return aPrecedence > bPrecedence;
@@ -37,6 +47,8 @@ export function reOrderGates(gate: Gate, order: GatePrecedence[]): Gate {
         case "|":
         case "~&":
         case "~|":
+        case "=>":
+        case "<=>":
             const orderedLeft = reOrderGates(gate.a, order);
             const orderedRight = reOrderGates(gate.b, order);
 

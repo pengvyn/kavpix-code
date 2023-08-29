@@ -2,6 +2,7 @@
 import BaseHead from "../../components/BaseHead.astro";
 import Footer from "../../components/Footer.astro";
 import Header from "../../components/Header.astro";
+import TreeResult from "../../components/trees/TreeResult.astro";
 
 ---
 
@@ -14,17 +15,19 @@ import Header from "../../components/Header.astro";
         <div class="page-cont">
             <Header back="../" />
             <div class="code-example-cont">
-                <form id="logic-gate-form">
-                    <input 
-                        type="text"
-                        id="logic-gate-inp"
-                        name="logic-gate-inp"
-                        required
-                    />
-                </form>
-                <div class="result-cont" style="height: 100%; width: 100%;">
-                    <div id="result" />
-                    <div id="tree" style="width: calc(100vw - 20px); height: 90%"/>
+                <div class="left">
+                    <form id="logic-gate-form">
+                        <input 
+                            type="text"
+                            id="logic-gate-inp"
+                            name="logic-gate-inp"
+                            required
+                        />
+                    </form>
+                </div>
+
+                <div class="right">
+                    <TreeResult />
                 </div>
             </div>
             <script>

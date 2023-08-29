@@ -21,7 +21,7 @@ export function evaluateGateRecurse(gate: Gate): Gate {
         case "|":
         case "~&":
         case "~|":
-        case "#":
+        case "!=":
         case "=>":
         case "<=>":
             const evalA = evaluateGateRecurse(gate.a);
@@ -142,7 +142,7 @@ export function evaluateGate(gate: Gate): Gate {
                 return gate;
             }
             return norGate(gate.a, gate.b);
-        case "#":
+        case "!=":
             if(!aAndBBinaryBoolLeaf(gate)) {
                 return gate;
             }

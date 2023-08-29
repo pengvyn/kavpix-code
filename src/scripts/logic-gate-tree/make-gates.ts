@@ -56,7 +56,7 @@ export function makeGate(name: GateName, a: Gate, b: Gate | null): Gate {
         case "|":
         case "~&":
         case "~|":
-        case "#":
+        case "!=":
         case "=>":
         case "<=>":
             return {

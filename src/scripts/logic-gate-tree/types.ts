@@ -59,7 +59,7 @@ export interface Nor {
 export interface Xor {
     a: Gate,
     b: Gate,
-    _tag: "#",
+    _tag: "!=",
 }
 export interface Group {
     val: Gate,

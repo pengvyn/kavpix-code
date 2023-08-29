@@ -4,6 +4,7 @@ import BaseHead from "../../components/BaseHead.astro";
 import Header from "../../components/Header.astro";
 import Footer from "../../components/Footer.astro";
 import ExpCalc from "../../components/stylesheets/ExpCalc.astro"
+import TreeResult from "../../components/trees/TreeResult.astro";
 
 ---
 
@@ -170,12 +171,13 @@ import ExpCalc from "../../components/stylesheets/ExpCalc.astro"
                 </div>
 
                 <div class="right">
-                    <div class="result-cont">
+                    <!-- <div class="result-cont">
                         <div class="result" id="result" />
                         <div class="tree" id="tree">
                             <div id="myDiagramDiv" />
                         </div>
-                    </div>
+                    </div> -->
+                    <TreeResult />
                 </div>
                 
                 <script>

@@ -7,7 +7,7 @@ import type { Gate, GateName, Leaf, NextExp, ParsedWaitNext, Waiting } from "./t
 
 // export const gateNames = ["not", "and", "or", "nand", "nor", "xor", "true", "false"];
 
-export const gateNames = ["~", "&", "|", "~&", "~|", "#", "true", "false"];
+export const gateNames = ["~", "&", "|", "~&", "~|", "!=", "true", "false"];
 
 export function prepareGateString(gate: string, names: string[]): string[] {
     const listed = gate.split("").reduce(
@@ -61,7 +61,7 @@ export function prepareGateString(gate: string, names: string[]): string[] {
     return r;
 }
 
-const binaryGateNames = ["&", "|", "~&", "~|", "#", "=>", "<=>"];
+const binaryGateNames = ["&", "|", "~&", "~|", "!=", "=>", "<=>"];
 
 export function isExpected(cur: string, nextExp: NextExp[]): NextExp | "unexpected" {
     if(["(", ")"].includes(cur)) {
@@ -214,7 +214,6 @@ export function valueIsOrInGroup(val: string, PWD: ParsedWaitNext): ParsedWaitNe
 
 export function parseGate(gate: string): Gate | null {
     const listed = prepareGateString(gate, gateNames);
-    console.log(listed);
 
     let waiting: Waiting = { 
         gateName: null, 
@@ -228,7 +227,6 @@ export function parseGate(gate: string): Gate | null {
         const curVal = listed[idx];
         const curValType = isExpected(curVal, nextExp);
         if(curValType === "unexpected") {
-            console.log(waiting, parsed)
             console.log("UNEXPECTED:", curVal)
             throw "Unexpected character: " + curVal;
         }

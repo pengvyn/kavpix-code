@@ -10,7 +10,7 @@ export const defaultOrder: GatePrecedence[] = [
     { name: "&", precedence: 3 },
     { name: "|", precedence: 2},
     { name: "=>", precedence: 2},
-    { name: "#", precedence: 1 },
+    { name: "!=", precedence: 1 },
     { name: "<=>", precedence: 1},
     { name: "variable", precedence: 0},
     { name: "boolean", precedence: 0},
@@ -18,9 +18,7 @@ export const defaultOrder: GatePrecedence[] = [
 ];
 
 function isAHigherThanB(a: Gate, b: Gate, order: GatePrecedence[]): boolean {
-    console.log(a, b, order)
     const aPrecedence = order[order.findIndex(g => {
-        console.log(g, a)
         return g.name === a._tag;
     })].precedence;
     const bPrecedence = order[order.findIndex(g => g.name === b._tag)].precedence;
@@ -42,7 +40,7 @@ export function reOrderGates(gate: Gate, order: GatePrecedence[]): Gate {
         case "boolean":
         case "variable":
             return gate;
-        case "#":
+        case "!=":
         case "&":
         case "|":
         case "~&":

@@ -16,19 +16,31 @@ function translateLabel(tag: string): string {
     switch(tag) {
         case "group":
             return "( )";
+        case "=>":
+            return "⇒";
+        case "<=>":
+            return "⇔";
+        case "~":
+            return "¬";
+        case "|":
+            return "∥";
+        case "!=":
+            return "≢";
         default:
             return tag;
     }
 }
 
 function isNodeOperator(n: cytoscape.NodeSingular): boolean {
-    return ["( )", "&", "|", "~", "~&", "~|", "#", "=>", "<=>"].includes(n.data("label"));
+    return ["( )", "&", "|", "~", "~&", "~|", "!=", "=>", "<=>"].includes(n.data("label"));
 }
 function isNodeVariable(n: cytoscape.NodeSingular): boolean {
     return _variables.includes(n.data("label"));
 }
 
 dagre(cytoscape);
+
+let curCy: cytoscape.Core | null = null;
 
 function gateCallback(ev: SubmitEvent) {
     ev.preventDefault();
@@ -40,11 +52,27 @@ function gateCallback(ev: SubmitEvent) {
         throw "Empty input!"
     }
 
-    console.log(parsed);
 
     const ordered = reOrderGates(parsed, defaultOrder);
     const evalled = evaluateGateRecurse(ordered);
     console.log(evalled);
+
+    // ===== Reset tree =====
+
+
+    const dgdiv = document.getElementById("myDiagramDiv") as HTMLElement;
+    const parent = dgdiv.parentElement;
+
+    const fragment = new DocumentFragment();
+
+    const newDiv = document.createElement("div");
+    newDiv.id = dgdiv.id;
+    fragment.append(newDiv);
+    dgdiv.remove();
+    parent?.append(fragment);
+
+    curCy?.destroy();
+    curCy = null;
 
     // === TREEEEE ===
 
@@ -73,10 +101,10 @@ function gateCallback(ev: SubmitEvent) {
     (document.getElementById("result") as HTMLElement).textContent = strung;
 
     const c = cytoscape({
-        container: document.getElementById("tree"),
+        container: document.getElementById("myDiagramDiv"),
         elements: {
-            nodes,
-            edges,
+            nodes: nodes,
+            edges: edges,
         },
         style: [
             {
@@ -129,4 +157,6 @@ function gateCallback(ev: SubmitEvent) {
 
     c.resize()
     c.center()
+
+    curCy = c;
 }

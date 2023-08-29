@@ -1,8 +1,6 @@
 import type { Gate } from "./types";
 
 export function gateToString(gate: Gate): string {
-    console.log(gate);
-
     switch(gate._tag) {
         case "variable":
         case "binary":

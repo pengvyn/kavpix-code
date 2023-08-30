@@ -2,7 +2,11 @@
 import BaseHead from "../../components/BaseHead.astro";
 import Footer from "../../components/Footer.astro";
 import Header from "../../components/Header.astro";
+import ChangeOrder from "../../components/trees/ChangeOrder.astro";
+import Examples from "../../components/trees/Examples.astro";
 import TreeResult from "../../components/trees/TreeResult.astro";
+import Variables from "../../components/trees/Variables.astro";
+import "../../styles/exp-calculator.css";
 
 ---
 
@@ -16,14 +20,43 @@ import TreeResult from "../../components/trees/TreeResult.astro";
             <Header back="../" />
             <div class="code-example-cont">
                 <div class="left">
-                    <form id="logic-gate-form">
-                        <input 
-                            type="text"
-                            id="logic-gate-inp"
-                            name="logic-gate-inp"
-                            required
-                        />
-                    </form>
+                    <div class="input-cont">
+                        <div class="form-cont">
+                            <form id="logic-gate-form">
+                                <input 
+                                    type="text"
+                                    id="logic-gate-inp"
+                                    name="logic-gate-inp"
+                                    required
+                                />
+                            </form>
+                        </div>
+                        <Examples examples={["0 & 1 | 0", "a != b | c"]} />
+                    </div>
+                    <ChangeOrder operationInps={[
+                        {symbol: "~&", name: "nand", precedence: 5},
+                        {symbol: "~|", name: "nor", precedence: 4},
+                        { symbol: "&", name: "and", precedence: 3 },
+                        { symbol: "∥", name: "or", precedence: 2},
+                        { symbol: "⇒", name: "implies", precedence: 2},
+                        { symbol: "≢", name: "xor", precedence: 1 },
+                        { symbol: "⇔", name: "biconditional", precedence: 1},
+                    ]} />
+                    <script>
+                        import { gatePrecedenceListener } from "../../scripts/logic-gate-tree/logic-tree-interactions";
+
+                        const ids = ["or", "nor", "nand", "xor", "implies", "biconditional"].reduce((p, c) => {
+                            return {
+                                ...p,
+                                [c]: "order-" + c
+                            }
+                        }, {"and": "order-and"});
+                        console.log("IDs:", ids);
+
+                        gatePrecedenceListener(document.getElementById("re-orderer-form"), ids);
+                    </script>
+
+                    <Variables />
                 </div>
 
                 <div class="right">

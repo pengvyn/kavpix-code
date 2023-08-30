@@ -1,0 +1,38 @@
+---
+
+interface SymbolAndName {
+    symbol: string,
+    name: string,
+    precedence: number,
+}
+
+interface Props {
+    operationInps: SymbolAndName[]
+}
+
+import "../../styles/exp-calculator.css";
+
+const {operationInps} = Astro.props;
+---
+
+<div class="change-order">
+    <div class="title">Operator Precedence</div>
+    <form id="re-orderer-form">
+        <label>Change operator precedence</label>
+        <div class="operations">
+            {operationInps.map(
+                (el) => <div class="operation">
+                        <div class="symbol">
+                            {el.symbol}
+                        </div>
+                        <input 
+                            type="number"
+                            name={`order-${el.name}`}
+                            id={`order-${el.name}`}
+                            placeholder={`${el.precedence}`}
+                        />
+                    </div>
+            )}
+        </div>
+    </form>
+</div>

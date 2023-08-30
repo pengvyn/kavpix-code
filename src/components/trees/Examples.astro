@@ -1,0 +1,15 @@
+---
+
+interface Props {
+    examples: string[];
+}
+
+const {examples} = Astro.props;
+
+---
+
+<div class="examples" id="examples">
+    {examples.map(
+        (ex: string) => <div class="example">{ex}</div>
+    )}
+</div>

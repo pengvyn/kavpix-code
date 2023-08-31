@@ -57,6 +57,12 @@ import "../../styles/exp-calculator.css";
                     </script>
 
                     <Variables />
+                    <script>
+                        import { variableListener, updateVariablesListener } from "../../scripts/logic-gate-tree/logic-tree-interactions";
+
+                        variableListener();
+                        updateVariablesListener();
+                    </script>
                 </div>
 
                 <div class="right">

@@ -4,12 +4,15 @@ import { gateToString } from "./gateToString";
 import { listifyGate } from "./listifier";
 import { defaultOrder, reOrderGates } from "./orderer";
 import { parseGate } from "./parser";
-import type { CytoscapeEdge, CytoscapeNode, Gate, GatePrecedence } from "./types";
+import type { CytoscapeEdge, CytoscapeNode, Gate, GatePrecedence, VariableAndValue, VariablesValue } from "./types";
 import dagre from "cytoscape-dagre";
 import { Variable, _variables } from "../tree-expressions/types";
+import { isEqual } from "lodash";
+
+const form = document.getElementById("logic-gate-form");
 
 export function gateListener() {
-    document.getElementById("logic-gate-form")?.addEventListener("submit", (ev) => gateCallback(ev));
+    form?.addEventListener("submit", (ev) => gateCallback(ev));
 }
 
 function translateLabel(tag: string): string {
@@ -62,7 +65,6 @@ function changeGatePrecedence(ev: Event, ids: {
     implies: string, 
     biconditional: string,
 }) {
-    console.log("CHANGE GATE PRECEDENCE", ids.and)
     ev.preventDefault();
 
     const andInp = document.getElementById(ids.and);
@@ -75,7 +77,6 @@ function changeGatePrecedence(ev: Event, ids: {
 
     const gatePrecedence = [andInp, orInp, nandInp, norInp, xorInp, impliesInp, biconInp].map(
         (gate) => {
-            console.log(gate)
             return {
                 name: translateGatenameToSymbol((gate as HTMLInputElement).id.replaceAll("order-", "")),
                 precedence: JSON.parse((gate as HTMLInputElement).value ? (gate as HTMLInputElement).value : (gate as HTMLInputElement).placeholder),
@@ -110,8 +111,102 @@ export function gatePrecedenceListener(form: HTMLFormElement, ids: {
     form.addEventListener("input", (ev) => changeGatePrecedence(ev, ids));
 }
 
-// ===== MAIN FUNCTION =====
+// ===== VARIABLES ======
 
+
+export function variableListener() {
+    document.getElementById("variables")?.addEventListener("input", (ev) => {
+        ev.preventDefault();
+
+        callFunctions();
+    });
+}
+
+function variableValueIsAllowed(val: string | undefined): val is VariablesValue {
+    return val === "0" || val === "1" || val === "T" || val === "F";
+}
+
+function getVariables(): VariableAndValue[] {
+    const children = (document.getElementById("variables") as HTMLElement).children;
+
+    return Array.from(children).map((n) => {
+        const varName = n.querySelector("label")?.textContent;
+        const val = n.querySelector("input")?.value;
+        const isVarAllowed = variableValueIsAllowed(val);
+
+        return {
+            variable: varName as Variable,
+            value: isVarAllowed ? val : undefined
+        }
+    })
+}
+
+function replaceVariables(str: string, variables: VariableAndValue[]): string {
+    if(variables.length === 0) {
+        return str;
+    }
+
+    return variables.reduce(
+        (p, c) => c.value === undefined
+            ? p
+            : p.replace(c.variable, "" + c.value), 
+        str
+    )
+}
+
+function updateVariables(input: string) {
+    const exp = input.split("");
+
+    const cont = document.getElementById("variables") as HTMLDivElement;
+    const children = Array.from(cont.children);
+    const vars: Variable[] = children.map(
+        (c) => (c.querySelector("label") as HTMLLabelElement).textContent as Variable
+    );
+    const newVars = exp.filter(
+        (c) => ([..._variables] as string[]).includes(c) && !([...vars] as string[]).includes(c)
+    )
+    const singleInstanceVars = newVars.reduce((p, c) => p.includes(c) ? p : [...p, c], [] as string[]);
+
+    const varsToBeRemoved: Variable[] = vars.filter((v) => !exp.includes(v));
+
+    varsToBeRemoved.map((v) => {
+        const inp = document.getElementById(`variable-${v}`);
+        if(inp === null) {
+            return;
+        }
+        inp.parentElement?.remove();
+    })
+
+    singleInstanceVars.map((v) => {
+        const fragment = new DocumentFragment();
+        const div = document.createElement("div");
+        div.className = "variable";
+
+        const label = document.createElement("label");
+        label.textContent = v;
+        div.appendChild(label);
+
+        const inp = document.createElement("input");
+        inp.type = "text";
+        inp.id = `variable-${v}`;
+
+        div.appendChild(inp);
+
+        fragment.append(div);
+
+        cont.appendChild(fragment);
+    })
+    
+    if(newVars.length !== 0) {
+        (document.querySelector(".variables-cont") as HTMLElement).className = "variables-cont";
+    }
+}
+
+export function updateVariablesListener() {
+    form?.addEventListener("input", (ev) => updateVariables((ev.target as HTMLInputElement).value));
+}
+
+// ===== MAIN FUNCTION =====
 
 function isNodeOperator(n: cytoscape.NodeSingular): boolean {
     return ["( )", "&", "|", "~", "~&", "~|", "!=", "=>", "<=>"].includes(n.data("label"));
@@ -126,7 +221,8 @@ let curCy: cytoscape.Core | null = null;
 
 function callFunctions() {
 
-    const str = (document.getElementById("logic-gate-inp") as HTMLInputElement).value;
+    const inputStr = (document.getElementById("logic-gate-inp") as HTMLInputElement).value;
+    const str = replaceVariables(inputStr, getVariables());
     const parsed = parseGate(str);
 
     if(parsed === null) {

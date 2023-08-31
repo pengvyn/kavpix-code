@@ -144,3 +144,12 @@ export interface CytoscapeEdge {
         target: string,
     }
 }
+
+// ============ !LOGIC TREE INTERACTIONS! ===============
+
+export interface VariableAndValue {
+    variable: Variable,
+    value: VariablesValue,
+}
+
+export type VariablesValue = "0" | "1" | "T" | "F" | undefined;

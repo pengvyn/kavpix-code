@@ -1,10 +1,10 @@
 import * as fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { andGate, evaluateGate, evaluateGateRecurse, nandGate, norGate, notGate, orGate, xorGate } from '../../scripts/logic-gate-tree/evaluator';
-import type { BinaryLeaf, Gate } from '../../scripts/logic-gate-tree/types';
-import { makeGate, makeLeaf } from '../../scripts/logic-gate-tree/make-gates';
-import { defaultOrder, reOrderGates } from '../../scripts/logic-gate-tree/orderer';
-import { parseGate } from '../../scripts/logic-gate-tree/parser';
+import { andGate, evaluateGate, evaluateGateRecurse, nandGate, norGate, notGate, orGate, xorGate } from '../../scripts/logic-tree/evaluator';
+import type { BinaryLeaf, Gate } from '../../scripts/logic-tree/types';
+import { makeGate, makeLeaf } from '../../scripts/logic-tree/make-gates';
+import { defaultOrder, reOrderGates } from '../../scripts/logic-tree/orderer';
+import { parseGate } from '../../scripts/logic-tree/parser';
 
 describe("Evaluator", () => {
     describe("Evaluate gate functions", () => {

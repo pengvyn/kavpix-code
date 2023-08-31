@@ -21,6 +21,7 @@ import "../../styles/exp-calculator.css";
             <div class="code-example-cont">
                 <div class="left">
                     <div class="input-cont">
+                        <div class="title">Logic tree</div>
                         <div class="form-cont">
                             <form id="logic-gate-form">
                                 <input 
@@ -31,7 +32,12 @@ import "../../styles/exp-calculator.css";
                                 />
                             </form>
                         </div>
-                        <Examples examples={["0 & 1 | 0", "a != b | c"]} />
+                        <Examples examples={["0 & 1 | 0", "a != b | c", "(T ~& F) != (~a | b)", "0 & T", "~(a & 1)"]} />
+                        <script>
+                            import { exampleListener } from "../../scripts/logic-tree/logic-tree-interactions";
+
+                            exampleListener(document.getElementById("examples"));
+                        </script>
                     </div>
                     <ChangeOrder operationInps={[
                         {symbol: "~&", name: "nand", precedence: 5},
@@ -43,7 +49,7 @@ import "../../styles/exp-calculator.css";
                         { symbol: "⇔", name: "biconditional", precedence: 1},
                     ]} />
                     <script>
-                        import { gatePrecedenceListener } from "../../scripts/logic-gate-tree/logic-tree-interactions";
+                        import { gatePrecedenceListener } from "../../scripts/logic-tree/logic-tree-interactions";
 
                         const ids = ["or", "nor", "nand", "xor", "implies", "biconditional"].reduce((p, c) => {
                             return {
@@ -58,7 +64,7 @@ import "../../styles/exp-calculator.css";
 
                     <Variables />
                     <script>
-                        import { variableListener, updateVariablesListener } from "../../scripts/logic-gate-tree/logic-tree-interactions";
+                        import { variableListener, updateVariablesListener } from "../../scripts/logic-tree/logic-tree-interactions";
 
                         variableListener();
                         updateVariablesListener();
@@ -70,7 +76,7 @@ import "../../styles/exp-calculator.css";
                 </div>
             </div>
             <script>
-                import { gateListener } from "../../scripts/logic-gate-tree/logic-tree-interactions";
+                import { gateListener } from "../../scripts/logic-tree/logic-tree-interactions";
                 gateListener();
             </script>
             <Footer />

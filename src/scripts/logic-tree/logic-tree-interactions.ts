@@ -341,3 +341,26 @@ function gateCallback(ev: SubmitEvent) {
 
     callFunctions();
 }
+
+// ==== EXAMPLES ====
+
+function exampleCallback(ev: Event) {
+    const target = ev.target as HTMLElement | null;
+
+    if(target === null || target.className !== "example") {
+        return;
+    }
+
+    console.log(form);
+    const inp = (document.getElementById("logic-gate-inp") as HTMLInputElement)
+    console.log(inp);
+    inp.value = target.textContent === null ? "" : target.textContent;
+    // in reality this will never be null since it's an example i manually provide
+
+    updateVariables(target.textContent === null ? "" : target.textContent);
+    callFunctions();
+}
+
+export function exampleListener(cont: HTMLDivElement) {
+    cont.addEventListener("click", (ev) => exampleCallback(ev));
+}

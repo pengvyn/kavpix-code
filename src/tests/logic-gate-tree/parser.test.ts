@@ -1,6 +1,6 @@
 import * as fc from "fast-check";
 import { describe, it } from "vitest";
-import { gateNames, parseGate, prepareGateString } from "../../scripts/logic-gate-tree/parser";
+import { gateNames, parseGate, prepareGateString } from "../../scripts/logic-tree/parser";
 
 describe("Parser", () => {
     it("Prepare Gate string", () => {

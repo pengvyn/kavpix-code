@@ -230,6 +230,8 @@ function callFunctions() {
     }
 
 
+    console.log(parsed);
+
     const ordered = reOrderGates(parsed, order);
     const evalled = evaluateGateRecurse(ordered);
 

@@ -115,6 +115,8 @@ export function valueIsLeaf(stringVal: string, PWD: ParsedWaitNext): ParsedWaitN
 // -------------- PARAN FUNCS ---------------
 
 export function valueIsOpenParan(PWD: ParsedWaitNext): ParsedWaitNext {
+
+    console.log("OPEN PARAN", PWD.wait.group);
     const group = PWD.wait.group;
 
     if(group._tag === "grouped") {
@@ -122,7 +124,7 @@ export function valueIsOpenParan(PWD: ParsedWaitNext): ParsedWaitNext {
             ...PWD, 
             wait: {
                 ...PWD.wait, 
-                group: {_tag: "grouped", expression: group.expression}
+                group: {_tag: "grouped", expression: group.expression + "("}
             },
             next: ["parentheses", "leaf", "not"]
         };
@@ -148,6 +150,11 @@ export function areAllParenthesesClosed(str: string): boolean {
 export function valueIsClosedParan(PWD: ParsedWaitNext): ParsedWaitNext {
     const {parsed, wait, next} = PWD;
     const group = wait.group;
+
+    console.log("CLOSED PARAN")
+
+
+    console.log("ALL PARANS CLOSED:", areAllParenthesesClosed(group.expression), group.expression);
 
     if(!areAllParenthesesClosed(group.expression)) {
         return {
@@ -225,6 +232,7 @@ export function parseGate(gate: string): Gate | null {
 
     for (const idx in listed) {
         const curVal = listed[idx];
+        console.log(idx, curVal)
         const curValType = isExpected(curVal, nextExp);
         if(curValType === "unexpected") {
             console.log("UNEXPECTED:", curVal)

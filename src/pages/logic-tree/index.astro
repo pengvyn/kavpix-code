@@ -6,7 +6,8 @@ import ChangeOrder from "../../components/trees/ChangeOrder.astro";
 import Examples from "../../components/trees/Examples.astro";
 import TreeResult from "../../components/trees/TreeResult.astro";
 import Variables from "../../components/trees/Variables.astro";
-import "../../styles/exp-calculator.css";
+import "../../styles/tree-styles.css";
+import "../../styles/logic-tree.css";
 
 ---
 
@@ -24,6 +25,46 @@ import "../../styles/exp-calculator.css";
                         <div class="title">Logic tree</div>
                         <div class="form-cont">
                             <form id="logic-gate-form">
+                                <label>
+                                    <div class="input-label">
+                                        Type an expression with
+                                        <span class="input-info">
+                                            <span class="text">Logic Inputs</span>
+                                            <span class="info">Binary (0, 1) or boolean (T, F)</span>
+                                        </span>,
+                                        <span class="input-info">
+                                            <span class="text">Variables</span>
+                                            <span class="info">Any lower-case English letter</span>
+                                        </span>, and
+                                        <span class="input-info">
+                                            <span class="text">Operators</span>
+                                            <span class="info">
+                                                <span class="info-left">
+                                                    ~<br>
+                                                    &<br>
+                                                    |<br>
+                                                    ~&<br>
+                                                    ~|<br>
+                                                    !=<br>
+                                                    =&gt;<br>
+                                                    &lt;=&gt;<br>
+                                                    ()
+                                                </span>
+                                                <span class="info-right">
+                                                    Not<br>
+                                                    And<br>
+                                                    Or<br>
+                                                    Nand<br>
+                                                    Nor<br>
+                                                    Xor<br>
+                                                    Implies<br>
+                                                    Biconditional<br>
+                                                    Parentheses
+                                                </span>
+                                            </span>
+                                        </span>
+                                    </div>  
+                                </label>
                                 <input 
                                     type="text"
                                     id="logic-gate-inp"

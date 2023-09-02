@@ -1,3 +1,11 @@
 .input-info {
     z-index: 10000;
 }
+
+select {
+    background-color: white !important;
+}
+
+.note {
+    font-size: 0.6rem;
+}

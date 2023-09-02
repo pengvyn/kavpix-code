@@ -12,6 +12,7 @@ type Chapter =
     "Orderer" |
     "Evaluator" | 
     "Simplifier" |
+    "Logic Tree" |
     "Outro";
 // ^ same as in NextPg.astro
 
@@ -26,6 +27,7 @@ const chaptersList: Chapter[] = [
     "Orderer",
     "Evaluator", 
     "Simplifier",
+    "Logic Tree",
     "Outro"
 ]
 
@@ -52,7 +54,7 @@ const codeChapters = {
 
 const outroChapter = {
     title: "",
-    chapters: ["Outro"] as Chapter[]
+    chapters: ["Logic Tree", "Outro"] as Chapter[]
 }
 
 const allChapters = [nonCodeChapters, codeChapters, outroChapter];

@@ -6,12 +6,13 @@ const chapters = [
     "Intro", 
     "Order of Operations", 
     "Four Modules", 
-    "Operator Precedence", 
+    "Operator Precedence",
     "Code Intro",
     "Parser",
     "Orderer",
     "Evaluator", 
     "Simplifier",
+    "Logic Tree",
     "Outro"
 ] as const;
 
@@ -25,6 +26,7 @@ type Chapter =
     "Orderer" |
     "Evaluator" | 
     "Simplifier" |
+    "Logic Tree" |
     "Outro";
 
 function getBackHref(chapter: Chapter) {

@@ -1,0 +1,63 @@
+import Mermaid from '../../../components/Mermaid.astro'
+import "../../../styles/index.css"
+import "../../../styles/essay.css"
+import Header from "../../../components/Header.astro"
+import Toc from "../../../components/essay/Toc.astro"
+import Title from "../../../components/essay/Title.astro"
+import NextPg from "../../../components/essay/NextPg.astro"
+
+<Title chapter="Outro"/>
+
+<Header back="../../"/>
+<div class="bg-slate-300 w-full h-max">
+
+<article class="font-sans max-w-prose my-0 mx-auto leading-relaxed pb-6">
+
+# **Summary**
+
+There we go! We first looked at the benefits of the tree structure, such as visualization, computation, etc, and then the 4 main modules.
+
+The four main modules are the **parser**, which transforms an expression in a `string` form, which the computer can't understand, to the tree form. Second, the **orderer**, which re-arranges the tree so that it follows the order of operations. Third, the **evaluator**, it does what it says: evaluates. It goes through each of the elements in the tree and evaluates each of them! Fourth and last, the **simplifier**, which evaluates some things that the evaluator couldn't.
+
+The parser is a very important function, not just for this expression calculator, but because it's used in many other scenarios. Transforming something in one form to another are used everywhere, less prominently in some and more prominently in others.
+
+Finally, we looked at how the Logic Tree works, and how it is (almost) exactly the same as the Number Tree!
+
+## **To-Do list**
+
+- Distribution
+- Simplifying multiplication/division for expressions like `1 * a` or `a / 1`
+
+Logic tree:
+
+- Simplifier
+- Simplifying gates like `a & 0`, `a | 1`, etc.
+
+- Generalizing main functions (parser, orderer, evaluator, and simplifier)
+
+## **Libraries Used**
+
+- [Lodash](https://lodash.com)
+- [Vitest](https://vitest.dev)
+- [Astro](https://astro.build)
+- [Cytoscape](https://js.cytoscape.org)
+- [Mermaid](https://mermaid.js.org)
+- [Tailwind](https://tailwindcss.com)
+
+
+<Toc chapter="Outro"/>
+
+
+</article>
+
+
+<NextPg chapter="Outro"/>
+
+</div>
+
+<script type="module">
+{`
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+`}
+</script>

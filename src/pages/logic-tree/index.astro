@@ -98,7 +98,6 @@ import "../../styles/logic-tree.css";
                                 [c]: "order-" + c
                             }
                         }, {"and": "order-and"});
-                        console.log("IDs:", ids);
 
                         gatePrecedenceListener(document.getElementById("re-orderer-form"), ids);
                     </script>
@@ -120,7 +119,14 @@ import "../../styles/logic-tree.css";
                 import { gateListener } from "../../scripts/logic-tree/logic-tree-interactions";
                 gateListener();
             </script>
-            <Footer />
+            <footer>
+                <div class="copyright">
+                    &copy; 2022-2023 kavpix, All rights reserved.
+                </div>
+                <div class="forbidden">
+                    Read the <a class="inline underline text-violet-800" href="/number-tree/essay/part10">article</a> on how and why I made this
+                </div>
+            </footer>   
         </div>
     </body>
 </html>

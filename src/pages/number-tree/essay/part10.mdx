@@ -1,4 +1,3 @@
-import Mermaid from '../../../components/Mermaid.astro'
 import "../../../styles/index.css"
 import "../../../styles/essay.css"
 import Header from "../../../components/Header.astro"
@@ -6,49 +5,171 @@ import Toc from "../../../components/essay/Toc.astro"
 import Title from "../../../components/essay/Title.astro"
 import NextPg from "../../../components/essay/NextPg.astro"
 
-<Title chapter="Outro"/>
+<Title chapter="Logic Tree"/>
 
-<Header back="../../"/>
+<Header back="../../" />
+
 <div class="bg-slate-300 w-full h-max">
-
 <article class="font-sans max-w-prose my-0 mx-auto leading-relaxed pb-6">
 
-# **Summary**
+# **What is the Logic Tree?**
 
-There we go! We first looked at the benefits of the tree structure, such as visualization, computation, etc, and then the 4 main modules.
+This is a continuation of the previous sections, if you haven't already, you can read from the [start](https://code.kavpix.com/number-tree/essay/page1)
+<br/>
+You can try out this logic tree [here](https://code.kavpix.com/logic-tree)!
+<br/>
+It looks very similar to the the number tree, but it uses logic gates instead.
+<br/>
+They both do pretty much the same thing, just not in the same contexts. So, the code and general processes are all similar, with only a few minor differences here and there.
 
-The four main modules are the **parser**, which transforms an expression in a `string` form, which the computer can't understand, to the tree form. Second, the **orderer**, which re-arranges the tree so that it follows the order of operations. Third, the **evaluator**, it does what it says: evaluates. It goes through each of the elements in the tree and evaluates each of them! Fourth and last, the **simplifier**, which evaluates some things that the evaluator couldn't.
+# **Differences**
 
-The parser is a very important function, not just for this expression calculator, but because it's used in many other scenarios. Transforming something in one form to another are used everywhere, less prominently in some and more prominently in others.
+None of the major functions changed much. They just use different symbols and inputs. For the logic tree, I decided to skip the simplifier. It is important, but not completely necessary. Still, I plan to add it in some time in the future.
 
-## **To-Do list**
+<br/>
 
-- Distribution
-- Simplifying multiplication/division for expressions like `1 * a` or `a / 1`
+With the number tree, the parser just had to check for single symbols. But now, it has to check for multiple. For example, `~&` (`Nand`) uses two characters: `~` and `&`.
+Which means, we can't just go about it character by character, we need to first make sure that we combine the symbols together.
 
-## **Libraries Used**
+<br/>
 
-- [Lodash](https://lodash.com)
-- [Vitest](https://vitest.dev)
-- [Astro](https://astro.build)
-- [Cytoscape](https://js.cytoscape.org)
-- [Mermaid](https://mermaid.js.org)
-- [Tailwind](https://tailwindcss.com)
+You might remember the `joinSimilars` function from the number tree. We're just going to change that a bit to make sure it joins the operators together.
+
+```typescript
+const gateNames = ["~", "&", "|", "~&", "~|", "!=", "true", "false"];
+
+function prepareGateString(gate: string, names: string[]): string[] {
+    const listed = gate.split("")
+    
+    // joining
+    let waiting: string = "";
+    let prepared: string[] = [];
+
+    for (const idx in listed) {
+        if (listed[idx] === " ") {
+            
+            if(waiting !== "") {
+                prepared = [...prepared, waiting];
+            }
+
+            waiting = "";
+
+        } else if (listed[idx] === "(" || listed[idx] === ")") {
+            prepared = [...prepared, ...(waiting === "" ? [] : [waiting]), listed[idx]];
+            waiting = "";
+
+        } else if (JSON.parse(idx) === listed.length - 1) {
+            prepared = [...prepared, ...(waiting === "" ? [] : [waiting]), listed[idx]];
+
+        } else if (waiting === "~") {
+            if(listed[idx] === "&" || listed[idx] === "|") {
+                waiting = waiting + listed[idx];
+            } else {
+                prepared = [...prepared, waiting, listed[idx]];
+                waiting = "";
+            }
+        } else {
+            waiting = waiting + listed[idx];
+
+        }
+    }
+
+    return prepared;
+}
+```
+
+It looks a little complicated, so let's go line by line.
+
+First, the input string can be split to make a list. You can see that there is a `waiting` here as well.
+<br/>
+This one's a bit different, though. It stores just a string. For symbols like `~&`, it will store `~`,
+then add `&` to it after.
+<br/>
+Then there's also a `prepared`. This one has the same function as `parsed` in the parser. It just stores the result-in-progress.
+<br/>
+This one uses a `for` loop. Let's start with the first `if`.
+
+```typescript
+if (listed[idx] === " ") {
+            
+            if(waiting !== "") {
+                prepared = [...prepared, waiting];
+            }
+
+            waiting = "";
+
+        }
+```
+
+For this one, we're using `" "` (space) as a separator. Whenever theres a space, it adds the waiting to the prepared list. Then, it resets the waiting.
+<br/>
+Next, open parentheses and closed parentheses. 
 
 
-<Toc chapter="Outro"/>
+```typescript
 
+else if (listed[idx] === "(" || listed[idx] === ")") {
+    prepared = [...prepared, ...(waiting === "" ? [] : [waiting]), listed[idx]];
+    waiting = "";
+
+}
+
+```
+
+This one does pretty much the same thing.
+<br/>
+It adds the waiting to the prepared, but also the open/closed parentheses. If the waiting is empty, 
+it just puts the parentheses in there. It resets the waiting as well, just like before.
+
+```typescript
+
+else if (JSON.parse(idx) === listed.length - 1) {
+    prepared = [...prepared, ...(waiting === "" ? [] : [waiting]), listed[idx]];
+}
+
+```
+
+This is to check if it's on the last value of the list. If it is, puts the waiting and the value into the prepared list.
+<br/>
+This step is needed because otherwise, the value would be added to the waiting, and the loop would end without the value.
+
+```typescript
+
+else if (waiting === "~") {
+    if(listed[idx] === "&" || listed[idx] === "|") {
+        waiting = waiting + listed[idx];
+    } else {
+        prepared = [...prepared, waiting, listed[idx]];
+        waiting = "";
+    }
+}
+
+```
+
+This is for the `~`. It could either be a `not`, or it could be the start of a `nand` or `nor`.
+<br/>
+This one actually checks if `waiting` is `~`, not the current value. If the waiting is `~`,
+it either adds the current value to `~` if the value is `&` or `|`.
+<br/> Otherwise, it just adds the waiting and current value to the prepared and then resets the waiting.
+
+```typescript
+
+else {
+    waiting = waiting + listed[idx];
+}
+
+```
+
+It comes here whenever the current value is a gate (except for when the `waiting` is `~`), variable, boolean, or binary.
+<br/>
+Finally, it just returns `prepared`.
+<br/>
+That's pretty much the only change. The other major functions (parser, orderer, evaluator) all do the same thing as with the number tree, but they use logic gates instead.
+
+<Toc chapter="Logic Tree"/>
 
 </article>
 
-
-<NextPg chapter="Outro"/>
+<NextPg chapter="Logic Tree"/>
 
 </div>
-
-<script type="module">
-{`
-    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-    mermaid.initialize({ startOnLoad: true });
-`}
-</script>

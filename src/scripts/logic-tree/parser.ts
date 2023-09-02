@@ -8,15 +8,8 @@ import type { Gate, GateName, Leaf, NextExp, ParsedWaitNext, Waiting } from "./t
 // export const gateNames = ["not", "and", "or", "nand", "nor", "xor", "true", "false"];
 
 export const gateNames = ["~", "&", "|", "~&", "~|", "!=", "true", "false"];
-
 export function prepareGateString(gate: string, names: string[]): string[] {
-    const listed = gate.split("").reduce(
-        (p, c) => [...p, c === "T" || c === "F"
-            ? c
-            : c.toLowerCase()
-        ],
-        [] as string[]
-    )
+    const listed = gate.split("")
     
     // joining
     let waiting: string = "";
@@ -36,7 +29,6 @@ export function prepareGateString(gate: string, names: string[]): string[] {
             waiting = "";
 
         } else if (JSON.parse(idx) === listed.length - 1) {
-            waiting = waiting /*+ listed[idx];*/
             prepared = [...prepared, ...(waiting === "" ? [] : [waiting]), listed[idx]];
 
         } else if (waiting === "~") {
@@ -51,14 +43,8 @@ export function prepareGateString(gate: string, names: string[]): string[] {
 
         }
     }
-    const r = prepared.reduce(
-        (p, c) => names.includes(c)
-            ? [...p, c.slice(0, 1).toUpperCase() + c.slice(1)]
-            : [...p, c],
-        [] as string[]
-    )
 
-    return r;
+    return prepared;
 }
 
 const binaryGateNames = ["&", "|", "~&", "~|", "!=", "=>", "<=>"];
@@ -115,8 +101,6 @@ export function valueIsLeaf(stringVal: string, PWD: ParsedWaitNext): ParsedWaitN
 // -------------- PARAN FUNCS ---------------
 
 export function valueIsOpenParan(PWD: ParsedWaitNext): ParsedWaitNext {
-
-    console.log("OPEN PARAN", PWD.wait.group);
     const group = PWD.wait.group;
 
     if(group._tag === "grouped") {
@@ -150,11 +134,6 @@ export function areAllParenthesesClosed(str: string): boolean {
 export function valueIsClosedParan(PWD: ParsedWaitNext): ParsedWaitNext {
     const {parsed, wait, next} = PWD;
     const group = wait.group;
-
-    console.log("CLOSED PARAN")
-
-
-    console.log("ALL PARANS CLOSED:", areAllParenthesesClosed(group.expression), group.expression);
 
     if(!areAllParenthesesClosed(group.expression)) {
         return {
@@ -232,7 +211,6 @@ export function parseGate(gate: string): Gate | null {
 
     for (const idx in listed) {
         const curVal = listed[idx];
-        console.log(idx, curVal)
         const curValType = isExpected(curVal, nextExp);
         if(curValType === "unexpected") {
             console.log("UNEXPECTED:", curVal)

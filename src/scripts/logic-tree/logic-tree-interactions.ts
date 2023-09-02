@@ -123,7 +123,13 @@ export function variableListener() {
 }
 
 function variableValueIsAllowed(val: string | undefined): val is VariablesValue {
-    return val === "0" || val === "1" || val === "T" || val === "F";
+    const result = val === "0" || val === "1" || val === "T" || val === "F";
+
+    if(!result && val !== "") {
+        animateError();
+    }
+
+    return result;
 }
 
 function getVariables(): VariableAndValue[] {
@@ -131,13 +137,20 @@ function getVariables(): VariableAndValue[] {
 
     return Array.from(children).map((n) => {
         const varName = n.querySelector("label")?.textContent;
-        const val = n.querySelector("input")?.value;
-        const isVarAllowed = variableValueIsAllowed(val);
+        // const val = n.querySelector("input")?.value;
+        // const isValAllowed = variableValueIsAllowed(val);
 
-        return {
+        const val = Array.from((n.querySelector("select") as HTMLSelectElement)).findIndex(
+            (option) => {
+                return (option as HTMLOptionElement).selected
+            }
+        )
+
+        const result = {
             variable: varName as Variable,
-            value: isVarAllowed ? val : undefined
+            value: [undefined, "T", "F", "0", "1"][(val + 1) === -1 ? 0 : val] as VariablesValue
         }
+        return result;
     })
 }
 
@@ -186,9 +199,34 @@ function updateVariables(input: string) {
         label.textContent = v;
         div.appendChild(label);
 
-        const inp = document.createElement("input");
-        inp.type = "text";
+        const inp = document.createElement("select");
         inp.id = `variable-${v}`;
+
+        const none = document.createElement("option")
+        none.value = v;
+        none.textContent = v;
+
+        const t = document.createElement("option")
+        t.value = "T";
+        t.textContent = "T";
+
+        const f = document.createElement("option")
+        f.value = "F";
+        f.textContent = "F";
+
+        const zero = document.createElement("option")
+        zero.value = "0";
+        zero.textContent = "0";
+
+        const one = document.createElement("option")
+        one.value = "1";
+        one.textContent = "1";
+
+        inp.appendChild(none)
+        inp.appendChild(t);
+        inp.appendChild(f);
+        inp.appendChild(zero)
+        inp.appendChild(one)
 
         div.appendChild(inp);
 
@@ -204,6 +242,46 @@ function updateVariables(input: string) {
 
 export function updateVariablesListener() {
     form?.addEventListener("input", (ev) => updateVariables((ev.target as HTMLInputElement).value));
+}
+
+// ===== ANIMATE ERROR ======
+
+
+function animateError() {
+    const inp = form?.querySelector("input");
+    
+    const keyframes: Keyframe[] = [
+        { 
+            border: "2px solid #dd3333",
+            transform: "translateX(0.3rem) scale(1.3)",
+        },
+        {
+            border: "2px solid #dd3333",
+            transform: "translateX(-0.3rem) scale(1)",
+        },
+        {
+            border: "2px solid #dd3333",
+            transform: "translateX(-0.3rem)",
+        },
+        {
+            border: "2px solid #dd3333",
+            transform: "translateX(0.1rem)",
+        },
+        {
+            border: "2px solid #dd3333",
+            transform: "translateX(-0.1rem)",
+        },
+        {
+            border: "2px solid #dd3333",
+            transform: "translateX(-0.1rem)",
+        },
+        {
+            borderColor: "blue",
+            borderOpacity: 1,
+        }
+    ]
+
+    inp?.animate(keyframes, 300);
 }
 
 // ===== MAIN FUNCTION =====
@@ -223,14 +301,25 @@ function callFunctions() {
 
     const inputStr = (document.getElementById("logic-gate-inp") as HTMLInputElement).value;
     const str = replaceVariables(inputStr, getVariables());
+    // const parsed = parseGate(str);
+
+    let inputInvalid = false;
+
+    try {
+        parseGate(str);
+    } catch (error) {
+        inputInvalid = true;
+    } finally {
+        if(inputInvalid) {
+            animateError();
+        }
+    }
+
     const parsed = parseGate(str);
 
     if(parsed === null) {
-        throw "Empty input!"
+        return;
     }
-
-
-    console.log(parsed);
 
     const ordered = reOrderGates(parsed, order);
     const evalled = evaluateGateRecurse(ordered);
@@ -352,10 +441,7 @@ function exampleCallback(ev: Event) {
     if(target === null || target.className !== "example") {
         return;
     }
-
-    console.log(form);
     const inp = (document.getElementById("logic-gate-inp") as HTMLInputElement)
-    console.log(inp);
     inp.value = target.textContent === null ? "" : target.textContent;
     // in reality this will never be null since it's an example i manually provide
 

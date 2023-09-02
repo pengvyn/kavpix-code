@@ -291,7 +291,7 @@ label {
     display: grid;
     grid-template-rows: 1.5rem 1fr;
 }
-.variable input {
+.variable input, .variable select {
     width: 3rem;
     height: 1.8rem;
     font-size: 0.8rem;
@@ -554,7 +554,7 @@ label {
         padding-top: 1rem;
         font-size: 0.5rem;
     }
-    .variable input {
+    .variable input, .variable select {
         font-size: 0.6rem;
         height: 1rem;
         width: 2rem;
